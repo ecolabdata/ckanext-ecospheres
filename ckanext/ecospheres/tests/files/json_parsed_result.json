@@ -1,0 +1,389 @@
+{
+   "name":"name",
+   "access_rights":[
+      {
+         "label":{
+            "en":"access_rights_label_en",
+            "fr":"access_rights_label_fr"
+         },
+         "uri":"accessRights-uri"
+      }
+   ],
+   "accrual_periodicity":[
+      "http://publications.europa.eu/resource/authority/frequency/ANNUAL"
+   ],
+   "attributes_page":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/attachments/442e60a9-d626-44d2-99ee-57e2f41f90be",
+   "bbox":"Ile-de-France",
+   "conforms_to":[
+      {
+         "title":{
+            "en":"title_en",
+            "fr":"title_fr"
+         },
+         "uri":"conformsTo_Standard-uri"
+      }
+   ],
+   "contact_point":[
+      {
+         "affiliation":{
+            "en":"en_Organisation-Name",
+            "fr":"fr_Organisation-Name"
+         },
+         "email":"ckan@mtes.fr",
+         "name":{
+            "en":"Point de contact DiDo",
+            "fr":"Point de contact DiDo"
+         },
+         "phone":"0158585858",
+         "url":"https://statistiques.developpement-durable.gouv.fr/contact"
+      }
+   ],
+   "created":"2021-07-29T06:02:34.134000+00:00",
+   "creator":[
+      {
+         "affiliation":"Organisation-Name",
+         "comment":{
+            "en":"Bureau de l'\u00e9tat des milieux",
+            "fr":"Bureau de l'\u00e9tat des milieux"
+         },
+         "email":"ckan@mtes.fr",
+         "name":{
+            "en":"CGDD/SDES/SDIE/BEM",
+            "fr":"CGDD/SDES/SDIE/BEM"
+         },
+         "phone":"0158585858",
+         "title":"Bureau de l'\u00e9tat des milieux",
+         "type":"type",
+         "url":"https://statistiques.developpement-durable.gouv.fr/contact"
+      }
+   ],
+   "description":{
+      "en":"EN Donn\u00e9es locales de consommation d'\u00e9lectricit\u00e9, de gaz naturel et de chaleur et de froid - consommations annuelles et points de livraison d'\u00e9lectricit\u00e9, de gaz naturel, et de chaleur et de froid, r\u00e9partis en cinq secteurs (agriculture, industrie, tertiaire, r\u00e9sidentiel et non affect\u00e9) ou selon le code NAF \u00e0 2 niveaux selon les cas, \u00e0 la maille IRIS",
+      "fr":"FR Donn\u00e9es locales de consommation d'\u00e9lectricit\u00e9, de gaz naturel et de chaleur et de froid - consommations annuelles et points de livraison d'\u00e9lectricit\u00e9, de gaz naturel, et de chaleur et de froid, r\u00e9partis en cinq secteurs (agriculture, industrie, tertiaire, r\u00e9sidentiel et non affect\u00e9) ou selon le code NAF \u00e0 2 niveaux selon les cas, \u00e0 la maille IRIS"
+   },
+   "extras":[
+      
+   ],
+   "free_tags":[
+      {
+         "name":"consommation-d-energie"
+      },
+      {
+         "name":"gaz-naturel"
+      },
+      {
+         "name":"chaleur"
+      },
+      {
+         "name":"energie"
+      },
+      {
+         "name":"electricite"
+      },
+      {
+         "name":"froid"
+      },
+      {
+         "name":"un"
+      },
+      {
+         "name":"deux"
+      },
+      {
+         "name":"trois"
+      }
+   ],
+   "identifier":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datasets/610244c9e436671e84ec5da8",
+   "is_primary_topic_of":[
+      {
+         "contact_point":[
+            {
+               "affiliation":{
+                  "en":"en_Organisation-Name_pt",
+                  "fr":"fr_Organisation-Name_pt"
+               },
+               "email":"ckan@mtes.fr",
+               "name":{
+                  "en":"Point de contact DiDo",
+                  "fr":"Point de contact DiDo"
+               },
+               "phone":"0158585858",
+               "url":"https://statistiques.developpement-durable.gouv.fr/contact"
+            }
+         ],
+         "identifier":"https://data.ststiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datasets/610244c9e436671e84ec5da8",
+         "language":[
+            "italiern",
+            "francais",
+            "allemand"
+         ],
+         "modified":"2021-10-17T17:19:00.965000+00:00"
+      }
+   ],
+   "issued":"2021-07-29T06:03:53.921000+00:00",
+   "landing_page":"http://publications.europa.eu/resource/authority/frequency/ANNUAL",
+   "language":[
+      "http://publications.europa.eu/resource/authority/language/FRA",
+      "http://publications.europa.eu/resource/authority/language/ENG"
+   ],
+   "license_id":"",
+   "modified":"2022-03-09T09:12:56.785000+00:00",
+   "notes":{
+      "en":"EN Donn\u00e9es locales de consommation d'\u00e9lectricit\u00e9, de gaz naturel et de chaleur et de froid - consommations annuelles et points de livraison d'\u00e9lectricit\u00e9, de gaz naturel, et de chaleur et de froid, r\u00e9partis en cinq secteurs (agriculture, industrie, tertiaire, r\u00e9sidentiel et non affect\u00e9) ou selon le code NAF \u00e0 2 niveaux selon les cas, \u00e0 la maille IRIS",
+      "fr":"FR Donn\u00e9es locales de consommation d'\u00e9lectricit\u00e9, de gaz naturel et de chaleur et de froid - consommations annuelles et points de livraison d'\u00e9lectricit\u00e9, de gaz naturel, et de chaleur et de froid, r\u00e9partis en cinq secteurs (agriculture, industrie, tertiaire, r\u00e9sidentiel et non affect\u00e9) ou selon le code NAF \u00e0 2 niveaux selon les cas, \u00e0 la maille IRIS"
+   },
+   "page":[
+      {
+         "created":"2021-10-17T17:19:00.178000+00:00",
+         "description":{
+            "en":"description_en",
+            "fr":"description_fr"
+         },
+         "issued":"2021-10-19T22:00:00+00:00",
+         "modified":"2021-10-17T17:19:00.965000+00:00",
+         "title":{
+            "en":"Non r\u00e9pondants - collecte \u00e9lectricit\u00e9 2018 \u00e0 2020",
+            "fr":"Non r\u00e9pondants - collecte \u00e9lectricit\u00e9 2018 \u00e0 2020"
+         },
+         "url":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/files/fdf07cdb-6d24-4f68-86c4-a7d62aecf630",
+         "uri":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/attachments/fdf07cdb-6d24-4f68-86c4-a7d62aecf630"
+      
+      }
+   ],
+   "provenance":{
+      "en":"en_label",
+      "fr":"fr_label"
+   },
+   "publisher":[
+      {
+         "affiliation":"Organisation-Name",
+         "comment":{
+            "en":"Bureau de l'\u00e9tat des milieux",
+            "fr":"Bureau de l'\u00e9tat des milieux"
+         },
+         "email":"ckan@mtes.fr",
+         "name":{
+            "en":"CGDD/SDES/SDIE/BEM",
+            "fr":"CGDD/SDES/SDIE/BEM"
+         },
+         "phone":"0158585858",
+         "title":"Bureau de l'\u00e9tat des milieux",
+         "type":"type",
+         "url":"https://statistiques.developpement-durable.gouv.fr/contact"
+      },
+      {
+         "affiliation":"Organisation-Name",
+         "comment":{
+            "en":"Bureau de l'\u00e9tat des milieux",
+            "fr":"Bureau de l'\u00e9tat des milieux"
+         },
+         "email":"ckan@mtes.fr",
+         "name":{
+            "en":"CGDD/SDES/SDIE/BEM",
+            "fr":"CGDD/SDES/SDIE/BEM"
+         },
+         "phone":"0158585858",
+         "title":"Bureau de l'\u00e9tat des milieux",
+         "type":"type",
+         "url":"https://statistiques.developpement-durable.gouv.fr/contact"
+      }
+   ],
+   "qualified_attribution":[
+      {
+         "agent":[
+            {
+               "mail":"ckan@mtes.fr",
+               "name":"mtes",
+               "url":"mtes.website.com"
+            }
+         ],
+         "had_role":"owner"
+      }
+   ],
+   "resources":[
+      {
+         "description":{
+            "en":"en_description",
+            "fr":"fr_description"
+         },
+         "format":"https://www.iana.org/assignments/media-types/application/geo+json",
+         "licenses":[
+            {
+               "label":{
+                  "en":"label_en",
+                  "fr":"label_fr"
+               },
+               "type":"type_licence",
+               "uri":"https://www.etalab.gouv.fr/licence-ouverte-open-licence"
+            }
+         ],
+         "media_type_ressource":[
+            {
+               "label":{
+                  "en":"label_en",
+                  "fr":"label_fr"
+               },
+               "uri":"https://www.iana.org/assignments/media-types/application/geo+json"
+            }
+         ],
+         "name":{
+            "en":"en_Donn\u00e9es de consommation et de points de livraison d'\u00e9nergie \u00e0 la maille IRIS - \u00e9lectricit\u00e9 - ann\u00e9e 2020 - mill\u00e9sime 2021-10 - format geojson - Champ IRIS",
+            "fr":"fr_Donn\u00e9es de consommation et de points de livraison d'\u00e9nergie \u00e0 la maille IRIS - \u00e9lectricit\u00e9 - ann\u00e9e 2020 - mill\u00e9sime 2021-10 - format geojson - Champ IRIS"
+         },
+         "other_format":{
+            "label":{
+               "en":"label_en",
+               "fr":"label_fr"
+            }
+         },
+         "resource_issued":"2022-03-09T09:12:55.902000+00:00",
+         "rights":{
+            "label":{
+               "en":"label_en",
+               "fr":"label_fr"
+            }
+         },
+         "service_conforms_to":{
+            "en":"en_title",
+            "fr":"fr_title"
+         },
+         "uri":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/distributions/f88a1c55-0f24-4dac-9ac5-e151caf745e8/spatial/geojson?millesime=2021-10&geoField=IRIS",
+         "url":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/v1/datafiles/f88a1c55-0f24-4dac-9ac5-e151caf745e8/spatial/geojson?millesime=2021-10&geoField=IRIS",
+         "url_download":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/v1/datafiles/f88a1c55-0f24-4dac-9ac5-e151caf745e8/spatial/geojson?millesime=2021-10&geoField=IRIS"
+      }
+   ],
+   "rights_holder":[
+      {
+         "affiliation":"Organisation-Name",
+         "comment":{
+            "en":"Bureau de l'\u00e9tat des milieux",
+            "fr":"Bureau de l'\u00e9tat des milieux"
+         },
+         "email":"ckan@mtes.fr",
+         "name":{
+            "en":"CGDD/SDES/SDIE/BEM",
+            "fr":"CGDD/SDES/SDIE/BEM"
+         },
+         "phone":"0158585858",
+         "title":"Bureau de l'\u00e9tat des milieux",
+         "type":"type",
+         "url":"https://statistiques.developpement-durable.gouv.fr/contact"
+      }
+   ],
+   "spatial_coverage":[
+      {
+         "identifier":"identifier-location",
+         "label":{
+            "en":"en-label",
+            "fr":"fr-label"
+         },
+         "uri":"https://location_ressorce"
+      },
+      {
+         "uri":"https://location_ressorce_bbox"
+      }
+   ],
+   "spatial_resolution":"spatial_resolution",
+   "tags":[
+      {
+         "name":"consommation-d-energie"
+      },
+      {
+         "name":"gaz-naturel"
+      },
+      {
+         "name":"chaleur"
+      },
+      {
+         "name":"energie"
+      },
+      {
+         "name":"electricite"
+      },
+      {
+         "name":"froid"
+      },
+      {
+         "name":"un"
+      },
+      {
+         "name":"deux"
+      },
+      {
+         "name":"trois"
+      }
+   ],
+   "temporal":[
+      {
+         "end_date":"2005-01-01",
+         "start_date":"2020-12-31"
+      }
+   ],
+   "temporal_resolution":"temporal_resolution",
+   "title":{
+      "en":"en_Donn\u00e9es locales de consommation d'\u00e9lectricit\u00e9, de gaz naturel et de chaleur et de froid - IRIS (\u00e0 partir de 2018)",
+      "fr":"fr_Donn\u00e9es locales de consommation d'\u00e9lectricit\u00e9, de gaz naturel et de chaleur et de froid - IRIS (\u00e0 partir de 2018)"
+   },
+   "uri":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datasets/610244c9e436671e84ec5da8",
+   "url":"http://publications.europa.eu/resource/authority/frequency/ANNUAL",
+   "version":"1.0.1",
+   "version_notes":{
+      "en":"version_notes_en",
+      "fr":"version_notes_fr"
+   },
+   "dataset_series":[
+      {
+         "identifier":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datafiles/444f95f4-46f5-446f-b286-96c3b87738c0",
+         "title":"Données de consommation et de points de livraison d'énergie à la maille IRIS - gaz naturel- année 2019"
+      },
+      {
+         "identifier":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datafiles/9aae15ac-70be-4c07-bd6d-069a12bc481f",
+         "title":"Données de consommation et de points de livraison d'énergie à la maille IRIS - chaleur et froid - année 2018"
+      },
+      {
+         "identifier":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datafiles/76544c44-2e90-4b8b-9a70-e98acea3976f",
+         "title":"Données de consommation et de points de livraison d'énergie à la maille IRIS - chaleur et froid - année 2020"
+      },
+      {
+         "identifier":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datafiles/d79477a2-bd13-4986-81db-2ea1c9a5b68a",
+         "title":"Données de consommation et de points de livraison d'énergie à la maille IRIS - électricité - année 2018"
+      },
+      {
+         "identifier":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datafiles/f88a1c55-0f24-4dac-9ac5-e151caf745e8",
+         "title":"Données de consommation et de points de livraison d'énergie à la maille IRIS - électricité - année 2020"
+      },
+      {
+         "identifier":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datafiles/0d1ac244-00f1-4e55-9a19-189f9f09cb00",
+         "title":"Données de consommation et de points de livraison d'énergie à la maille IRIS - gaz naturel- année 2020"
+      },
+      {
+         "identifier":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datafiles/3f09b183-715a-4032-a79f-d8a1da86e048",
+         "title":"Données de consommation et de points de livraison d'énergie à la maille IRIS - gaz naturel- année 2018"
+      },
+      {
+         "identifier":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datafiles/27ac7bef-c767-47bd-8657-fe3a4a035e9d",
+         "title":"Données de consommation et de points de livraison d'énergie à la maille IRIS - chaleur et froid - année 2019"
+      },
+      {
+         "identifier":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datafiles/3589a62d-264d-4ce4-8dfd-d69e69656300",
+         "title":"Données de consommation et de points de livraison d'énergie à la maille IRIS - électricité - année 2019"
+      }
+   ],
+   "in_series": [
+      {
+          "identifier": "https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datasets/6102486fe436672220ec5da8",
+          "title": "Donn\u00e9es locales de consommation d'\u00e9lectricit\u00e9 et de gaz naturel - EPCI (\u00e0 partir de 2018)",
+          "url": "6102486fe436672220ec5da8"
+      },
+      {
+         "identifier": "https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datasets/6102486fe436672220ec5daf8",
+         "title": "Donn\u00e9es locales de consommation d'\u00e9lectricit\u00e9 et de gaz naturel - EPCI (\u00e0 partir de 2018)",
+         "url": "6102486fe436672220ec5da8"
+     },
+     {
+      "identifier": "https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datasets/6102486fe436672220ec5dffa8",
+      "title": "Donn\u00e9es locales de consommation d'\u00e9lectricit\u00e9 et de gaz naturel - EPCI (\u00e0 partir de 2018)",
+      "url": "6102486fe436672220ec5da8"
+  }
+   ]
+}

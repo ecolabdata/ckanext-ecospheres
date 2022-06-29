@@ -1,0 +1,5 @@
+{% for row in h.fr_spatial_toobj( data[field.field_name]) %}
+            {{ 
+                h.fr_spatial_translate_dict(h.lang()).codes.get(field.field_name).get(row, '') 
+            }}
+{% endfor %}

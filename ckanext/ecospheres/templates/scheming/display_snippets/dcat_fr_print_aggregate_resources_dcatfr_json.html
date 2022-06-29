@@ -1,0 +1,11 @@
+<ul>
+{% for row in h.fr_dcat_json_string_to_object_aggregated_ressources( data[field.field_name]) %}
+        <li>
+        <a href="/dataset/{{ row["url"] }}" style="margin-bottom: 30px;">
+            {{ row["title"] }}
+        </a>
+    </li>
+    
+{% endfor %}
+
+</ul>

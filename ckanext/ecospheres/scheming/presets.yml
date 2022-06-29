@@ -1,0 +1,44 @@
+scheming_presets_version: 1
+about: these are the default scheming field presets
+about_url: http://github.com/open-data/ckanext-scheming#preset
+presets:
+
+- preset_name: url
+  values:
+    display_snippet: dcat_url.html
+- preset_name: print_text
+  values:
+    display_snippet: dcat_print_text.html
+  
+- preset_name: fr_date
+  values: 
+    display_snippet: dcat_fr_date.html
+    # output_validators: timestamp_to_datetime
+
+- preset_name: fr_aggregate
+  values:
+    display_snippet: dcat_fr_print_aggregate_resources_dcatfr_json.html
+
+- preset_name: fr_documentation
+  values:
+    display_snippet: dcat_print_fr_documentation_json.html
+
+
+- preset_name: fr_licence
+  values:
+    display_snippet: dcat_fr_licence.html
+
+
+- preset_name: multilingual_text
+  values: 
+    display_snippet: fluent_text.html
+    validators: fluent_text
+    output_validators: multilingual_text_output
+
+
+- preset_name: multilingual_markdown
+  values: 
+    form_snippet: fluent_markdown.html
+    display_snippet: fluent_markdown.html
+    validators: fluent_text
+    output_validators: multilingual_text_output

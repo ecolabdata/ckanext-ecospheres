@@ -1,0 +1,45 @@
+{% set fields = data[field.field_name] %}
+
+{% block subfield_display %}
+  {% for field_data in fields %}
+  <div class="panel panel-default">
+    
+    <div class="panel-body">
+        <dl class="scheming-subfield-list">
+        {# Traitement des champs avec subfield : in_series et dateset_series  #}
+        {% if field.field_name == "in_series" or field.field_name == "serie_datasets" %}
+            {# création d'un lien vers la ressource           {{ data[field.field_name] }}  #}
+            <a href="/dataset/{{ field_data['url']   }}"> {{ field_data['title'] }} </a> 
+            </br>
+
+
+        {% else %}
+
+                  {% for subfield in field.repeating_subfields %}
+                          {%- if field_data[subfield.field_name] -%}
+                        
+                            <div style="display:flex;">
+                            
+                              <dt class="dataset-label" style="font-weight:bold;">
+                                {{ h.scheming_language_text(subfield.label) }}:
+                              </dt>
+
+                              <dd>
+                              {%- snippet 'scheming/snippets/display_field.html',
+                                field=subfield,
+                                data=field_data,
+                                entity_type=entity_type,
+                                object_type=object_type
+                              -%}
+                              </dd>
+
+                            </div>  
+                          {%- endif -%}
+              {% endfor %}
+        
+        {% endif %}
+            </dl>
+          </div>
+        </div>
+  {% endfor %}
+{% endblock %}

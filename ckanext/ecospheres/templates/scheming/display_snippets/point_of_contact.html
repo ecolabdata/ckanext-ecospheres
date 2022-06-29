@@ -1,0 +1,5 @@
+{% set metadata = h.fr_spatial_toobj(data[field.field_name])[0] %}{% set contactinfo = metadata.get('contact-info') %}<b>{{ metadata.get('organisation-name') }}</b>
+{% if metadata.get('individual-name') %}{{ metadata.get('individual-name') }}
+{% endif %}{% if metadata.get('position-name') %} {{ metadata.get('position-name') }}
+{% endif %}{% if contactinfo.get('email') %} {{ contactinfo.get('email') }}
+{% endif %}Rôle: {{ h.fr_spatial_translate_dict(h.lang()).codes.get('role').get(metadata.get('role'), '')  }}

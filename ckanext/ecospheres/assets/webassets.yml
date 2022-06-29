@@ -1,0 +1,14 @@
+# ecospheres-js:
+#   filter: rjsmin
+#   output: ckanext-ecospheres/%(version)s-ecospheres.js
+#   contents:
+#     - js/ecospheres.js
+#   extra:
+#     preload:
+#       - base/main
+
+# ecospheres-css:
+#   filter: cssrewrite
+#   output: ckanext-ecospheres/%(version)s-ecospheres.css
+#   contents:
+#     - css/ecospheres.css

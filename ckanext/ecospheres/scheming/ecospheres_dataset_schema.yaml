@@ -1,0 +1,1217 @@
+tscheming_version: 2
+dataset_type: dataset
+about: Dataset schema for spatial data
+about_url: https://github.com/ecolabdata/ckanext-spatial-fr
+
+
+# ----------------------------------------------------------------------------------------
+# ---------------------------------- Variables communes ----------------------------------
+# ----------------------------------------------------------------------------------------
+
+.common_field_agent: &common_field_agent
+  repeating_subfields:
+    # NAME {*}
+    # > foaf:name
+    # [+ DCAT-AP]
+    - field_name: name
+      label: 
+        fr: Nom
+        en: Name
+      preset: fluent_text
+
+
+      # TYPE
+      # > dct:type
+      # [+ DCAT-AP]
+      # - stockage et exposition sous forme d'URI
+      # - affichage du label, obtenu en interrogeant l'URI, qui est présumée 
+      #   pointer sur un registre RDF.  pointer sur un registre RDF.
+      
+    - field_name: type
+      label: 
+        fr: Type
+        en: Type
+      # display_snippet: link.html
+      display_property: skos:prefLabel
+      # TODO: ajouter un display_snippet basé semblable à link mais capable
+      # plus généralement de récupérer le label, quelle que soit la propriété
+      # utilisée (éventuellement autre que skos:prefLabel)
+    
+    
+      # > foaf:mbox
+      # [+ GeoDCAT-AP]
+      # - stockage et exposition sous forme d'URI
+      # - affichage sans préfixe 'mailto:'
+    - field_name: email
+      label:
+        fr: Courriel
+        en: Mail
+      # display_snippet: link.html
+      # TODO: ajouter un display_snippet pour l'hyperlien + suppression
+      # du préfixe à l'affichage.
+    
+    
+      # > foaf:phone
+      # - stockage et exposition sous forme d'URI
+      # - affichage sans préfixe 'tel:'
+    - field_name: phone
+      label:
+        fr:  Téléphone
+        en: Phone
+      # display_snippet: link.html
+      # TODO: ajouter un display_snippet pour l'hyperlien + suppression
+      # du préfixe à l'affichage.
+
+
+      # > foaf:workplaceHomepage
+      # [+ GeoDCAT-AP]
+      # - stockage et exposition sous forme d'URI
+      # - affichage de l'URL complète avec hyperlien
+    - field_name: url
+      label:
+        fr:  Site internet
+        en: Website
+      # display_snippet: link.html
+
+
+      # > org:memberOf [-> org:Organization] / foaf:name
+    - field_name: affiliation
+      label: 
+        fr: Appartient à
+        en: Belongs to
+      preset: fluent_text
+
+    # non exposé pour l'heure
+    # information fournie par Dido uniquement
+    # TODO: confirmer l'intérêt de l'afficher, considérer que les noms
+    # d'organisation de Dido semblent spécifier le sigle entre parenthèses
+    - field_name: acronym
+      label: 
+        fr: Sigle
+        en: Abbreviations
+    - field_name: title
+      label: title (dido)
+
+    # COMMENT {*}
+    # - non exposé pour l'heure
+    # - information fournie par Dido uniquement
+    - field_name: comment
+      label: 
+        fr: Commentaire
+        en: Comment
+      help_text: Description ou autre information relative à l'organisation.
+      preset: fluent_text
+
+.common_contact_fields: &common_contact_fields
+  repeating_subfields: 
+    # NAME {*}
+    # > vcard:fn
+    # [+ GeoDCAT-AP]
+    # > vcard:fn
+    - field_name: name
+      label:
+        fr: Nom
+        en: Name
+      preset: fluent_text
+
+    # EMAIL []
+    # > vcard:hasEmail
+    # [+ GeoDCAT-AP]
+    - field_name: email
+      label:
+        fr:  Courriel
+        en: Mail
+      display_snippet: link.html
+      # TODO: ajouter un display_snippet pour l'hyperlien + suppression
+      # du préfixe à l'affichage.
+
+    # PHONE []
+    # > vcard:hasTelephone
+    # [+ GeoDCAT-AP]
+    - field_name: phone
+      label: 
+        fr: Téléphone
+        en: Phone
+      display_snippet: link.html
+      # TODO: ajouter un display_snippet pour l'hyperlien + suppression
+      # du préfixe à l'affichage.
+
+    
+    # URL 
+    # > vcard:hasURL
+    # [+ GeoDCAT-AP]
+    - field_name: url
+      label: 
+        fr: Site internet
+        en: Website
+      display_snippet: link.html
+      
+    # AFFILIATION {*}
+    # > vcard:organization-name
+    # [+ GeoDCAT-AP]
+    - field_name: affiliation
+      label: 
+        fr: Appartient à
+        en: Belongs to
+      
+    # ACRONYM
+    - field_name: acronym
+      label: 
+        fr: Sigle
+        en: Abbreviations
+
+    # COMMENT {*}
+    - field_name: comment
+      label: 
+        fr: Commentaire
+        en: Comment
+      help_text: Description ou autre information relative à l'organisation.
+
+
+
+
+.standard_fields: &standard_fields
+  repeating_subfields:
+    # URI
+    - field_name: uri
+      label: 
+        fr: URL
+        en: URL
+      display_snippet: link.html
+      display_property: skos:prefLabel
+      # TODO: ajouter un display_snippet basé semblable à link mais capable
+      # plus généralement de récupérer le label, quelle que soit la propriété
+      # utilisée (éventuellement autre que skos:prefLabel). Si l'URI ne pointe
+      # pas sur un registre, on l'affiche telle quelle.
+    # TITLE {*}
+    # > dct:title
+    # [+ GeoDCAT-AP]
+    - field_name: title
+      label: 
+        fr: Libellé
+        en: Label
+
+
+
+# ------------------------------------------------------------------------------------
+# ---------------------------------- JEU DE DONNEES ----------------------------------
+# ------------------------------------------------------------------------------------
+
+dataset_fields:
+# NAME
+# - sert à construire les URL de CKAN + gestion des doublons
+# - pour les métadonnées INSPIRE, il s'agit de l'identifiant de la fiche
+#   de métadonnées (et non celui du jeu de données)
+# - pour les métadonnées DCAT, il est déduit de "identifier" ou, à
+#   défaut, de "uri".
+- field_name: name
+  label: 
+    fr: URL
+    en: URL
+  preset: dataset_slug
+  
+# URI
+# - fournit l'URI du dcat:Dataset pour l'exposition DCAT
+# - pour les métadonnées INSPIRE, il est déduit de "landing_page"
+# - pour les métadonnées DCAT, l'URI d'origine est préservé
+- field_name: uri
+  label:
+    fr:  URI du jeu de données
+    en:  dataset URI
+  display_snippet: null
+
+
+# IDENTIFIER
+# > dct:identifier
+# - pour les métadonnées INSPIRE, il s'agit ici de l'identifiant du
+#   jeu de données et non de l'identifiant de la fiche de métadonnées
+#   (cf. propriété "is_primary_topic_of")
+- field_name: identifier
+  label:
+    fr:  Identifiant
+    en: Identifiant
+  display_snippet: null
+  help_text: Identifiant du jeu de données.
+
+# TITLE {*}
+# > dct:title
+- field_name: title
+  label: 
+    fr: Titre
+    en: Title
+  preset: title
+  help_text: Libellé du jeu de données.
+
+# NOTES {*}
+# > dct:description
+- field_name: notes
+  label: 
+    en: Description
+    fr: Description
+    # display_snippet: markdown.html
+  help_text: Description du jeu de données.
+  preset: multilingual_markdown
+  
+
+
+# ------- Dates --------
+
+# > dct:temporal -> dct:PeriodOfTime
+- field_name: temporal
+  label: 
+    fr: Couverture temporelle
+    en: Temporal coverage
+  help_text: Périodes décrites par le jeu de données.
+  repeating_subfields:
+  # > dcat:startDate
+  - field_name: start_date
+    preset: fr_date
+    label: 
+      fr: Date de début
+      en: Start date
+  # > dcat:endDate
+  - field_name: end_date
+    preset: fr_date
+    label:
+      fr:  Date de fin
+      en: End date
+
+# > dct:modified
+- field_name: modified
+  label: 
+    fr: Date de modification
+    en: Modified date
+
+  preset: fr_date
+  help_text: Date de dernière modification du jeu de données.
+
+# > dct:created
+- field_name: created
+  label:
+    fr: Date de création
+    en: Creation date
+  preset: fr_date
+  help_text: Date de création du jeu de données.
+
+# > dct:issued
+- field_name: issued
+  label: 
+    fr: Date de publication
+    en: Issued date
+  preset: fr_date
+  help_text: Date de publication du jeu de données.
+
+
+# ------ Organisations ------
+# > dcat:contactPoint -> vcard:Kind
+# - cf. "publisher" pour les détails sur le stockage et l'affichage
+# - l'exposition DCAT est différente (objet de classe vcard:Kind et non
+#   foaf:Agent, avec des propriétés équivalentes - même stockage - mais
+#   qui portent d'autres noms)
+- field_name: contact_point
+  label: 
+    fr: Points de contact
+    en: Contact point
+  repeating_label: Point de contact
+  help_text: Entité à contacter pour obtenir des informations sur les données.
+  <<: *common_contact_fields
+
+
+# PUBLISHER [{}]
+# > dct:publisher -> foaf:Organization
+- field_name: publisher
+  label: 
+    fr: Éditeur
+    en: Publisher
+  help_text: Organisme ou personne qui assure la publication des données.
+  <<: *common_field_agent
+    
+
+# CREATOR [{}]
+# > dct:creator -> foaf:Organization
+- field_name: creator
+  label:
+    fr:  Auteur
+    en: Creator
+  help_text: Principal responsable de la production des données.
+  <<: *common_field_agent
+
+
+# RIGHTS_HOLDER [{}]
+# dct:rightsHolder -> foaf:Organization
+# [+ GeoDCAT-AP]
+- field_name: rights_holder
+  label:
+    fr:  Propriétaires
+    en: Holder
+  repeating_label: Propriétaire
+  help_text: Organisme ou personne qui détient des droits sur les données.
+  <<: *common_field_agent
+
+
+# QUALIFIED_ATTRIBUTION [{}]
+# > prov:qualifiedAttribution -> prov:Attribution
+# [- DCAT-AP v2]
+# il faudra prévoir un mapping entrant pour les propriétés
+# geodcat:custodian, geodcat:distributor, geodcat:originator
+# geodcat:principalInvestigator, geodcat:processor, 
+# geodcat:resourceProvider et geodcat:user
+- field_name: qualified_attribution
+  label: 
+    fr: Autres organisations responsables
+    en: Autres organisations responsables
+
+  repeating_label: Autre organisation responsable
+  help_text: >
+    Organisme qui est intervenu ou exerce une responsabilité sur
+    les données.
+  repeating_subfields:
+  # HAD_ROLE [{}]
+  # > dcat:hadRole
+  - field_name: had_role
+    label: 
+      fr: Rôle
+      en: Role
+    display_snippet: link.html
+    display_property: skos:prefLabel
+    # TODO: ajouter un display_snippet basé semblable à link mais capable
+    # plus généralement de récupérer le label, quelle que soit la propriété
+    # utilisée
+  # AGENT [{}]
+  # > prov:agent -> prov:Agent
+  - field_name: agent
+    label: 
+      fr: Organisation
+      en: Organization
+    repeating_subfields:
+
+      #foaf:givenName
+    - field_name: name
+      label: 
+        fr: Nom
+        en: Name
+
+      #foaf:mbox 
+    - field_name: mail
+      label:
+        fr: Email
+        en: Mail
+
+      #foaf:homePage
+    - field_name: url
+      label: 
+        fr: Site web
+        en: Website
+
+# ------- Relations -------
+# IN_SERIES []
+# > dcat:inSeries
+# [+ DCAT v3]
+# - dct:isPartOf est également mappé vers ce champ
+# - stockage sous la forme d'une liste d'identifiants de datasets CKAN
+#   correspondant aux séries dont fait partie le dataset
+# - pour l'exposition DCAT on va chercher la valeur des clés "uri"
+#   des séries
+# - pour l'affichage, on utilise "title" avec l'URL de la page du guichet
+#   en hyperlien
+
+- field_name: in_series
+  label: 
+    fr: Inclus dans les séries de données
+    en: Included in data series
+  # display_snippet: multiple_text
+  # TODO: ajouter un display_snippet qui lit la liste comme multiple_text
+  # et affiche les libellés des jeux de données avec leur page du guichet
+  # en hyperlien
+  help_text: Liste des identifiants CKAN de le jeu de données.
+  # preset: fr_aggregate
+  repeating_subfields:
+    # URI
+    - field_name: url
+      label: 
+        fr: URL
+        en: URL
+    # URI
+    - field_name: identifier
+      label: 
+        fr: identifier
+        en: identifier
+    # URI
+    - field_name: title
+      label:
+        fr:  Titre
+        en:  Title
+
+# SERIES_MEMBER []
+# > dcat:seriesMember
+# [+ DCAT v3]
+# - si présent, on type le dataset comme dcat:DatasetSeries en plus de
+#   dcat:Dataset (ce dernier pour assurer un minimum de rétro-compatibilité)
+# - dct:hasPart est également mappé vers ce champ
+# - stockage sous la forme d'une liste d'identifiants de datasets CKAN
+# - pour l'affichage, on utilise "title" avec l'URL de la page du guichet
+#   en hyperlien
+
+- field_name: serie_datasets
+  label:
+    fr:  Jeux de données de la série
+    en:  Series datasets
+
+  # display_snippet: multiple_text
+  # TODO: ajouter un display_snippet qui lit la liste comme multiple_text
+  # et affiche les libellés des jeux de données avec leur page du guichet
+  # en hyperlien
+  help_text: Liste des identifiants CKAN des jeux de données rattachés à la série ou lot de données.
+  repeating_subfields:
+    # URI
+    - field_name: url
+      label:
+        fr:  URL
+        en:  URL
+    # URI
+    - field_name: identifier
+      label: 
+        fr: identifier
+        en: identifier
+    # URI
+    - field_name: title
+      label:
+        fr:  Titre
+        en:  Title
+
+# ------ Références ------
+
+# LANDING_PAGE
+# > dcat:landingPage
+# pour l'URL de la fiche sur le catalogue source
+- field_name: landing_page
+  label:
+    fr: Accès à la fiche sur le catalogue source
+    en: Access to the file on the source catalog
+  display_snippet: link.html
+
+# ATTRIBUTE_PAGE
+# > foaf:page
+# [+ DCAT-AP]
+# pour le lien vers le catalogue d'attribut
+- field_name: attributes_page
+  label:
+    fr:  Catalogue d'attributs
+    en:  CAttribute Catalog
+
+
+  help_text: Lien de la page où sont décrits les champs du jeu de données.
+  display_snippet: link.html
+
+# PAGE [{}]
+# > foaf:page -> foaf:Document
+# [+ DCAT-AP]
+# - pour la documentation au sens large
+# - lorsque le catalogue source met à disposition des représentations
+#   HTML, XML, RDF, etc. des métadonnées, elles sont autant que possible
+#   mappées vers cette propriété
+# - le champ "uri" correspond à l'objet du triplet <uri> foaf:page <uri>,
+#   s'il n'est pas défini, l'exposition utilise un noeud anonyme
+- field_name: page
+  label:
+    fr:  Documentation
+    en:  Documentation
+  repeating_subfields:
+
+  # URI
+  - field_name: uri
+    label: 
+      fr: URI
+      en: URI
+    display_snippet: link.html
+
+
+  # > dct:url
+  - field_name: url
+    label: 
+      fr: URL
+      en: URL
+    display_snippet: link.html
+
+
+  # TITLE {*}
+  # > dct:title
+  # [+ GeoDCAT-AP]
+  - field_name: title
+    label: 
+      fr: Titre
+      en: Title
+    preset: fluent_text
+
+
+  # DESCRIPTION {*}
+  # > dct:description
+  # [+ GeoDCAT-AP]
+  - field_name: description
+    label: 
+      fr: Description
+      en: Description
+    preset: fluent_markdown
+
+      
+  # MODIFIED
+  # > dct:modified
+  # [X]
+  # disponible dans Dido, hors standards DCAT
+  - field_name: modified
+    label:
+      fr: Date de modification
+      en: Modified date
+    preset: fr_date
+    help_text: Date de dernière modification du document.
+
+
+
+  # CREATED
+  # > dct:created
+  # [X]
+  # disponible dans Dido, hors standards DCAT
+  - field_name: created
+    label: 
+      fr: Date de création
+      en: Creation Date
+    preset: fr_date
+    help_text: Date de création du document.
+
+  # ISSUED
+  # > dct:issued
+  # [X]
+  # disponible dans Dido, hors standards DCAT
+  - field_name: issued
+    label: 
+      fr: Date de publication
+      en: Issued date 
+    preset: fr_date
+    help_text: Date de publication du document.
+
+    
+# ------ Thèmes et mots clés ------
+
+#N1->14 themes : urba, risques
+#   N2 ->
+
+
+# CATEGORY []
+# > dcat:theme
+# - pour le premier niveau de thèmes de la nomenclature du guichet
+# - déduit de "theme", "subject" et "free_tag" lors du moissonnage
+# - stockage sous forme d'une liste d'URI (appartenant au registre
+#   du guichet)
+# - les étiquettes des URI seraient à mapper sur la propriété
+#   "tags" lors du moissonnage
+- field_name: category
+  label: 
+    fr: Thème
+    en: Theme
+  # display_snippet: multiple_text
+  # TODO: ajouter un display_snippet qui interroge l'URI pour récupérer
+  # l'étiquette.
+
+# SUBCATEGORY []
+# > dcat:theme
+# - pour le second niveau de thèmes de la nomenclature du guichet
+# - déduit de "theme", "subject" et "free_tag" lors du moissonnage
+# - stockage sous forme d'une liste d'URI (appartenant au registre
+#   du guichet)
+# - les étiquettes des URI seraient à mapper sur la propriété
+#   "tags" lors du moissonnage
+- field_name: subcategory
+  label: 
+    fr: Sous-thème
+    en: Subtopic
+  # display_snippet: multiple_text
+  # TODO: ajouter un display_snippet qui interroge l'URI pour récupérer
+  # l'étiquette.
+
+# THEME []
+# > dcat:theme
+# - pour les nomemclatures externes, notamment celle de la commission
+#   européenne et la nomenclature INSPIRE
+# - mapper dct:subject vers cette propriété (utilisé dans GeoDCAT-AP v2
+#   pour les catégories ISO)
+# - stockage sous la forme d'une liste d'URI
+# - les étiquettes des URI seraient à mapper sur la propriété
+#   "tags" lors du moissonnage
+- field_name: theme
+  label:
+    fr:  Autres thèmes
+    en:  other theme
+  display_snippet: null
+
+# > dct:subject
+# nomenclatures externes, notamment les thèmes ISO
+# stockage sous la forme d'une liste d'URI
+- field_name: subject
+  label: 
+    fr: Autre catégorie thématique
+    en: Other thematic category
+  display_snippet: null
+
+# FREE_TAG [{*}]
+# {"en": ["big", "large"], "fr": ["grande"]}
+# > dcat:keyword
+# - pour les mots-clés libres
+# - à mapper également sur la propriété "tags" lors du moissonnage
+- field_name: free_tags
+  label: 
+    fr: Mots-clés
+    en: Keywords
+  # display_snippet: null
+  repeating_subfields:
+    - field_name: name
+      label:
+        fr: Tag
+        en: Tag
+
+
+# TAGS [{}]
+# - field_name: tags
+# TODO: voir s'il y a quelque chose à redéfinir ou s'il est possible
+# de se contenter de la gestion native de CKAN.
+# "tags" est une liste de dictionnaires. Les valeurs à affichées
+# sont fournies par la clé "name".
+
+# ------ Métadonnées sur les métadonnées ------
+
+# IS_PRIMARY_TOPIC_OF [{}]
+# > foaf:isPrimaryTopicOf -> dcat:CatalogRecord
+# [- DCAT-AP v2]
+- field_name: is_primary_topic_of
+  label: Métadonnées sur les métadonnées
+  repeating_subfields:
+  # MODIFIED
+  # > dct:modified
+  - field_name: modified
+    label: 
+      fr: Date de modification
+      en : Modified date
+    preset: datetime
+    help_text: Date de dernière modification des métadonnées.
+  # LANGUAGE []
+  # > dct:language
+  # [+ DCAT-AP]
+  # - stockage et exposition sous la forme d'une liste d'URI
+  # - affichage des étiquettes, obtenues en interrogeant les URI,
+  #   qui sont présumées pointer sur un registre RDF.
+  - field_name: language
+    label: 
+      fr: Langues
+      en: language
+    display_snippet: multiple_text.html
+    help_text: Langues de rédaction des métadonnées.
+    # TODO: ajouter un display_snippet qui interroge les URI pour 
+    # récupérer leurs étiquettes.
+  # IDENTIFIER 
+  # > dct:identifier
+  - field_name: identifier
+    label:
+      fr:  Identifiant
+      en:  Identifiant
+    display_snippet: null
+    help_text: Identifiant de la fiche de métadonnées.
+  # CONTACT_POINT [{}]
+  # > dcat:contactPoint -> vcard:Kind
+  - field_name: contact_point
+    label:
+      fr:  Points de contact
+      en:  Contact point
+    repeating_label: Point de contact
+    help_text: Entité à contacter pour obtenir des informations sur les métadonnées.
+    <<: *common_contact_fields
+
+
+# ------ Couverture spatiale ------
+
+# BBOX
+# > dct:spatial [-> dct:Location] / dcat:bbox
+# pour l'emprise du jeu de données
+# - stockage et exposition sous l GML, comme
+#   il convient pour cette propriété
+# - calculé à partir de "spatial" pour les métadonnées INSPIRE
+- field_name: bbox
+  label: 
+    fr: Rectangle d'emprise
+    en: Boundary rectangle
+
+  display_snippet: null
+
+# SPATIAL_COVERAGE [{}]
+# > dct:spatial -> dct:Location
+# - pour les territoires sur lesquels portent les données
+# - le champ "uri" correspond à l'objet du triplet <...> dct:spatial <uri>,
+#   s'il n'est pas défini, l'exposition utilise un noeud anonyme
+#   de classe dct:Location 
+- field_name: spatial_coverage
+  label: Couverture géographique
+  repeating_subfields:
+  - field_name: uri
+    label: 
+      fr: URL
+      en: URL
+    display_snippet: link.html
+    display_property: skos:prefLabel
+    # TODO: ajouter un display_snippet basé semblable à link mais capable
+    # plus généralement de récupérer le label, quelle que soit la propriété
+    # utilisée (éventuellement autre que skos:prefLabel)
+  # IN_SCHEME
+  # > skos:inScheme
+  # [+ GeoDCAT-AP]
+  - field_name: in_scheme
+    label: 
+      fr: Index géographique
+      en: Geographic index
+    display_snippet: link.html
+    display_property: skos:prefLabel
+    help_text: Type de lieu, index de référence pour l'identifiant (commune, département...).
+    # TODO: ajouter un display_snippet basé semblable à link mais capable
+    # plus généralement de récupérer le label, quelle que soit la propriété
+    # utilisée (éventuellement autre que skos:prefLabel)
+  # IDENTIFIER
+  # > dct:identifier
+  # [+ GeoDCAT-AP]
+  - field_name: identifier
+    label: 
+      fr: Code géographique
+      en: Geographic code
+
+    help_text: Code du département, code INSEE de la commune, etc.
+  # LABEL {*}
+  # > skos:prefLabel
+  # [+ GeoDCAT-AP]
+  - field_name: label
+    label:
+      fr:  Libellé
+      en:  Label
+    help_text: Dénomination explicite du lieu.
+
+# SPATIAL
+# - utilisé par ckanext-spatial pour la prévisualisation cartographique
+# - non exposé en DCAT
+# - stockage sous la forme d'un dump GeoJSON (cf.
+#   http://docs.ckan.org/projects/ckanext-spatial/en/latest/spatial-search.html#geo-indexing-your-datasets)
+# - calculé à partir de "bbox" (propriété de "spatial_coverage") pour 
+#   les métadonnées DCAT
+- field_name: spatial
+  label: 
+    fr: Rectangle d'emprise
+    en: Boundary rectangle
+  display_snippet: null
+
+# TERRITORY
+# <<En stand by>>
+# - non repris dans l'export DCAT (hormis pour les
+#   informations mappées depuis la propriété "spatial")
+# - utilisé uniquement pour le filtrage par territoire
+# - déduit de "spatial" si possible, à défaut du territoire de
+#   compétence de l'organisation
+# - stockage sous la forme d'une liste d'étiquettes ?
+# - à mapper sur la propriété "tags" lors du moissonnage
+- field_name: territory
+  label: 
+    fr: Territoires
+    en: Territory
+  display_snippet: null
+  help_text: Divisions administratives (régions, départements...) présumées couvertes par les données.
+
+# TERRITORY_FULL
+# - reprend la liste de "territory" en y ajoutant les
+#   territoires qui contiennent ces territoires (par ex la région
+#   d'un département)
+# - à NE PAS mapper dans "tags"
+- field_name: territory_full
+  label: 
+    fr: Territoires (inclusif)
+    en: Territory (inclusif)
+  display_snippet: null
+  help_text: Divisions administratives (régions, départements...) incluant les données.
+
+
+# ------- Etc. ------
+
+# ACCESS_RIGHTS [{}]
+# > dct:accessRights -> dct:RightsStatement
+# - le champ "uri" correspond à l'objet du triplet
+#   <uri> dct:accessRights <uri>, s'il n'est pas
+#   défini, l'exposition utilise un noeud anonyme de classe
+#   dct:RightsStatement 
+- field_name: access_rights
+  label: 
+    fr: Conditions d'accès
+    en: Access conditions
+  help_text: Contraintes réglementaires limitant l'accès au jeu de données.
+  repeating_subfields:
+  # URI
+  - field_name: uri
+    label: 
+      fr: URL
+      en: URL
+    display_snippet: link.html
+    display_property: skos:prefLabel
+    # TODO: ajouter un display_snippet basé semblable à link mais capable
+    # plus généralement de récupérer le label, quelle que soit la propriété
+    # utilisée (éventuellement autre que skos:prefLabel)
+  # LABEL {*}
+  # > rdfs:label
+  # [+ GeoDCAT-AP]
+  - field_name: label
+    label: 
+      fr: Mention
+      en: Mention
+    help_text: >
+      Description des contraintes réglementaires qui limitent l'accès
+      aux données et des modalités pratiques pour les obtenir.
+
+# CRS []
+#TODO: à clarifier 
+# > dct:conformsTo
+# - pour les référentiels de coordonnées
+# - stockage et exposition sous forme d'une liste d'URI
+# - affichage de l'étiquette, récupérée en interrogeant l'URI
+- field_name: crs
+  label: 
+    fr: Référentiels de coordonnées
+    en: Coordinate repositories
+  display_snippet: multiple_text.html
+  # TODO: ajouter un display_snippet qui interroge les URI pour récupérer
+  # leurs étiquettes.
+
+# CONFORMS_TO
+# > dct:conformsTo -> dct:Standard
+# - pour les autres standards
+# - le champ "uri" correspond à l'objet du triplet
+#   <uri> dct:conformsTo <uri>. S'il n'est pas
+#   défini, l'exposition utilise un noeud anonyme de classe
+#   dct:Standard 
+- field_name: conforms_to
+  label: 
+    fr: Standard
+    en: Standard
+  help_text: Standard, schéma, etc. auquel se conforment les données.
+  <<: *standard_fields
+
+
+# ACCRUAL_PERIODICITY
+# > dct:accrualPeriodicity
+# - stockage et exposition sous forme d'URI
+# - affichage de l'étiquette récupérée par interrogation de l'URI
+- field_name: accrual_periodicity
+  label:
+    fr:  Fréquence de mise à jour
+    en:  Update frequency
+  # display_snippet: link.html
+  # TODO: ajouter un display_snippet basé semblable à link mais capable
+  # plus généralement de récupérer le label, quelle que soit la propriété
+  # utilisée (éventuellement autre que skos:prefLabel).
+
+# LANGUAGE []
+# > dct:language
+# - stockage et exposition sous forme d'une liste d'URI
+# - affichage des étiquettes récupérées par interrogation des URI
+- field_name: language
+  label: 
+    fr: Langues des données
+    en: Data languages
+  display_snippet: multiple_text.html
+  # TODO: ajouter un display_snippet qui interroge les URI pour récupérer
+  # leurs étiquettes.
+
+# PROVENANCE [{*}]
+# > dct:provenance [-> dct:ProvenanceStatement] / rdfs:label
+# [+ DCAT-AP]
+- field_name: provenance
+  label: 
+    fr: Généalogie
+    en: Genealogy
+  display_snippet: multiple_text.html
+  help_text: Informations sur les sources et méthodes de production des données.
+  # TODO: ajouter un display_snippet qui permette à la fois
+  # de gérer les listes de valeur et de reconnaître le
+  # Markdown
+
+# VERSION
+# > owl:versionInfo
+- field_name: version
+  label: 
+    fr: Version
+    en: Version
+  help_text: Version ou millésime du jeu de données.
+
+# VERSION_NOTES {*}
+# > adms:versionNotes
+- field_name: version_notes
+  label: 
+    fr: Notes de version
+    en: Release Notes
+  display_snippet: markdown.html
+  help_text: Différences entre la version courante des données et les versions antérieures.
+
+# TEMPORAL_RESOLUTION
+# > dcat:temporalResolution
+# - stockage et exposition sous forme standardisée (ex: 'P2HT30M' pour 2h30)
+- field_name: temporal_resolution
+  label: 
+    fr: Résolution temporelle
+    en: Temporal resolution
+  help_text: Plus petit pas de temps significatif dans le contexte du jeu de données.
+  # TODO: Ajouter un display_snippet capable d'afficher
+  # des durées lisibles à partir de la forme standardisée
+
+# SPATIAL_RESOLUTION
+# > dcat:spatialResolutionInMeters
+- field_name: spatial_resolution
+  label: 
+    fr: Résolution spatiale en mètres
+    en: Spatial resolution in meters
+  help_text: Plus petite distance significative dans le contexte du jeu de données, exprimée en mètres.
+
+# EQUIVALENT_SCALE
+# non exposé, permet uniquement de conserver
+# cette information présente dans les métadonnées INSPIRE
+# et sur la base de laquelle "spatial_resolution" est
+# calculé
+- field_name: equivalent_scale
+  label: 
+    fr: Échelle équivalente
+    en: Equivalent scale
+
+
+
+
+
+# ------ Champs hors DCAT ------
+
+- field_name: license_id
+  label:
+    fr: Etiquette de licence
+    en: License tag
+  display_snippet: null
+
+- field_name: bbox
+  label:
+    fr:  Rectangle d'emprise
+    en:  Boundary rectangle
+  display_snippet: null
+  # pour la prévisualisation cartographique - à voir
+  # s'il serait possible de s'en passer
+
+- field_name: graphic_preview
+  label: 
+    fr: Illustration
+    en: Illustration
+  display_snippet: image.html
+
+
+
+
+
+
+
+# ------------------------------------------------------------------------
+# ------------------------------ RESSOURCES ------------------------------
+# ------------------------------------------------------------------------
+
+.media_type_fields: &media_type_fields
+  repeating_subfields: 
+  # URI
+    - field_name: uri
+      label:
+        fr:  URL
+        en:  URL
+      display_snippet: link.html
+      display_property: skos:prefLabel
+      # TODO: ajouter un display_snippet basé semblable à link mais capable
+      # plus généralement de récupérer le label, quelle que soit la propriété
+      # utilisée (éventuellement autre que skos:prefLabel)
+    # LABEL {*}
+    # > rdfs:label
+    # [+ GeoDCAT-AP]
+    - field_name: label
+      label:
+        fr: Nom
+        en: Name
+
+
+resource_fields:
+
+# URI
+# fournit l'URI de la dcat:Distribution pour l'exposition DCAT
+- field_name: uri
+  label: 
+    fr: URI de la ressource
+    en: Resource URI
+  display_snippet: null
+
+
+# URL []
+# > dcat:accessURL
+- field_name: url
+  label: 
+    fr: URL d'accès
+    en: Access URL
+  # display_snippet: multiple_text.html
+  help_text: URL d'accès à la ressource.
+  # TODO: Ajouter un display_snippet qui gère à la fois les
+  # liste de valeurs et l'affichage des hyperliens
+  preset: url
+
+
+
+
+# DOWNLOAD_URL []
+# > dcat:downloadURL
+- field_name: url_download
+  label:
+    fr:  Téléchargement
+    en:  Download
+  # display_snippet: multiple_text.html
+  help_text: URL de téléchargement direct du fichier, dans le cas d'une ressource téléchargeable.
+  # TODO: Ajouter un display_snippet qui gère à la fois les
+  # liste de valeurs et l'affichage des hyperliens
+  preset: url
+
+
+
+
+# TITLE {*}
+# > dct:title
+- field_name: name
+  label:
+    fr: Nom
+    en: Name
+  preset: fluent_text
+
+
+# DESCRIPTION {*}
+# > dct:description
+- field_name: description
+  label: 
+    fr: Description
+    en: Description
+  preset: fluent_markdown
+
+
+# MEDIA_TYPE [{}]
+# > dcat:mediaType -> dct:MediaType
+- field_name: media_type_ressource
+  label: 
+    fr: Format (registre IANA)
+    en: Format (register IANA)
+  <<: *media_type_fields
+
+
+
+
+# # OTHER_FORMAT [{}]
+# # > dct:format -> dct:MediaTypeOrExtent
+- field_name: other_format
+  label: 
+    fr: Autres formats
+    en: other formats
+  <<: *media_type_fields
+  preset: print_text
+
+
+
+
+# FORMAT
+# on mappe dans le champ "format" natif les étiquettes
+# des propriétés "media_type", "other_format" et 
+# "service_conforms_to" (dans cet ordre et en s'arrêtant
+# dès qu'on obtient une valeur)
+- field_name: format
+  label: 
+    fr: Format
+    en: Format
+  # display_snippet: resource_format_autocomplete
+  preset: url
+
+
+# SERVICE_CONFORMS_TO [{}]
+# > dcat:accessService [-> dcat:DataService] / dct:conformsTo
+# - pour spécifier le protocole/standard auquel se conforme le
+#   service qui met à disposition la ressource, le cas échéant
+- field_name: service_conforms_to
+  label: 
+    fr: Service
+    en: Service
+  help_text: >
+    Standard, protocole, référentiel de coordonnées, etc. auquel se conforme
+    le service qui met à disposition la ressource.
+
+# RIGHTS {*}
+# > dct:rights [-> dct:RightsStatement] / rdfs:label
+- field_name: rights
+  label:
+    fr:  Propriété intellectuelle
+    en:  Intellectual property
+  help_text: > 
+    Mention rappelant les droits de propriété intellectuelle sur
+    les données, à faire apparaître en cas de réutilisation de la
+    ressource.
+  preset: print_text
+
+# LICENSE [{}]
+# > dct:license -> dct:LicenseDocument
+# - le champ "uri" correspond à l'objet du triplet <...> dct:license <uri>,
+#   s'il n'est pas défini, l'exposition utilise un noeud anonyme
+#   de classe dct:LicenseDocument 
+- field_name: licenses
+  label: 
+    fr: Licence
+    en: Licence
+  help_text: Conditions d'utilisation de la ressource.
+  repeating_subfields:
+  # URI
+  - field_name: uri
+    label:
+      fr: URL
+      en: URL
+    # display_snippet: link.html
+    # display_property: skos:prefLabel
+    # TODO: ajouter un display_snippet basé semblable à link mais capable
+    # plus généralement de récupérer le label, quelle que soit la propriété
+    # utilisée (éventuellement autre que skos:prefLabel)
+  # TYPE []
+  # > dct:type
+  # [+ DCAT-AP]
+  - field_name: type
+    label: 
+      fr: Type
+      en: Type
+    # display_snippet: multiple_text.html
+    help_text: Caractéristiques de la licence.
+    # TODO: ajouter un display_snippet qui interroge les URI pour récupérer
+    # leurs étiquettes.
+  # LABEL {*}
+  # > rdfs:label
+  # [+ GeoDCAT-AP]
+  - field_name: label
+    label: 
+      fr: Termes
+      en: Terms
+    help_text: Termes de la licence.
+    preset: fluent_text
+
+
+# ISSUED
+# > dct:issued
+- field_name: resource_issued
+  label:
+    fr: Date de publication
+    en: Issued Date
+  preset: fr_date
+  help_text: Date de publication de la ressource.
+
+
+
+
+
+
+
+
+

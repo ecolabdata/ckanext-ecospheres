@@ -1,0 +1,7 @@
+{% for row in h.fr_spatial_toobj( data[field.field_name]) %}
+    {% if h.fr_spatial_package_name_to_title(row) %}
+        <a href="{{ h.url_for('dataset.read', id=row) }}">
+            {{ h.fr_spatial_package_name_to_title(row) }}
+        </a>
+    {% endif %}
+{% endfor %}

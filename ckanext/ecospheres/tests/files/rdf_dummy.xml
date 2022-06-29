@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/terms/"
+         xmlns:foaf="http://xmlns.com/foaf/0.1/"
+         xmlns:schema="http://schema.org/"
+         xmlns:dcat="http://www.w3.org/ns/dcat#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:vcard="http://www.w3.org/2006/vcard/ns#"
+         xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+         xmlns:prov="http://www.w3.org/ns/prov#"
+         xmlns:ns0="http://example.com/vocab#"
+         xmlns:org="http://www.w3.org/ns/org#"
+         xmlns:owl="http://www.w3.org/2002/07/owl#"
+         xmlns:adms="http://www.w3.org/ns/adms#"
+         >
+
+
+  <dcat:Dataset rdf:about="https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datasets/610244c9e436671e84ec5da8">
+  
+    <rdf:type rdf:resource="http://inspire.ec.europa.eu/metadata-codelist/ResourceType/series"/>
+  
+    <dc:accrualPeriodicity rdf:resource="http://publications.europa.eu/resource/authority/frequency/ANNUAL"/>
+  
+    <dcat:landingPage rdf:resource="http://publications.europa.eu/resource/authority/frequency/ANNUAL"/>
+  
+  
+    <dc:description xml:lang="fr">FR Données locales de consommation d'électricité, de gaz naturel et de chaleur et de froid - consommations annuelles et points de livraison d'électricité, de gaz naturel, et de chaleur et de froid, répartis en cinq secteurs (agriculture, industrie, tertiaire, résidentiel et non affecté) ou selon le code NAF à 2 niveaux selon les cas, à la maille IRIS</dc:description>
+    <dc:description xml:lang="en">EN Données locales de consommation d'électricité, de gaz naturel et de chaleur et de froid - consommations annuelles et points de livraison d'électricité, de gaz naturel, et de chaleur et de froid, répartis en cinq secteurs (agriculture, industrie, tertiaire, résidentiel et non affecté) ou selon le code NAF à 2 niveaux selon les cas, à la maille IRIS</dc:description>
+    
+    <dc:identifier rdf:datatype="http://www.w3.org/2001/XMLSchema#string">https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datasets/610244c9e436671e84ec5da8</dc:identifier>
+    
+    <dc:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2021-07-29T06:02:34.134Z</dc:created>
+
+    <dc:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2021-07-29T06:03:53.921Z</dc:issued>
+    <dc:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2022-03-09T09:12:56.785Z</dc:modified>
+    <dc:publisher rdf:resource="https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/organizations/60cf529307db02177dd00720"/>
+    
+    <!-- dct:title -->
+    <dc:title xml:lang="fr">fr_Données locales de consommation d'électricité, de gaz naturel et de chaleur et de froid - IRIS (à partir de 2018)</dc:title>
+    <dc:title xml:lang="en">en_Données locales de consommation d'électricité, de gaz naturel et de chaleur et de froid - IRIS (à partir de 2018)</dc:title>
+    
+
+    <foaf:page>
+        <foaf:Document rdf:about="https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/attachments/442e60a9-d626-44d2-99ee-57e2f41f90be">
+          <dc:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2021-10-17T17:19:00.178Z</dc:created>
+          <dc:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2021-10-19T22:00:00.000Z</dc:issued>
+          <dc:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2021-10-17T17:19:00.965Z</dc:modified>
+          <dc:title xml:lang="fr">Non répondants - collecte électricité 2018 à 2020</dc:title>
+          <dc:title xml:lang="en">Non répondants - collecte électricité 2018 à 2020</dc:title>
+          <dc:description xml:lang="fr">description_fr</dc:description>
+          <dc:description xml:lang="en">description_en</dc:description>
+          <schema:url xml:lang="fr">https://data.statistiques.developpement-durable.gouv.fr/dido/api/files/442e60a9-d626-44d2-99ee-57e2f41f90be</schema:url>
+        </foaf:Document>
+    </foaf:page>
+
+    
+    <!-- contactPoint -->
+    <dcat:contactPoint>
+      <vcard:Kind rdf:about="https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/contactPoint_1">
+        <vcard:fn xml:lang="fr">Point de contact DiDo</vcard:fn>
+        <vcard:fn xml:lang="en">Point de contact DiDo</vcard:fn>
+        <vcard:hasURL rdf:resource="https://statistiques.developpement-durable.gouv.fr/contact"/>
+        <vcard:hasEmail rdf:resource="ckan@mtes.fr"/>
+        <vcard:hasTelephone rdf:resource="0158585858"/> 
+        <vcard:organization xml:lang="fr">fr_Organisation-Name</vcard:organization>
+        <vcard:organization xml:lang="en">en_Organisation-Name</vcard:organization>
+
+      </vcard:Kind>
+    </dcat:contactPoint>
+
+
+    <!-- creator -->
+    <dc:creator>
+      <foaf:Agent rdf:about="https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/organizations/6273cf17ed00fe6d549h5e146">
+        <rdfs:comment xml:lang="fr">Bureau de l'état des milieux</rdfs:comment>
+        <rdfs:comment xml:lang="en">Bureau de l'état des milieux</rdfs:comment>
+        <foaf:name xml:lang="fr">CGDD/SDES/SDIE/BEM</foaf:name>
+        <foaf:name xml:lang="en">CGDD/SDES/SDIE/BEM</foaf:name>
+        <foaf:title xml:lang="fr">Bureau de l'état des milieux</foaf:title>
+        <foaf:mbox rdf:resource="ckan@mtes.fr"/>
+        <foaf:phone rdf:resource="0158585858"/>
+        <dc:type>type</dc:type>
+        <foaf:workplaceHomepage rdf:resource="https://statistiques.developpement-durable.gouv.fr/contact"/>
+      
+        <org:memberOf>
+          <org:Organization>
+              <foaf:name>Organisation-Name</foaf:name>
+          </org:Organization>
+        </org:memberOf>
+
+
+      </foaf:Agent>
+    </dc:creator>
+
+
+
+    <!-- rights_holder -->
+    <dc:rights_holder>
+      <foaf:Agent rdf:about="https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/organizations/6273cf17ed00fe6d5495e146h">
+        <rdfs:comment xml:lang="fr">Bureau de l'état des milieux</rdfs:comment>
+        <rdfs:comment xml:lang="en">Bureau de l'état des milieux</rdfs:comment>
+        <foaf:name xml:lang="fr">CGDD/SDES/SDIE/BEM</foaf:name>
+        <foaf:name xml:lang="en">CGDD/SDES/SDIE/BEM</foaf:name>
+        <foaf:title xml:lang="fr">Bureau de l'état des milieux</foaf:title>
+        <foaf:mbox rdf:resource="ckan@mtes.fr"/>
+        <dc:type>type</dc:type>
+        <foaf:phone rdf:resource="0158585858"/>
+        <foaf:workplaceHomepage rdf:resource="https://statistiques.developpement-durable.gouv.fr/contact"/>
+        <org:memberOf>
+          <org:Organization>
+              <foaf:name>Organisation-Name</foaf:name>
+          </org:Organization>
+        </org:memberOf>
+
+  
+      
+      </foaf:Agent>
+    </dc:rights_holder>
+
+
+
+    <!-- publisher -->
+    <dc:publisher>
+      <foaf:Agent rdf:about="https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/organizations/6273cf17edh00fe6dh5495e146">
+        <rdfs:comment xml:lang="fr">Bureau de l'état des milieux</rdfs:comment>
+        <rdfs:comment xml:lang="en">Bureau de l'état des milieux</rdfs:comment>
+        <foaf:name xml:lang="fr">CGDD/SDES/SDIE/BEM</foaf:name>
+        <foaf:name xml:lang="en">CGDD/SDES/SDIE/BEM</foaf:name>
+        <foaf:title xml:lang="fr">Bureau de l'état des milieux</foaf:title>
+        <foaf:mbox rdf:resource="ckan@mtes.fr"/>
+        <foaf:phone rdf:resource="0158585858"/>
+        <dc:type>type</dc:type>
+        <foaf:workplaceHomepage rdf:resource="https://statistiques.developpement-durable.gouv.fr/contact"/>
+        <org:memberOf>
+          <org:Organization>
+              <foaf:name>Organisation-Name</foaf:name>
+          </org:Organization>
+        </org:memberOf>
+      </foaf:Agent>
+    </dc:publisher>
+
+    <!-- qualifiedAttribution -->
+    <prov:qualifiedAttribution>
+        <prov:Attribution>
+          <ns0:hadRole>owner</ns0:hadRole>
+            <prov:agent>
+              <prov:Agent>
+                <foaf:givenName>mtes</foaf:givenName>
+                <foaf:givenName>mtes</foaf:givenName>
+                <foaf:mbox rdf:resource="ckan@mtes.fr"/>
+                <foaf:homePage rdf:resource="mtes.website.com"/>
+              </prov:Agent>
+            </prov:agent>
+        </prov:Attribution>
+    </prov:qualifiedAttribution>
+
+
+    <!-- < is_primary_topic_of > -->
+      <foaf:isPrimaryTopicOf>
+        <dcat:CatalogRecord>
+          <dc:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2021-10-17T17:19:00.965Z</dc:modified>
+          <dc:language rdf:resource="francais"/>
+          <dc:language rdf:resource="italiern"/>
+          <dc:language rdf:resource="allemand"/>
+          <dc:identifier rdf:datatype="http://www.w3.org/2001/XMLSchema#string">https://data.ststiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datasets/610244c9e436671e84ec5da8</dc:identifier>
+          <dcat:contactPoint>
+            <vcard:Kind rdf:about="https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/contactPoint">
+              <vcard:fn xml:lang="fr">Point de contact DiDo</vcard:fn>
+              <vcard:fn xml:lang="en">Point de contact DiDo</vcard:fn>
+              <vcard:hasURL rdf:resource="https://statistiques.developpement-durable.gouv.fr/contact"/>
+              <vcard:hasEmail rdf:resource="ckan@mtes.fr"/>
+              <vcard:hasTelephone rdf:resource="0158585858"/> 
+              <vcard:organization xml:lang="fr">fr_Organisation-Name_pt</vcard:organization>
+              <vcard:organization xml:lang="en">en_Organisation-Name_pt</vcard:organization>
+            </vcard:Kind>
+          </dcat:contactPoint>
+        </dcat:CatalogRecord>
+      </foaf:isPrimaryTopicOf>
+
+    <!-- Couverture spatiale -->
+  
+    <!-- BBOX -->
+    <dc:spatial>
+      <dc:Location rdf:about="https://location_ressorce_bbox">
+        <dcat:bbox  rdf:resource="Ile-de-France"/>
+      </dc:Location>
+    </dc:spatial>
+
+    <!-- SPATIAL_COVERAGE -->
+    <dc:spatial>
+      <dc:Location rdf:about="https://location_ressorce">
+        <skos:inScheme>
+          <skos:prefLabel>label</skos:prefLabel>
+        </skos:inScheme>
+        <skos:prefLabel xml:lang="fr">fr-label</skos:prefLabel>
+        <skos:prefLabel xml:lang="en">en-label</skos:prefLabel>
+        <dc:identifier rdf:resource="identifier-location"/>
+      </dc:Location>
+    </dc:spatial>
+
+
+    <!-- access_rights -->
+
+    <dc:accessRights>
+      <dc:RightsStatement rdf:about="accessRights-uri">
+        <rdfs:label xml:lang="fr">access_rights_label_fr</rdfs:label>
+        <rdfs:label xml:lang="en">access_rights_label_en</rdfs:label>
+
+      </dc:RightsStatement>
+    </dc:accessRights>
+
+
+
+      <!-- conformsTo: liste d'URI --> 
+      <!-- <dc:conformsTo rdf:resource="test"/> 
+      <dc:conformsTo rdf:resource="terrrst"/>  -->
+
+      <!-- conformsTo -->
+      <dc:conformsTo> 
+        <dc:Standard rdf:about="conformsTo_Standard-uri">
+          <dc:title xml:lang="fr">title_fr</dc:title>
+          <dc:title xml:lang="en">title_en</dc:title>
+        </dc:Standard>
+      </dc:conformsTo> 
+
+      <!-- language -->   
+      <dc:language rdf:resource="http://publications.europa.eu/resource/authority/language/FRA"/>
+      <dc:language rdf:resource="http://publications.europa.eu/resource/authority/language/ENG"/>
+      
+      
+      <!-- dct:provenance -->
+      <dc:provenance>
+          <dc:ProvenanceStatement>
+              <rdfs:label xml:lang="fr">fr_label</rdfs:label>
+              <rdfs:label xml:lang="en">en_label</rdfs:label>
+          
+          </dc:ProvenanceStatement>
+
+      </dc:provenance>
+
+      <!-- owl:versionInfo -->
+      <owl:versionInfo rdf:resource="1.0.1"/>
+
+      <!-- adms:versionNotes -->
+      <adms:versionNotes xml:lang="fr">version_notes_fr</adms:versionNotes>
+      <adms:versionNotes xml:lang="en">version_notes_en</adms:versionNotes>
+
+      <!-- dcat:temporalResolution -->
+      <dcat:temporalResolution>temporal_resolution</dcat:temporalResolution>
+
+
+      <!-- dcat:spatialResolutionInMeters -->
+      <dcat:spatialResolutionInMeters>spatial_resolution</dcat:spatialResolutionInMeters>
+
+
+
+    <dcat:keyword xml:lang="fr">chaleur</dcat:keyword>
+    <dcat:keyword xml:lang="fr">consommation-d-energie</dcat:keyword>
+    <dcat:keyword xml:lang="fr">electricite</dcat:keyword>
+    <dcat:keyword xml:lang="fr">energie</dcat:keyword>
+    <dcat:keyword xml:lang="fr">froid</dcat:keyword>
+    <dcat:keyword xml:lang="fr">gaz-naturel</dcat:keyword>
+    <dc:temporal>
+        <dc:PeriodOfTime>
+          <dc:endDate rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2020-12-31T00:00:00.000Z</dc:endDate>
+          <dc:startDate rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2005-01-01T00:00:00.000Z</dc:startDate>
+        </dc:PeriodOfTime>
+    </dc:temporal>
+
+
+    
+
+  <dcat:distribution>
+      <dcat:Distribution rdf:about="https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/distributions/f88a1c55-0f24-4dac-9ac5-e151caf745e8/spatial/geojson?millesime=2021-10&amp;geoField=IRIS">
+        <dc:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2022-03-09T09:12:55.902Z</dc:issued>
+        
+        <!-- license -->
+
+        <dc:license>
+          <dc:LicenseDocument  rdf:about="https://www.etalab.gouv.fr/licence-ouverte-open-licence">
+              <dc:type>type_licence</dc:type>
+              <rdfs:label  xml:lang="en">label_en</rdfs:label>
+              <rdfs:label xml:lang="fr">label_fr</rdfs:label>
+          </dc:LicenseDocument>
+        </dc:license>
+        
+
+        <!-- title -->
+        <dc:title xml:lang="fr">fr_Données de consommation et de points de livraison d'énergie à la maille IRIS - électricité - année 2020 - millésime 2021-10 - format geojson - Champ IRIS</dc:title>
+        <dc:title xml:lang="en">en_Données de consommation et de points de livraison d'énergie à la maille IRIS - électricité - année 2020 - millésime 2021-10 - format geojson - Champ IRIS</dc:title>
+        
+        <dc:description xml:lang="en">en_description</dc:description>
+        <dc:description xml:lang="fr">fr_description</dc:description>
+        
+        <dcat:accessURL rdf:resource="https://data.statistiques.developpement-durable.gouv.fr/dido/api/v1/datafiles/f88a1c55-0f24-4dac-9ac5-e151caf745e8/spatial/geojson?millesime=2021-10&amp;geoField=IRIS"/>
+        
+        <dcat:downloadURL rdf:resource="https://data.statistiques.developpement-durable.gouv.fr/dido/api/v1/datafiles/f88a1c55-0f24-4dac-9ac5-e151caf745e8/spatial/geojson?millesime=2021-10&amp;geoField=IRIS"/>
+        
+        <!-- dcat:accessService -->
+        <dcat:accessService>
+          <dcat:DataService rdf:about="https://d">
+              <dc:conformsTo xml:lang="en">en_title</dc:conformsTo>
+              <dc:conformsTo xml:lang="fr">fr_title</dc:conformsTo>
+          </dcat:DataService>
+        </dcat:accessService>
+
+        <!-- dct:format -->
+        <dc:format>
+          <dc:MediaTypeOrExtent rdf:about="https://MediaTypeOrExtent_uri">
+              <rdfs:label  xml:lang="en">label_en</rdfs:label>
+              <rdfs:label xml:lang="fr">label_fr</rdfs:label>
+          </dc:MediaTypeOrExtent>
+        </dc:format>
+
+    <!-- dcat:mediaType  -->
+    <dcat:mediaType>
+      <dc:MediaType rdf:about="https://www.iana.org/assignments/media-types/application/geo+json">
+          <rdfs:label xml:lang="en">label_en</rdfs:label>
+          <rdfs:label xml:lang="fr">label_fr</rdfs:label>
+      </dc:MediaType>
+    </dcat:mediaType>
+    
+     <!-- dct:rights -->
+      <dc:rights>
+          <dc:RightsStatement>
+         <rdfs:label xml:lang="fr">label_fr</rdfs:label>
+         <rdfs:label xml:lang="en">label_en</rdfs:label>
+          </dc:RightsStatement>
+     </dc:rights>
+
+        <dcat:mediaType rdf:resource="https://www.iana.org/assignments/media-types/application/geo+json"/>
+      
+      </dcat:Distribution>
+  
+  </dcat:distribution>
+
+
+
+    <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/ENER"/>
+    <dcat:theme rdf:resource="https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/themes/energie"/>
+
+  </dcat:Dataset>
+</rdf:RDF>

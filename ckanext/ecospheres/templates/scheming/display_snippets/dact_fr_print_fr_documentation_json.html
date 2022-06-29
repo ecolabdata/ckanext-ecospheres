@@ -1,0 +1,45 @@
+
+    {% for row in h.fr_dcat_json_string_to_object_aggregated_ressources( data[field.field_name]) %}
+    <div>    
+    <div style="display:flex;  margin-top: 15px;">
+            <div style="font-weight:bold">
+                Titre
+            </div>
+            <div style="margin-left: 20px">
+                {{ row["title"] }}
+            </div>
+    </div>
+
+    <div style="display:flex">
+        <div style="font-weight:bold">
+            Date de création
+        </div>
+        <div style="margin-left: 20px">
+            {{ row["created"] }}
+        </div>
+    </div>
+
+
+        <div style="display:flex">
+            <div style="font-weight:bold">
+                Date de publication
+            </div>
+            <div style="margin-left: 20px">
+                {{ row["issued"] }}
+            </div>
+        </div>
+
+        <div style="display:flex">
+            <div style="font-weight:bold">
+                Lien vers la ressource
+            </div>
+            <a style="margin-left: 20px" href={{ row["url"] }}>
+                Télécharger ici
+            </a>
+        </div>
+
+    </div> 
+
+
+    {% endfor %}
+    
