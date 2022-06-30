@@ -669,6 +669,15 @@ dataset_fields:
         en: Tag
 
 
+        
+- field_name: keywords
+  label: 
+    en: Keywords
+    fr: Mots clés
+  
+  preset: fluent_tags
+
+
 # TAGS [{}]
 # - field_name: tags
 # TODO: voir s'il y a quelque chose à redéfinir ou s'il est possible

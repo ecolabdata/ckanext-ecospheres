@@ -47,7 +47,8 @@ try:
                                     _accrual_periodicity,
                                     _language,
                                     _provenance,
-                                    _version_notes
+                                    _version_notes,
+                                    _tags_keywords
                             )
 except Exception as e: 
     raise ValueError("Erreur lors de l'import de librairies: ",str(e))
@@ -263,7 +264,10 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     dataset_dict["tags"]=tags
     dataset_dict["free_tags"]=tags
     
-    
+    """-------------------------------------------<tags>-------------------------------------------"""        
+    _tags_keywords(self,dataset_ref,
+                            DCAT.keyword,
+                            dataset_dict)
     
     ############################################   Métadonnées sur les métadonnées   ############################################
     """-------------------------------------------< is_primary_topic_of >-------------------------------------------"""        
@@ -292,17 +296,7 @@ def parse_dataset(self, dataset_dict, dataset_ref):
 
 
     """-------------------------------------------<crs>-------------------------------------------"""   
-    # TODO: à clarifier
-
-    # for key, predicate in (
-    #                         ('crs', DCT.conformsTo), # description/notes du dataset
-    #                         ):
-    #     value = _object_value(self,dataset_ref, predicate)
-    #     if value:
-    #         print(value)
-    #         dataset_dict[key] = value
-
-
+    # TODO: 
 
     """-------------------------------------------<conforms_to>-------------------------------------------"""        
     _conforms_to(self,dataset_ref, DCT.conformsTo,dataset_dict)
@@ -423,6 +417,7 @@ def parse_dataset(self, dataset_dict, dataset_ref):
                         value = _object_value_multilang(self,format_node, predicate,multilang=True)
                         if value:
                             other_format_dict[key]=value
+            other_format_dict["uri"]=str(format_node)
             if other_format_dict:
                 resource_dict["other_format"]=other_format_dict
         
@@ -484,5 +479,5 @@ def parse_dataset(self, dataset_dict, dataset_ref):
                     if value:
                         resource_dict[key] = value
         dataset_dict['resources'].append(resource_dict)
-
+        
     return dataset_dict

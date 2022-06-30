@@ -4,6 +4,7 @@ import requests as _requests
 from rdflib.namespace import Namespace, RDFS, RDF, SKOS
 from rdflib import URIRef, BNode
 from ckan.lib.i18n import get_locales
+from ckan.lib.munge import munge_tag
 
 from ..constants import (
     ADMS,
@@ -42,6 +43,19 @@ def _strip_uri( value, base_uri):
 def get_langs():
     language_priorities = ['en','fr']
     return language_priorities
+    
+def _tags_keywords(self, subject, predicate,dataset_dict):
+    keywords = {}
+    # initialize the keywords with empty lists for all languages
+    for lang in get_langs():
+        keywords[lang] = []
+
+    for keyword_node in self.g.objects(subject, predicate):
+        lang = keyword_node.language
+        keyword = munge_tag(str(keyword_node))
+        keywords.setdefault(lang, []).append(keyword)
+
+    dataset_dict["keywords"] = keywords
 
 def _object_value_multilang(self, subject, predicate, multilang=False):
     '''

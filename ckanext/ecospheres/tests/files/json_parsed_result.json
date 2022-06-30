@@ -234,7 +234,8 @@
             "label":{
                "en":"label_en",
                "fr":"label_fr"
-            }
+            },
+            "uri":"https://MediaTypeOrExtent_urig"
          },
          "resource_issued":"2022-03-09T09:12:55.902000+00:00",
          "rights":{

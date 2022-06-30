@@ -254,12 +254,24 @@
 
 
 
-    <dcat:keyword xml:lang="fr">chaleur</dcat:keyword>
-    <dcat:keyword xml:lang="fr">consommation-d-energie</dcat:keyword>
-    <dcat:keyword xml:lang="fr">electricite</dcat:keyword>
-    <dcat:keyword xml:lang="fr">energie</dcat:keyword>
-    <dcat:keyword xml:lang="fr">froid</dcat:keyword>
-    <dcat:keyword xml:lang="fr">gaz-naturel</dcat:keyword>
+    <dcat:keyword xml:lang="fr">fr_chaleur</dcat:keyword>
+    <dcat:keyword xml:lang="en">en_chaleur</dcat:keyword>
+    
+    <dcat:keyword xml:lang="fr">fr_consommation-d-energie</dcat:keyword>
+    <dcat:keyword xml:lang="en">en_consommation-d-energie</dcat:keyword>
+
+    <dcat:keyword xml:lang="fr">fr_electricite</dcat:keyword>
+    <dcat:keyword xml:lang="en">en_electricite</dcat:keyword>
+
+    <dcat:keyword xml:lang="fr">fr_energie</dcat:keyword>
+    <dcat:keyword xml:lang="en">en_energie</dcat:keyword>
+
+    <dcat:keyword xml:lang="fr">fr_froid</dcat:keyword>
+    <dcat:keyword xml:lang="en">en_froid</dcat:keyword>
+
+    <dcat:keyword xml:lang="fr">fr_gaz-naturel</dcat:keyword>
+    <dcat:keyword xml:lang="en">en_gaz-naturel</dcat:keyword>
+
     <dc:temporal>
         <dc:PeriodOfTime>
           <dc:endDate rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2020-12-31T00:00:00.000Z</dc:endDate>

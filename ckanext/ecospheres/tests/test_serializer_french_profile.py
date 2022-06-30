@@ -354,6 +354,7 @@ class TestEuroDCATAPProfileSerializeDataset(BaseSerializeTest):
         # > dcat:theme
 
 
+
         """------------------------------------------ subcategory ------------------------------------------"""
         # SUBCATEGORY []
         # > dcat:theme
@@ -516,11 +517,43 @@ class TestEuroDCATAPProfileSerializeDataset(BaseSerializeTest):
                 if title[-1].language:
                     assert dataset["resources"][0]["name"][title[-1].language] == str(title[-1])
 
-
             """------------------------------------------ description   ------------------------------------------"""
 
             descriptions = self._triples(g,dist, DCT.description, None)
             for description in descriptions:
                 if description[-1].language:
                     assert dataset["resources"][0]["description"][description[-1].language] == str(description[-1])
+
+            """------------------------------------------ media_type_ressource   ------------------------------------------"""
+            media_type_ressource_nodes = self._triple(g,dist, DCT.mediaType, None)[-1]
+            for node in  self._triples(g,media_type_ressource_nodes, RDFS.label, None):
+                assert   dataset["resources"][0]["media_type_ressource"][0]["label"][node[-1].language] == str(node[-1])
             
+            """------------------------------------------ other_format   ------------------------------------------"""
+            
+            format_nodes = self._triple(g,dist, DCT["format"], None)[-1]
+            for node in  self._triples(g,format_nodes, RDFS.label, None):
+                assert   dataset["resources"][0]["other_format"]["label"][node[-1].language] == str(node[-1])
+
+            """------------------------------------------ service_conforms_to   ------------------------------------------"""
+            
+            _conforms_to_node = self._triple(g,dist, DCT.accessService, None)[-1]
+            for node in  self._triples(g,_conforms_to_node,  DCT.conformsTo, None):
+                assert   dataset["resources"][0]["service_conforms_to"][node[-1].language] == str(node[-1])
+
+            """------------------------------------------ rights   ------------------------------------------"""
+            access_right_node = self._triple(g,dist, DCT.rights, None)
+
+            for node in  self._triples(g,access_right_node, RDFS.label, None):
+                assert self._triple(g, node[-1], RDF.type, DCT.RightsStatement)
+                assert dataset["rights"][node[-1].language] == str(node[-1])
+        
+            """------------------------------------------ licenses   ------------------------------------------"""
+            _license_node = self._triple(g,dist, DCT.license, None)[-1]
+            labels = self._triples(g,_license_node, RDFS.label, None)
+            for label in labels:
+                if label[-1].language:
+                    assert dataset["resources"][0]["licenses"][0]["label"][label[-1].language] == str(label[-1])
+
+            """------------------------------------------ resource_issued   ------------------------------------------"""
+            assert self._triple(g, dist, DCT.issued,  parse_date(dataset["resources"][0]["resource_issued"]).isoformat(), XSD.dateTime)

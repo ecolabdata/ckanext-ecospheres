@@ -52,8 +52,6 @@ class DCATfrRDFHarvester(DCATRDFHarvester):
                 print(f'groups:\t{res.group(1)}')
         else:
             print("identifier is not an url")
-        pass
-
     def after_update(self, harvest_object, dataset_dict, temp_dict):
         return None
 

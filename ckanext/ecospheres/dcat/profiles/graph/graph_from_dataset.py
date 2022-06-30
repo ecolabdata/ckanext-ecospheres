@@ -8,10 +8,13 @@ try:
         OWL,
         RDF,
         FOAF,
+        RDFS,
+        XSD,
+
         Literal
     )
     from ckanext.dcat.utils import resource_uri
-    from rdflib import URIRef
+    from rdflib import URIRef, BNode, Literal
     from ._functions import (
         _set_qualifiedAttribution,
         _set_primary_topic_of,
@@ -332,29 +335,119 @@ def graph_from_dataset(self, dataset_dict, dataset_ref):
     # voir littéraux
 
     ############################################   RESSOURCES ############################################
-    # print(dataset_dict["resources"])
     for obj in g.objects(dataset_ref, DCAT.distribution):
         g.remove((dataset_ref, DCAT.distribution, obj,))
 
 
     for resource_dict in dataset_dict.get('resources', []):
-        # print("rd: ",len(dataset_dict.get('resources', [])))
         distribution = URIRef(resource_uri(resource_dict))
         g.add((dataset_ref, DCAT.distribution, distribution))
         g.add((distribution, RDF.type, DCAT.Distribution))
+
 
         """------------------------------------------ title   ------------------------------------------"""
         # # TITLE {*}
         # # > dct:title
         if names:=resource_dict.get("name",None):
             for lang in names:
-                # print(lang,names[lang])
                 g.add((distribution,  DCT.title, Literal(names[lang], lang=lang)))
 
-        """------------------------------------------ description   ------------------------------------------"""
 
+        """------------------------------------------ description   ------------------------------------------"""
+        # DESCRIPTION {*}
+        # > dct:description
         if descriptions:=resource_dict.get("description",None):
             for lang in descriptions:
-                # print(lang,names[lang])
                 g.add((distribution,  DCT.description, Literal(descriptions[lang], lang=lang)))
 
+
+        """------------------------------------------ media_type_ressource   ------------------------------------------"""
+        # MEDIA_TYPE [{}]
+        # > dcat:mediaType -> dct:MediaType
+        if media_type_ressource:=resource_dict.get("media_type_ressource",None):
+            for media_type_element in media_type_ressource:
+
+            if uri:=media_type_element.get("uri",None):
+                media_type_ressource_node=URIRef(uri)
+            else:
+                media_type_ressource_node=BNode()
+                
+            g.add((media_type_ressource_node, RDF.type, DCT.MediaType))
+            g.add((distribution, DCT.mediaType, media_type_ressource_node))
+
+            if labels:=media_type_element.get("label",None):
+                for lang in labels:
+                    g.add((media_type_ressource_node, RDFS.label, Literal(labels[lang],lang=lang)))
+
+
+        """------------------------------------------ other_format   ------------------------------------------"""
+        # OTHER_FORMAT [{}]
+        # > dct:format -> dct:MediaTypeOrExtent
+        if other_format:=resource_dict.get("other_format",None):
+            if uri:=other_format.get("uri",None):
+                other_format_node=URIRef(uri)
+            else:
+                other_format_node=BNode()
+                
+            g.add((other_format_node, RDF.type, DCT.MediaTypeOrExtent))
+            g.add((distribution, DCT["format"], other_format_node))
+
+            if labels:=other_format.get("label",None):
+                for lang in labels:
+                    g.add((other_format_node, RDFS.label, Literal(labels[lang],lang=lang)))
+
+        """------------------------------------------ service_conforms_to   ------------------------------------------"""
+        # SERVICE_CONFORMS_TO [{}]
+        # > dcat:accessService [-> dcat:DataService] / dct:conformsTo
+        if service_conforms_to:=resource_dict.get("service_conforms_to",None):
+            service_conforms_to_node=BNode()
+            g.add((service_conforms_to_node, RDF.type, DCAT.DataService))
+            g.add((distribution, DCT.accessService, service_conforms_to_node))
+            
+            for lang in service_conforms_to:
+                g.add((service_conforms_to_node, DCT.conformsTo, Literal(service_conforms_to[lang],lang=lang)))
+
+
+        """------------------------------------------ rights   ------------------------------------------"""
+        # RIGHTS {*}
+        # > dct:rights [-> dct:RightsStatement] / rdfs:label
+        if access_rights:=resource_dict.get("rights",None):
+            if labels:=access_rights.get("label",None):
+                access_right_node=BNode()
+                g.add((access_right_node, RDF.type, DCT.RightsStatement))
+                g.add((distribution, DCT.rights, access_right_node))
+                for lang in labels:
+                    g.add((access_right_node, RDFS.label, Literal(labels[lang],lang=lang)))
+
+
+        """------------------------------------------ licenses   ------------------------------------------"""
+        # LICENSE [{}]
+        # > dct:license -> dct:LicenseDocument
+        if licenses:=resource_dict.get("licenses",None):
+            for license in licenses:
+                if uri:=license.get("uri",None):
+                    license_node=URIRef(uri)
+                else:
+                    license_node=BNode()
+                
+                g.add((license_node, RDF.type, DCT.LicenseDocument))
+                g.add((distribution, DCT.license, license_node))
+                
+                # TYPE []
+                # > dct:type
+                if _type:=license.get("type",None):
+                    g.add((license_node, DCT.type, Literal(_type)))
+                
+                # LABEL {*}
+                # > rdfs:label
+                if labels:=license.get("label",None):
+                    for lang in labels:
+                        g.add((license_node, RDFS.label, Literal(labels[lang],lang=lang)))
+
+
+        """------------------------------------------ resource_issued   ------------------------------------------"""
+        # ISSUED
+        # > dct:issued
+        if issued:=resource_dict.get("resource_issued"):
+            g.add((distribution, DCT.issued, Literal(issued,
+                                                  datatype=XSD.dateTime)))

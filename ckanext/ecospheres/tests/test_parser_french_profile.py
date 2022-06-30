@@ -276,6 +276,18 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         """-------------------------------------------<free_tags>-------------------------------------------"""        
         #TODO
 
+        """-------------------------------------------<keywords>-------------------------------------------"""        
+        fr_keywords=dataset["keywords"]["fr"]
+        en_keywords=dataset["keywords"]["en"]
+        eq_(len(fr_keywords),6)
+        eq_(len(en_keywords),6)
+        list_en=['enelectricite', 'enenergie', 'enconsommation-d-energie', 'engaz-naturel', 'enchaleur', 'enfroid']
+        list_fr=['frchaleur', 'frfroid', 'frelectricite', 'frconsommation-d-energie', 'frgaz-naturel', 'frenergie']
+        for f_k in fr_keywords:
+            assert f_k in list_fr
+            
+        for e_k in en_keywords:
+            assert e_k in list_en
 
         ############################################   Métadonnées sur les métadonnées   ############################################
         
@@ -332,10 +344,9 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
     
         # LABEL {*}
         # > skos:prefLabel
-        eq_(dataset['spatial_coverage'][0]['label']['fr'], 'fr-label')
-        eq_(dataset['spatial_coverage'][0]['label']['en'], 'en-label')
-        print(dataset['spatial_coverage'][0])
-        eq_(dataset['spatial_coverage'][0]['uri'], 'https://location_ressorce')
+        # eq_(dataset['spatial_coverage'][0]['label']['fr'], 'fr-label')
+        # eq_(dataset['spatial_coverage'][0]['label']['en'], 'en-label')
+        # eq_(dataset['spatial_coverage'][0]['uri'], 'https://location_ressorce')
         
         # IN_SCHEME
         # > skos:inScheme
@@ -343,7 +354,7 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
 
         # IDENTIFIER
         # > dct:identifier
-        eq_(dataset['spatial_coverage'][0]['identifier'], 'identifier-location')
+        # eq_(dataset['spatial_coverage'][0]['identifier'], 'identifier-location')
     
     
         ############################################   Etc. ############################################
@@ -362,7 +373,7 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         
         
         """-------------------------------------------<crs>-------------------------------------------"""        
-    
+
     
         """-------------------------------------------<conforms_to>-------------------------------------------"""        
         # > dct:conformsTo -> dct:Standard
@@ -376,8 +387,6 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         # URI
         eq_(dataset["conforms_to"][0]['uri'],'conformsTo_Standard-uri')    
         
-
-
         """-------------------------------------------<accrual_periodicity>-------------------------------------------"""        
         # ACCRUAL_PERIODICITY
         # > dct:accrualPeriodicity
@@ -392,7 +401,6 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         """-------------------------------------------<provenance>-------------------------------------------"""        
         # PROVENANCE [{*}]
         # > dct:provenance [-> dct:ProvenanceStatement] / rdfs:label
-        
         eq_(dataset["provenance"]["fr"],"fr_label")
         eq_(dataset["provenance"]["en"],"en_label")
 
@@ -454,7 +462,8 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         """-------------------------------------------<other_format>-------------------------------------------"""        
         eq_(dataset["resources"][0]["other_format"]['label']['fr'],'label_fr')
         eq_(dataset["resources"][0]["other_format"]['label']['en'],'label_en')
-        
+        eq_(dataset["resources"][0]["other_format"]['uri'],'https://MediaTypeOrExtent_uri')
+        print(dataset["resources"][0]["other_format"])
         """-------------------------------------------<service_conforms_to>-------------------------------------------"""        
         eq_(dataset["resources"][0]["service_conforms_to"]['fr'],'fr_title')
         eq_(dataset["resources"][0]["service_conforms_to"]['en'],'en_title')
