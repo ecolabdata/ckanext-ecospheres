@@ -109,15 +109,15 @@ class TestEuroDCATAPProfileSerializeDataset(BaseSerializeTest):
             eq_(dataset['notes'][x[-1].language],str(x[-1]))
         
         """ created """
-        assert self._triple(g, dataset_ref, DCT.created, dataset['created'])
+        assert self._triple(g, dataset_ref, DCT.created, dataset['created'], XSD.dateTime)
 
 
         """ modified """
-        assert self._triple(g, dataset_ref, DCT.modified, dataset['modified'])
+        assert self._triple(g, dataset_ref, DCT.modified, dataset['modified'], XSD.dateTime)
 
 
         """ issued """
-        assert self._triple(g, dataset_ref, DCT.issued, dataset['issued'])
+        assert self._triple(g, dataset_ref, DCT.issued, dataset['issued'], XSD.dateTime)
         
         
         """ landing_page: Cf. Références """
@@ -215,6 +215,7 @@ class TestEuroDCATAPProfileSerializeDataset(BaseSerializeTest):
         creator_dict=dataset['creator'][0]
 
         assert self._triple(g, creator_node, RDF.type, FOAF.Organization)
+
         # NAME {*}
         # > foaf:name
         for x in  self._triples(g, creator_node, VCARD.name, None):
@@ -336,8 +337,13 @@ class TestEuroDCATAPProfileSerializeDataset(BaseSerializeTest):
             if str(p) == dataset["page"][0]['uri']:
                 assert self._triple(g, p, RDF.type, FOAF.Document)
                 assert self._triple(g, p,  DCT.url, dataset["page"][0]['url'])
-                assert self._triple(g, p,  DCT.title, dataset["page"][0]['title'])
-                assert self._triple(g, p,  DCT.description, dataset["page"][0]['description'])
+                
+                for x in  self._triples(g, p, DCT.title, None):
+                    eq_(dataset["page"][0]['title'][x[-1].language],str(x[-1]))
+
+                for x in  self._triples(g, p, DCT.description, None):
+                    eq_(dataset["page"][0]['description'][x[-1].language],str(x[-1]))
+
                 assert self._triple(g, p,  DCT.modified,Literal( dataset["page"][0]['modified'],
                                                   datatype=XSD.dateTime))
                 assert self._triple(g, p,  DCT.created,Literal(dataset["page"][0]['created'],
@@ -557,3 +563,11 @@ class TestEuroDCATAPProfileSerializeDataset(BaseSerializeTest):
 
             """------------------------------------------ resource_issued   ------------------------------------------"""
             assert self._triple(g, dist, DCT.issued,  parse_date(dataset["resources"][0]["resource_issued"]).isoformat(), XSD.dateTime)
+    
+    
+    # def test_graph_from_catalog(self):
+    #     # dataset=self._get_file_contents("json_parsed_result.json")
+    #     s = RDFSerializer()
+    #     g = s.g
+
+    #     dataset_ref = s.graph_from_catalog(None)

@@ -3,7 +3,7 @@ try:
     from ckan.plugins import toolkit
     from ckantoolkit import config
     from rdflib import URIRef, BNode
-
+    import os
     import json,logging,re 
     from rdflib.namespace import RDF, SKOS
     from ..constants import (
@@ -29,7 +29,7 @@ try:
 
     )
     from ckan.lib.helpers import lang
-
+    from ..extra.themes_db import test_db
     from ._functions import (_parse_agent,
                                     _contact_points,
                                     _get_frequency,
@@ -57,12 +57,14 @@ except Exception as e:
 
 log = logging.getLogger(__name__)
 
-
 def afficher(data):
         print(json.dumps(data, indent=4, sort_keys=True))
 
 def parse_dataset(self, dataset_dict, dataset_ref):
-    
+    # print(config.get("sqlalchemy.url",None))
+    # print(os.getenv('CKAN_DATASTORE_WRITE_URL',None))
+
+    test_db()
     """------------------------------------------<Littéraux>------------------------------------------"""
 
     for key, predicate in (
@@ -226,7 +228,8 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     # - les étiquettes des URI seraient à mapper sur la propriété
     #   "tags" lors du moissonnage
 
-
+    # dataset_dict["category"]=map_theme(theme,ref_theme)
+    
     """-------------------------------------------<subcategory>-------------------------------------------"""        
     # SUBCATEGORY []
     # > dcat:theme
@@ -257,12 +260,12 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     
     
     """-------------------------------------------<free_tags>-------------------------------------------"""        
-    tags=dataset_dict["tags"]
-    # TODO: juste pour tester
-    add_tag(tags,['un','deux'])
-    add_tag(tags,'trois')
-    dataset_dict["tags"]=tags
-    dataset_dict["free_tags"]=tags
+    # tags=dataset_dict["tags"]
+    # # TODO: juste pour tester
+    # add_tag(tags,['un','deux'])
+    # add_tag(tags,'trois')
+    # dataset_dict["tags"]=tags
+    # dataset_dict["free_tags"]=tags
     
     """-------------------------------------------<tags>-------------------------------------------"""        
     _tags_keywords(self,dataset_ref,

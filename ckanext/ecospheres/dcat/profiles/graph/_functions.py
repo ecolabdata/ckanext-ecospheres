@@ -297,10 +297,12 @@ def _set_documentation_page(self, graph, _dataset_dict, _dataset_ref):
                 g.add((page_details, DCT.url, Literal(url)))
                 
             if title:=page.get(_TITLE,None): #  {*}
-                g.add((page_details, DCT.title, Literal(title)))
+                for lang in title:
+                    g.add((page_details, DCT.title, Literal(title[lang],lang=lang)))
                 
             if description:=page.get(_DESCRIPTION,None): #  {*}
-                g.add((page_details, DCT.description, Literal(description)))
+                for lang in description:
+                    g.add((page_details, DCT.description, Literal(description[lang],lang=lang)))
 
             if modified:=page.get(_MODIFIED,None):
                 g.add((page_details, DCT.modified, Literal(modified,

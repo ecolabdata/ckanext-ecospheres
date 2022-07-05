@@ -239,7 +239,7 @@ dataset_fields:
   label: 
     fr: Titre
     en: Title
-  preset: title
+  preset: fluent_text
   help_text: Libellé du jeu de données.
 
 # NOTES {*}

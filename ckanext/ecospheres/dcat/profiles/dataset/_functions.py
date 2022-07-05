@@ -46,7 +46,6 @@ def get_langs():
     
 def _tags_keywords(self, subject, predicate,dataset_dict):
     keywords = {}
-    # initialize the keywords with empty lists for all languages
     for lang in get_langs():
         keywords[lang] = []
 
@@ -54,8 +53,8 @@ def _tags_keywords(self, subject, predicate,dataset_dict):
         lang = keyword_node.language
         keyword = munge_tag(str(keyword_node))
         keywords.setdefault(lang, []).append(keyword)
-
-    dataset_dict["keywords"] = keywords
+    if keywords:
+        dataset_dict["keywords"] = keywords
 
 def _object_value_multilang(self, subject, predicate, multilang=False):
     '''
@@ -77,7 +76,7 @@ def _object_value_multilang(self, subject, predicate, multilang=False):
         # when translation does not exist, create an empty one
         for lang in get_langs():
             if lang not in lang_dict:
-                # TODO: à adapter ( Développé sur DIDO pas de traduction disponible, données originales prises par défaut dans les autres langues)
+                # TODO: à adapter ( Développé sur DIDO pas de traduction disponible, données originales prises par défaut pour les autres langues)
                 lang_dict[lang] = ''
 
     __values=sum([bool(lang_dict[key]) for key in lang_dict]) == 0
@@ -264,23 +263,7 @@ def _parse_agent(self, subject, predicate,dataset_dict,keybase=None):
     
         list_publisher=[]
         
-        #TODO: initialiser à agent_dict={}
-        agent_dict ={
-                    # "name":{
-                    #         "fr":"fr-Indisponible",
-                    #         "en":"en-Indisponible"},
-                    # "title":"Indisponible",
-                    # "comment":{
-                    #         "fr":"fr-Indisponible",
-                    #         "en":"en-Indisponible"},
-                    # "type":"Indisponible",
-                    # "email":"Indisponible",
-                    # "phone":"Indisponible",
-                    # "url":"Indisponible",
-                    # "affiliation":{
-                    #         "fr":"fr-Indisponible",
-                    #         "en":"en-Indisponible"},
-                    }
+        agent_dict ={}
         
         for agent in self.g.objects(subject, predicate):
             if agent is None:
@@ -325,17 +308,7 @@ def _parse_agent(self, subject, predicate,dataset_dict,keybase=None):
 
 def _contact_points(self, subject, predicate,dataset_dict,return_value=False):
         
-        contact_points_dict = {
-            # "name":{
-            #     "fr":"fr-Indisponible",
-            #     "en":"en-Indisponible"},
-            # "email":"Indisponible",
-            # "phone":"Indisponible",
-            # "url":"Indisponible",
-            # "affiliation":{
-            #     "fr":"fr-Indisponible",
-            #     "en":"en-Indisponible"},
-        }
+        contact_points_dict = dict()
         contact_points_list = []
         for contact_node in self.g.objects(subject, predicate):
             
@@ -344,6 +317,7 @@ def _contact_points(self, subject, predicate,dataset_dict,return_value=False):
                 ("phone",VCARD.hasTelephone) ,
                 ("url",VCARD.hasURL), 
             ):
+            
                 value=self._object_value(contact_node, _predicate)
                 if value:
                     contact_points_dict[key] = value

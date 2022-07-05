@@ -80,14 +80,6 @@ def graph_from_dataset(self, dataset_dict, dataset_ref):
     items = [
         # identifier
         ('identifier', DCT.identifier, ['guid', 'id'], Literal),
-        # date de modification
-        ('modified', DCT.modified, None, Literal),
-        
-        # date de creation 
-        ('created', DCT.created, None, Literal),
-        
-        # date de publication
-        ('issued', DCT.issued, None, Literal),
         
         # URL de la fiche sur le catalogue source
         ('landing_page', DCAT.landingPage, None, Literal),
@@ -112,46 +104,42 @@ def graph_from_dataset(self, dataset_dict, dataset_ref):
         
     ]
     
-
-    
     self._add_triples_from_dict(dataset_dict, dataset_ref, items)
-        
-    items = [
-        # date de modification
-        ('modified', DCT.modified, None, Literal),
-        
-        # date de creation 
-        ('created', DCT.created, None, Literal),
-        
-        # date de publication
-        ('issued', DCT.issued, None, Literal),
-        
-        
-    ]
-    
 
-    self._add_date_triples_from_dict(dataset_dict, dataset_ref, items)
+    # date de modification
+    if modified:=dataset_dict.get("modified",None):
+        g.add((dataset_ref, DCT.modified, Literal(modified,
+                                                  datatype=XSD.dateTime)))
+    # date de creation 
+    if created:=dataset_dict.get("created",None):
+        g.add((dataset_ref, DCT.created, Literal(created,
+                                                  datatype=XSD.dateTime)))
+    # date de publication
+    if issued:=dataset_dict.get("issued",None):
+        g.add((dataset_ref, DCT.issued, Literal(issued,
+                                                  datatype=XSD.dateTime)))
 
-        
+
+
     
     
-    ############################################   LItteruw multilangue  ############################################
+    ############################################   Littéraux multilangue  ############################################
     # # description {*}
     # g.add((_dataset_ref, ADMS.versionNotes, Literal(notes, lang=lang)))
     for obj in g.objects(dataset_ref, DCT.description):
         g.remove((dataset_ref, DCT.description, obj,))
     
-    notes_dict=dataset_dict.get("notes",None)
-    for lang, notes in notes_dict.items():
-        g.add((dataset_ref, DCT.description, Literal(notes, lang=lang)))
+    if notes_dict:=dataset_dict.get("notes",None):
+        for lang in notes_dict:
+            g.add((dataset_ref, DCT.description, Literal(notes_dict[lang], lang=lang)))
 
 
     for obj in g.objects(dataset_ref, DCT.title):
         g.remove((dataset_ref, DCT.title, obj,))
     
-    notes_dict=dataset_dict.get("title",None)
-    for lang, _title in notes_dict.items():
-        g.add((dataset_ref, DCT.title, Literal(_title, lang=lang)))
+    if title_dict:=dataset_dict.get("title",None):
+        for lang in title_dict:
+            g.add((dataset_ref, DCT.title, Literal(title_dict[lang], lang=lang)))
 
 
 
@@ -367,17 +355,17 @@ def graph_from_dataset(self, dataset_dict, dataset_ref):
         if media_type_ressource:=resource_dict.get("media_type_ressource",None):
             for media_type_element in media_type_ressource:
 
-            if uri:=media_type_element.get("uri",None):
-                media_type_ressource_node=URIRef(uri)
-            else:
-                media_type_ressource_node=BNode()
-                
-            g.add((media_type_ressource_node, RDF.type, DCT.MediaType))
-            g.add((distribution, DCT.mediaType, media_type_ressource_node))
+                if uri:=media_type_element.get("uri",None):
+                    media_type_ressource_node=URIRef(uri)
+                else:
+                    media_type_ressource_node=BNode()
+                    
+                g.add((media_type_ressource_node, RDF.type, DCT.MediaType))
+                g.add((distribution, DCT.mediaType, media_type_ressource_node))
 
-            if labels:=media_type_element.get("label",None):
-                for lang in labels:
-                    g.add((media_type_ressource_node, RDFS.label, Literal(labels[lang],lang=lang)))
+                if labels:=media_type_element.get("label",None):
+                    for lang in labels:
+                        g.add((media_type_ressource_node, RDFS.label, Literal(labels[lang],lang=lang)))
 
 
         """------------------------------------------ other_format   ------------------------------------------"""
