@@ -608,6 +608,15 @@ dataset_fields:
   label: 
     fr: Thème
     en: Theme
+  repeating_subfields:
+    - field_name: uri
+      label:
+        fr: uri
+        en: uri
+    - field_name: theme
+      label:
+        fr: Thème
+        en: Theme
   # display_snippet: multiple_text
   # TODO: ajouter un display_snippet qui interroge l'URI pour récupérer
   # l'étiquette.
@@ -624,6 +633,16 @@ dataset_fields:
   label: 
     fr: Sous-thème
     en: Subtopic
+  repeating_subfields:
+    - field_name: uri
+      label:
+        fr: uri
+        en: uri
+    - field_name: subtheme
+      label:
+        fr: Sous-thème
+        en: Subtopic
+  
   # display_snippet: multiple_text
   # TODO: ajouter un display_snippet qui interroge l'URI pour récupérer
   # l'étiquette.

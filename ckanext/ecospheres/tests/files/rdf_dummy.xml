@@ -271,6 +271,18 @@
 
     <dcat:keyword xml:lang="fr">fr_gaz-naturel</dcat:keyword>
     <dcat:keyword xml:lang="en">en_gaz-naturel</dcat:keyword>
+    
+    
+    
+    <dcat:keyword xml:lang="fr">habitat</dcat:keyword>
+    <dcat:keyword xml:lang="fr">logement</dcat:keyword>
+    <dcat:keyword xml:lang="fr">agricole</dcat:keyword>
+    <dcat:keyword xml:lang="fr">climatique</dcat:keyword>
+    <dcat:keyword xml:lang="fr">climat</dcat:keyword>
+    <dcat:keyword xml:lang="fr">air</dcat:keyword>
+
+
+
 
     <dc:temporal>
         <dc:PeriodOfTime>

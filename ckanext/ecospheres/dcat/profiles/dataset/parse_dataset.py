@@ -5,6 +5,9 @@ try:
     from rdflib import URIRef, BNode
     import os
     import json,logging,re 
+    from pathlib import Path
+    from os.path import exists
+
     from rdflib.namespace import RDF, SKOS
     from ..constants import (
         _IS_PART_OF,
@@ -29,7 +32,6 @@ try:
 
     )
     from ckan.lib.helpers import lang
-    from ..extra.themes_db import test_db
     from ._functions import (_parse_agent,
                                     _contact_points,
                                     _get_frequency,
@@ -48,11 +50,31 @@ try:
                                     _language,
                                     _provenance,
                                     _version_notes,
-                                    _tags_keywords
+                                    _tags_keywords,
+                                    _check_sous_theme
                             )
 except Exception as e: 
     raise ValueError("Erreur lors de l'import de librairies: ",str(e))
 
+
+
+PATH_THEMES="/srv/app/src_extensions"
+FILENAME_THEME="ref_themes.json"
+
+
+
+def _get_theme_registry_as_json():
+    try:
+        p = Path(PATH_THEMES)
+        path = p / FILENAME_THEME
+        file_exists = exists(path)
+        if not file_exists:
+            return None
+        with open(path, 'r') as f:
+            return json.loads(f.read())
+    except Exception as e:
+        print(e)
+        raise Exception("Erreur lors de la lecture du fichier json des themes")
 
 
 log = logging.getLogger(__name__)
@@ -60,11 +82,12 @@ log = logging.getLogger(__name__)
 def afficher(data):
         print(json.dumps(data, indent=4, sort_keys=True))
 
-def parse_dataset(self, dataset_dict, dataset_ref):
-    # print(config.get("sqlalchemy.url",None))
-    # print(os.getenv('CKAN_DATASTORE_WRITE_URL',None))
 
-    test_db()
+
+
+
+def parse_dataset(self, dataset_dict, dataset_ref):
+
     """------------------------------------------<Littéraux>------------------------------------------"""
 
     for key, predicate in (
@@ -205,8 +228,8 @@ def parse_dataset(self, dataset_dict, dataset_ref):
                             ):
         if key =="attributes_page":
             value=self._object_value_list(dataset_ref, predicate)
-        # else:
-        value = self._object_value(dataset_ref, predicate)
+        else:
+            value = self._object_value(dataset_ref, predicate)
         if value:
             dataset_dict[key] = value
     
@@ -216,9 +239,56 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     
 
 
+
+
     ############################################   Thèmes et mots clés  ############################################
-    
+    # récuperation des listes des themes
+    try:
+        list_themes_ecosphere_as_dict=_get_theme_registry_as_json()
+        list_themes_ecosphere_as_dict=list_themes_ecosphere_as_dict.get("themes",None)
+    except Exception as e:
+        print(str(e))
+
+
+
+    #liste des mots clés du dataset
+    list_keywords=list(self._object_value_list(dataset_ref,DCAT.keyword))
+
+    title = self._object_value(dataset_ref, DCT.title)
+
+    categories={}
+    subcategories={}
+
+    for theme_ecosphere in list_themes_ecosphere_as_dict:
+
+        is_match,sous_theme,uri_sous_theme=_check_sous_theme(theme_ecosphere,list_keywords,title)
+
+        if is_match:
+            
+            pref_label=theme_ecosphere.get("prefLabel",None)
+
+            if not categories.get(pref_label,None):
+                categories[pref_label]={
+                                        "theme":pref_label,
+                                        "uri": theme_ecosphere.get("uri",None)
+                                       }
+
+
+            if not subcategories.get(sous_theme,None):
+                subcategories[sous_theme]={
+                                            "subtheme":sous_theme,
+                                            "uri": uri_sous_theme
+                                          }
+
+
+    # print("\nsouscategories: ",list(subcategories.values()))
+
+    if not subcategories and not categories:
+        #TODO: Theme ecosphere non trouvé 
+        pass
+
     """-------------------------------------------<category>-------------------------------------------"""        
+
     # CATEGORY []
     # > dcat:theme
     # - pour le premier niveau de thèmes de la nomenclature du guichet
@@ -227,9 +297,14 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     #   du guichet)
     # - les étiquettes des URI seraient à mapper sur la propriété
     #   "tags" lors du moissonnage
-
-    # dataset_dict["category"]=map_theme(theme,ref_theme)
     
+    if categories:
+        dataset_dict["category"]=list(categories.values())
+
+    if not dataset_dict.get("category",None):
+        print("\ncategory absente ")
+
+
     """-------------------------------------------<subcategory>-------------------------------------------"""        
     # SUBCATEGORY []
     # > dcat:theme
@@ -240,7 +315,13 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     # - les étiquettes des URI seraient à mapper sur la propriété
     #   "tags" lors du moissonnage
     
-    
+    if subcategories:
+        dataset_dict["subcategory"]=list(subcategories.values())
+
+    if not dataset_dict.get("subcategory",None):
+        print("subcategory absente\n")
+
+
     """-------------------------------------------<theme>-------------------------------------------"""        
     # THEME []
     # > dcat:theme
@@ -252,11 +333,13 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     # - les étiquettes des URI seraient à mapper sur la propriété
     #   "tags" lors du moissonnage
 
+
     """-------------------------------------------<subject>-------------------------------------------"""        
     # > dct:subject
     # nomenclatures externes, notamment les thèmes ISO
     # stockage sous la forme d'une liste d'URI
-        
+
+
     
     
     """-------------------------------------------<free_tags>-------------------------------------------"""        
@@ -289,7 +372,10 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     """-------------------------------------------<spatial_coverage>-------------------------------------------"""        
     _spatial_coverage(self,dataset_ref, DCT.spatial,dataset_dict)
 
-
+    """-------------------------------------------<TERRITORY>-------------------------------------------"""        
+    import random
+    mocked_territories=["paris","lyon","brest","lille"]
+    dataset_dict["territory"]=random.choice(mocked_territories)
 
     ############################################   Etc. ############################################
 
@@ -482,5 +568,4 @@ def parse_dataset(self, dataset_dict, dataset_ref):
                     if value:
                         resource_dict[key] = value
         dataset_dict['resources'].append(resource_dict)
-        
     return dataset_dict

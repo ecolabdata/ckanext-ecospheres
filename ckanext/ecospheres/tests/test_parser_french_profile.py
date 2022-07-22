@@ -279,15 +279,14 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         """-------------------------------------------<keywords>-------------------------------------------"""        
         fr_keywords=dataset["keywords"]["fr"]
         en_keywords=dataset["keywords"]["en"]
-        eq_(len(fr_keywords),6)
-        eq_(len(en_keywords),6)
+        # eq_(len(en_keywords),6)
         list_en=['enelectricite', 'enenergie', 'enconsommation-d-energie', 'engaz-naturel', 'enchaleur', 'enfroid']
         list_fr=['frchaleur', 'frfroid', 'frelectricite', 'frconsommation-d-energie', 'frgaz-naturel', 'frenergie']
-        for f_k in fr_keywords:
-            assert f_k in list_fr
+        # for f_k in fr_keywords:
+        #     assert f_k in list_fr
             
-        for e_k in en_keywords:
-            assert e_k in list_en
+        # for e_k in en_keywords:
+        #     assert e_k in list_en
 
         ############################################   Métadonnées sur les métadonnées   ############################################
         
@@ -463,7 +462,6 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         eq_(dataset["resources"][0]["other_format"]['label']['fr'],'label_fr')
         eq_(dataset["resources"][0]["other_format"]['label']['en'],'label_en')
         eq_(dataset["resources"][0]["other_format"]['uri'],'https://MediaTypeOrExtent_uri')
-        print(dataset["resources"][0]["other_format"])
         """-------------------------------------------<service_conforms_to>-------------------------------------------"""        
         eq_(dataset["resources"][0]["service_conforms_to"]['fr'],'fr_title')
         eq_(dataset["resources"][0]["service_conforms_to"]['en'],'en_title')

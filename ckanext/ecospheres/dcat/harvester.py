@@ -28,6 +28,8 @@ identifier_name_map={}
 
 
 class DCATfrRDFHarvester(DCATRDFHarvester):
+
+
     p.implements(IDCATRDFHarvester, inherit=True)
     def before_download(self, url, harvest_job):
         return url, []
@@ -59,7 +61,7 @@ class DCATfrRDFHarvester(DCATRDFHarvester):
         
     def before_create(self, harvest_object, dataset_dict, temp_dict):
         
-       
+        
         self.__before_create(harvest_object,dataset_dict)
         
     
