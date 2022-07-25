@@ -35,6 +35,8 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
             'multilingual_text_output': v.multilingual_text_output,
         }
 
+
+
     def dataset_facets(self, facets_dict, package_type):
         facets_dict = collections.OrderedDict()
         facets_dict['organization'] = plugins.toolkit._('Organisations')
@@ -43,6 +45,23 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         facets_dict['territory'] = plugins.toolkit._('Territoires')
         facets_dict['res_format'] = plugins.toolkit._('Formats')
         
+        return facets_dict
+
+
+    def group_facets(self, facets_dict, group_type, package_type):
+        # clear the dict instead and change the passed in argument
+        facets_dict['organization'] = plugins.toolkit._('Organizations')
+        facets_dict['political_level'] = plugins.toolkit._('Political levels')
+        facets_dict['res_rights'] = plugins.toolkit._('Terms of use')
+        facets_dict['res_format'] = plugins.toolkit._('Formats')
+        return facets_dict
+
+    def organization_facets(self, facets_dict, organization_type,
+                            package_type):
+        facets_dict['groups'] = plugins.toolkit._('Categories')
+        facets_dict['keywords_' + lang_code] = plugins.toolkit._('Keywords')
+        facets_dict['res_rights'] = plugins.toolkit._('Terms of use')
+        facets_dict['res_format'] = plugins.toolkit._('Formats')
         return facets_dict
 
 
@@ -75,8 +94,9 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
     def before_search(self, search_params):
         #d'une dateA à une dateB
-        # /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z&ext_enddate=2022-07-20T11:48:38.540Z
-        
+        # /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z&ext_enddate=2023-07-20T11:48:38.540Z
+        # /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z
+        # /dataset/?q=&ext_enddate=2022-07-20T11:48:38.540Z
         #dateA à aujourd'hui
         # ?q=&ext_startdate=2022-06-21T00:00:00Z&ext_enddate=NOW
 
@@ -92,6 +112,11 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         if not start_date and not end_date:
             return search_params
 
+        if not start_date :
+            start_date="*"
+        
+        if not end_date:
+            end_date="NOW"
 
         fq = search_params['fq']
         fq = '{fq} +modified:[{start_date} TO {end_date}]'.format(
@@ -107,7 +132,7 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         print("------------------------------------------------------------------------------------------")
         print("------------------------------------------------------------------------------------------")
         print("------------------------------------------------------------------------------------------")
-        print("search_results: ", search_results)
+        # print("search_results: ", search_results)
 
 
 
