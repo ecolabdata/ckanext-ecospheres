@@ -123,7 +123,7 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
     # [+ GeoDCAT-AP]
     - field_name: email
       label:
-        fr:  Courriel
+        fr: Courriel
         en: Mail
       display_snippet: link.html
       # TODO: ajouter un display_snippet pour l'hyperlien + suppression
@@ -222,8 +222,8 @@ dataset_fields:
 # - pour les métadonnées DCAT, l'URI d'origine est préservé
 - field_name: uri
   label:
-    fr:  URI du jeu de données
-    en:  dataset URI
+    fr: URI du jeu de données
+    en: Dataset URI
   display_snippet: null
 
 
@@ -234,8 +234,8 @@ dataset_fields:
 #   (cf. propriété "is_primary_topic_of")
 - field_name: identifier
   label:
-    fr:  Identifiant
-    en: Identifiant
+    fr: Identifiant
+    en: Identifier
   display_snippet: null
   help_text: Identifiant du jeu de données.
 
@@ -345,7 +345,7 @@ dataset_fields:
 # > dct:creator -> foaf:Organization
 - field_name: creator
   label:
-    fr:  Auteur
+    fr: Auteur
     en: Creator
   help_text: Principal responsable de la production des données.
   <<: *common_field_agent
@@ -356,7 +356,7 @@ dataset_fields:
 # [+ GeoDCAT-AP]
 - field_name: rights_holder
   label:
-    fr:  Propriétaires
+    fr: Propriétaires
     en: Holder
   repeating_label: Propriétaire
   help_text: Organisme ou personne qui détient des droits sur les données.
@@ -373,7 +373,7 @@ dataset_fields:
 - field_name: qualified_attribution
   label: 
     fr: Autres organisations responsables
-    en: Autres organisations responsables
+    en: Other responsible organization
   repeating_label: Autre organisation responsable
   help_text: >
     Organisme qui est intervenu ou exerce une responsabilité sur
@@ -409,15 +409,15 @@ dataset_fields:
       translatable_values: True
 
     # > foaf:mbox 
-    - field_name: mail
+    - field_name: email
       label:
-        fr: Email
+        fr: Courriel
         en: Mail
 
     # > foaf:homePage
     - field_name: url
       label: 
-        fr: Site web
+        fr: Site internet
         en: Website
 
 # ------- Relations -------
@@ -425,38 +425,33 @@ dataset_fields:
 # > dcat:inSeries
 # [+ DCAT v3]
 # - dct:isPartOf est également mappé vers ce champ
-# - stockage sous la forme d'une liste d'identifiants de datasets CKAN
-#   correspondant aux séries dont fait partie le dataset
-# - pour l'exposition DCAT on va chercher la valeur des clés "uri"
-#   des séries
 # - pour l'affichage, on utilise "title" avec l'URL de la page du guichet
-#   en hyperlien
+#   en hyperlien (champ "url")
+# - pour l'exposition DCAT, on utilise les URI des séries, soit les valeurs
+#   du champ "uri"
 - field_name: in_series
   label: 
     fr: Inclus dans les séries de données
     en: Included in data series
-  # display_snippet: multiple_text
-  # TODO: ajouter un display_snippet qui lit la liste comme multiple_text
-  # et affiche les libellés des jeux de données avec leur page du guichet
-  # en hyperlien
-  help_text: Liste des identifiants CKAN de le jeu de données.
+  help_text: Séries ou lots de données dont fait partie le jeu de données.
   # preset: fr_aggregate
   repeating_subfields:
     # URI
+    - field_name: uri
+      label:
+        fr: URI de la série
+        en: Data series URI
+      display_snippet: null
+    # URL
     - field_name: url
-      label: 
+      label:
         fr: URL
         en: URL
-    # URI
-    - field_name: identifier
-      label: 
-        fr: identifier
-        en: identifier
-    # URI
+    # TITLE {*}
     - field_name: title
       label:
-        fr:  Titre
-        en:  Title
+        fr: Titre
+        en: Title
       translatable_values: True
 
 # SERIES_MEMBER []
@@ -465,32 +460,27 @@ dataset_fields:
 # - si présent, on type le dataset comme dcat:DatasetSeries en plus de
 #   dcat:Dataset (ce dernier pour assurer un minimum de rétro-compatibilité)
 # - dct:hasPart est également mappé vers ce champ
-# - stockage sous la forme d'une liste d'identifiants de datasets CKAN
 # - pour l'affichage, on utilise "title" avec l'URL de la page du guichet
-#   en hyperlien
-
-- field_name: serie_datasets
+#   en hyperlien (champ "url")
+# - pour l'exposition DCAT, on utilise les URI, soit les valeurs du champ "uri"
+- field_name: series_member
   label:
-    fr:  Jeux de données de la série
-    en:  Series datasets
-
-  # display_snippet: multiple_text
-  # TODO: ajouter un display_snippet qui lit la liste comme multiple_text
-  # et affiche les libellés des jeux de données avec leur page du guichet
-  # en hyperlien
-  help_text: Liste des identifiants CKAN des jeux de données rattachés à la série ou lot de données.
+    fr: Jeux de données de la série
+    en: Series datasets
+  help_text: Jeux de données rattachés à la série ou lot de données.
   repeating_subfields:
     # URI
+    - field_name: uri
+      label:
+        fr: URI du jeu de données
+        en: Dataset URI
+      display_snippet: null
+    # URL
     - field_name: url
       label:
         fr: URL
         en: URL
-    # URI
-    - field_name: identifier
-      label: 
-        fr: identifier
-        en: identifier
-    # URI
+    # TITLE {*}
     - field_name: title
       label:
         fr: Titre
