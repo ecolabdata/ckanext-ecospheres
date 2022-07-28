@@ -1,5 +1,7 @@
 # encoding: utf-8
 
+from rdflib.namespace import Namespace
+
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 from ckan.model.package import Package
@@ -10,6 +12,9 @@ from ckanext.spatial.interfaces import ISpatialHarvester
 from ckanext.harvest.harvesters.base import HarvesterBase
 
 from ckanext.ecospheres.spatial.utils import build_dataset_dict_from_schema
+from ckanext.ecospheres.spatial.maps import ISO_639_2
+
+GEODCAT = Namespace('http://data.europa.eu/930/')
 
 class FrSpatialHarvester(plugins.SingletonPlugin):
     '''Customization of spatial metadata harvest.
@@ -55,8 +60,12 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         iso_values = data_dict['iso_values'] 
         xml_tree = data_dict['xml_tree']
 
-        dataset_dict = build_dataset_dict_from_schema('dataset',
-            language=iso_values['metadata-language'])
+        language = iso_values.get('metadata-language') or 'fr'
+        if len(language) > 2:
+            # d'autant que de besoin, conversion des codes de langue
+            # sur 3 caractères en codes sur 2 caractères, comme attendu en RDF
+            language=ISO_639_2.get(language, language)
+        dataset_dict = build_dataset_dict_from_schema('dataset', language=language)
 
         for target_field, package_field in {
             'owner_org': 'owner_org'
@@ -68,8 +77,73 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             'title': 'title',
             'notes': 'abstract',
             'name': 'guid',
+            'accrual_periodicity': 'frequency-of-update'
         }:
             dataset_dict.set_value(target_field, iso_values.get(iso_field))
+        # NB: package name should always be its guid, for easier
+        # handling of packages relationships and duplicate removal
+
+        # uri
+        # identifier (= identifiant du jeu de données)
+
+        if 'dataset-reference-date' in iso_values:
+            type_date_map = {
+                'creation': 'created',
+                'publication': 'issued',
+                'revision': 'modified',
+            }
+            for date_object in iso_values['dataset-reference-date']:
+                if date_object['type'] in type_date_map:
+                    dataset_dict.set_value(type_date_map[date_object['type']], date_object['value'])
+        
+        # temporal
+        # temporal > start_date
+        # temporal > end_date
+
+        if 'responsible-organisation' in iso_values:
+            base_role_map = {
+                'owner': 'rights_holder',
+                'publisher': 'publisher',
+                'author': 'creator',
+                'pointOfContact': 'contact_point'
+                }
+            other_role_map = {
+                'resourceProvider': GEODCAT.resourceProvider,
+                'custodian': GEODCAT.custodian,
+                'user': GEODCAT.user,
+                'distributor': GEODCAT.distributor,
+                'originator': GEODCAT.originator,
+                'principalInvestigator': GEODCAT.principalInvestigator,
+                'processor': GEODCAT.processor
+            }
+            for org_object in iso_values['responsible-organisation']:
+                if not 'role' in org_object or not 'organisation-name' in org_object:
+                    continue
+                if org_object['role'] in base_role_map:
+                    org_dict = dataset_dict.new_item(base_role_map[org_object['role']])
+                elif org_object['role'] in other_role_map:
+                    qa_dict = dataset_dict.new_item('qualified_attribution')
+                    qa_dict.set_value('had_role', other_role_map[org_object['role']])
+                    org_dict = qa_dict.new_item('agent')
+                else:
+                    continue
+                org_dict.set_value('name', org_object['organisation-name'])
+                if 'contact-info' in org_object:
+                    org_dict.set_value('email', org_object['contact-info'].get('email'))
+                    org_dict.set_value('url', org_object['contact-info'].get('online-resource'))
+        
+        # in_series
+        # in_series > uri
+        # in_series > url
+        # in_series > title
+
+        # series_member
+        # series_member > uri
+        # series_member > url
+        # series_member > title
+
+        # landing_page
+        # attributes_page
 
         return dataset_dict
 
