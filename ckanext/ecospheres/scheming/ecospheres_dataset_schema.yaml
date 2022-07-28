@@ -1,7 +1,7 @@
 tscheming_version: 2
 dataset_type: dataset
-about: Dataset schema for spatial data
-about_url: https://github.com/ecolabdata/ckanext-spatial-fr
+about: Dataset schema for INSPIRE and DCAT data
+about_url: https://github.com/ecolabdata/ckanext-ecospheres
 
 
 # ----------------------------------------------------------------------------------------
@@ -201,6 +201,7 @@ about_url: https://github.com/ecolabdata/ckanext-spatial-fr
 # ------------------------------------------------------------------------------------
 # ---------------------------------- JEU DE DONNEES ----------------------------------
 # ------------------------------------------------------------------------------------
+# -> dcat:Dataset
 
 dataset_fields:
 # NAME
@@ -1024,6 +1025,7 @@ dataset_fields:
 # ------------------------------------------------------------------------
 # ------------------------------ RESSOURCES ------------------------------
 # ------------------------------------------------------------------------
+# -> dcat:Distribution
 
 .media_type_fields: &media_type_fields
   repeating_subfields: 
