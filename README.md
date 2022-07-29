@@ -1,5 +1,43 @@
 [![Tests](https://github.com/ecolab/ckanext-ecospheres/workflows/Tests/badge.svg?branch=main)](https://github.com/ecolab/ckanext-ecospheres/actions)
 
+
+
+
+
+
+# Installation 
+
+### Création des tables thèmes, sous-thèmes et territoires
+```sh 
+
+docker-compose -f docker-compose.dev.yml exec  ckan-dev ckan -c ckan.ini ecospherefr initdb
+```
+
+### Chargement des fichiers <i>vocabularies/territoires.json</i> et <i>vocabularies/themes_jsonld.json</i> en base de données.
+```sh
+docker-compose -f docker-compose.dev.yml exec  ckan-dev ckan -c ckan.ini ecospherefr load-file -t themes
+docker-compose -f docker-compose.dev.yml exec  ckan-dev ckan -c ckan.ini ecospherefr load-file -t territory
+
+```
+
+### APIs pour récuperer les themes et territoires:
+
+```
+http://ckan-dev:5000/themes
+http://ckan-dev:5000/territoires
+
+```
+
+
+
+
+
+
+
+
+
+
+
 # ckanext-ecospheres
 
 **TODO:** Put a description of your extension here:  What does it do? What features does it have? Consider including some screenshots or embedding a video!

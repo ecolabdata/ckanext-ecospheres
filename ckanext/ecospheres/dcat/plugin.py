@@ -3,18 +3,38 @@ import ckan.plugins.toolkit as toolkit
 import ckanext.ecospheres.validators as v
 import ckanext.ecospheres.helpers as helpers
 import collections
-
+from ckanext.ecospheres.commands import ecospherefr as ecospherefr_cli
+from ckanext.ecospheres.models.territories import Territories
+from ckanext.ecospheres.models.themes import Themes,Subthemes
+import json
 import logging
+from flask import Blueprint
+from ckan.model import Session, meta
+from sqlalchemy import Column, Date, Integer, Text, create_engine, inspect
+
+
+def object_as_dict(obj):
+    return {c.key: getattr(obj, c.key)
+            for c in inspect(obj).mapper.column_attrs}
+
+
 
 class DcatFrenchPlugin(plugins.SingletonPlugin):
-    # Declare that this class implements IConfigurer.
     plugins.implements(plugins.IValidators)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IFacets)
     plugins.implements(plugins.IPackageController, inherit=True)
+    plugins.implements(plugins.IClick)
+    plugins.implements(plugins.IBlueprint)
 
-    # IConfigurer
 
+
+    # ------------- IClick ---------------#
+    def get_commands(self):
+        return ecospherefr_cli.get_commands()
+
+
+    # ------------- IConfigurer ---------------#
     
     def get_helpers(self):
         '''Register the functions above as a template
@@ -28,7 +48,7 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
                 }
 
     
-    # IValidators
+    # ------------- IValidators ---------------#
     def get_validators(self):
         return {
             'timestamp_to_datetime': v.timestamp_to_datetime,
@@ -36,6 +56,7 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         }
 
 
+    # ------------- IFacets ---------------#
 
     def dataset_facets(self, facets_dict, package_type):
         facets_dict = collections.OrderedDict()
@@ -66,11 +87,7 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
 
     def before_index(self, search_data):
-
-        import json
-
         validated_dict = json.loads(search_data['validated_data_dict'])
-
         if categories:=validated_dict.get("category",None):
             search_data["category"]=[categorie["theme"] for categorie in categories]
         
@@ -93,11 +110,9 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
 
     def before_search(self, search_params):
-        #d'une dateA à une dateB
         # /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z&ext_enddate=2023-07-20T11:48:38.540Z
         # /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z
         # /dataset/?q=&ext_enddate=2022-07-20T11:48:38.540Z
-        #dateA à aujourd'hui
         # ?q=&ext_startdate=2022-06-21T00:00:00Z&ext_enddate=NOW
 
         extras=search_params.get("extras",None)
@@ -127,14 +142,47 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
 
     def after_search(self,search_results, search_params):
-        print("------------------------------------------------------------------------------------------")
-        print("------------------------------------------------------------------------------------------")
-        print("------------------------------------------------------------------------------------------")
-        print("------------------------------------------------------------------------------------------")
-        print("------------------------------------------------------------------------------------------")
-        # print("search_results: ", search_results)
 
-
-
+        
 
         return search_results
+
+
+
+
+    # ------------- IBlueprint ---------------#
+    def _get_territoires(self):
+        query = meta.Session.query(Territories).autoflush(True)
+        return  {
+            "territoires":[object_as_dict(terr) for terr in query.all()]
+            }
+
+
+    def _get_themes(self):
+        themes=Themes.get_themes()
+        res={}
+        for theme in themes:
+            theme_dict=object_as_dict(theme[0])
+            if theme_dict["pref_label"] not in res:
+                res[theme_dict["pref_label"]]={
+                    "subthemes":[],
+                    "total":theme_dict.get("total",0)
+                }
+
+            subthemes_dict=object_as_dict(theme[1])
+            res[theme_dict["pref_label"]]["subthemes"].append(subthemes_dict)
+        
+        return res
+	
+
+    def get_blueprint(self):
+        blueprint = Blueprint('dcatapfrench_custom_api', self.__module__)
+        rules = [ 
+            ('/territoires', 'get_territoires', self._get_territoires),
+            ('/themes', 'get_themes', self._get_themes),
+            ]
+        for rule in rules:
+            blueprint.add_url_rule(*rule)
+
+        return blueprint
+

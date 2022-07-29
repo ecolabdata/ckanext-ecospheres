@@ -89,6 +89,7 @@ about_url: https://github.com/ecolabdata/ckanext-spatial-fr
       label: 
         fr: Sigle
         en: Abbreviations
+        
     - field_name: title
       label: title (dido)
 
@@ -672,7 +673,7 @@ dataset_fields:
   display_snippet: null
 
 # FREE_TAG [{*}]
-# {"en": ["big", "large"], "fr": ["grande"]}
+# {"en": ["big","large"], "fr": ["grande"]}
 # > dcat:keyword
 # - pour les mots-clés libres
 # - à mapper également sur la propriété "tags" lors du moissonnage
@@ -681,11 +682,6 @@ dataset_fields:
     fr: Mots-clés
     en: Keywords
   # display_snippet: null
-  repeating_subfields:
-    - field_name: name
-      label:
-        fr: Tag
-        en: Tag
 
 
         
@@ -828,7 +824,7 @@ dataset_fields:
   label: 
     fr: Rectangle d'emprise
     en: Boundary rectangle
-  display_snippet: null
+  # display_snippet: null
 
 # TERRITORY
 # <<En stand by>>
@@ -843,7 +839,7 @@ dataset_fields:
   label: 
     fr: Territoires
     en: Territory
-  display_snippet: null
+  display_snippet: territoires.html
   help_text: Divisions administratives (régions, départements...) présumées couvertes par les données.
 
 # TERRITORY_FULL
@@ -1006,7 +1002,7 @@ dataset_fields:
   label: 
     fr: Échelle équivalente
     en: Equivalent scale
-
+  
 
 
 

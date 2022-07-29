@@ -5,6 +5,10 @@ import rdflib.parser
 from rdflib import URIRef, BNode, Literal
 from rdflib.namespace import Namespace, RDFS, RDF,XSD, SKOS
 from ckanext.dcat.utils import catalog_uri, dataset_uri, url_to_rdflib_format, DCAT_EXPOSE_SUBCATALOGS
+from  ckanext.ecospheres.commands.utils import _get_file_from_disk
+from  ckanext.ecospheres.models.themes import Themes,Subthemes
+
+
 import xml
 from ckanext.dcat.exceptions import RDFProfileException, RDFParserException
 from ckanext.dcat.profiles import RDFProfile
@@ -18,8 +22,44 @@ ECOSPHERES = Namespace('http://registre/ecospheres/')
 THEMES = Namespace('http://registre/ecospheres/themes-ecospheres/')
 ESPSYNTAX = Namespace('http://registre/ecospheres/syntax#')
 
-PATH_THEMES="/srv/app/src_extensions"
-FILENAME_THEME="ref_themes.json"
+PATH_THEMES="/srv/app/src_extensions/ckanext-ecospheres/vocabularies/"
+FILENAME_THEME="themes_jsonld.json"
+
+
+
+
+
+def load_themes_from_file_to_db(filename=None):
+    if not filename:
+        filename="themes_jsonld.json"
+    file=_get_file_from_disk(filename)
+    parser=RDFThemesCGDDparser()
+    parser.parse(file,_format="jsonld")
+    themes_parsed=parser._get_themes_as_list()
+    Themes.delete_all()
+    for theme in themes_parsed:
+        prefLabel=theme.get("prefLabel",None)
+        uri=theme.get("uri",None)
+        Themes.from_data(
+            uri=theme.get("uri",None),
+            pref_label=theme.get("prefLabel",None),
+            alt_label=theme.get("altLabel",None),
+            change_note=theme.get("changeNote",None),
+            definition=theme.get("definition",None),
+        )
+        
+        if subthemes_list:=theme.get("narrower",None):
+            for subtheme in subthemes_list:
+                Subthemes.from_data(
+                    pref_label=subtheme.get("prefLabel",None),
+                    uri=subtheme.get("uri",None),
+                    broader=subtheme.get("broader",None),
+                    definition=subtheme.get("definition",None),
+                    alt_label=subtheme.get("altLabel",None),
+                    regexp=subtheme.get("regexp",None),
+                    theme_id=theme.get("prefLabel",None)
+                )
+
 
 
 
@@ -31,7 +71,6 @@ class RDFThemesCGDDparser(RDFProfile):
         _format = url_to_rdflib_format(_format)
         if not _format or _format == 'pretty-xml':
             _format = 'xml'
-
         try:
             self.g.parse(data=data, format=_format)
         except (SyntaxError, xml.sax.SAXParseException,
@@ -39,24 +78,9 @@ class RDFThemesCGDDparser(RDFProfile):
 
             raise RDFParserException(e)
 
-
-
     def _themes(self):
         for theme in self.g.subjects(RDF.type, SKOS.Concept):
             yield theme
-    
-    def _get_parent_theme_dict(self,theme):
-        is_parent=self._object_value_list( theme, SKOS.narrower)
-        if not is_parent:
-            return
-        return self._get_theme_as_dict(theme)
-
-    def _get_themes_children(self,parent_themes):
-        for _theme in parent_themes:
-            if themes_child:=_theme.get("narrower",None):
-                print(_theme)
-
-
 
 
     def _get_theme_as_dict(self,theme):
@@ -73,7 +97,6 @@ class RDFThemesCGDDparser(RDFProfile):
                 ("changeNote",SKOS.changeNote ) ,
                 ("definition",SKOS.definition ) ,
             ):
-
             if key in ["narrower"]:
                 theme_child_list=[]
                 for child in self.g.objects(theme, _predicate):
@@ -119,13 +142,7 @@ class RDFThemesCGDDparser(RDFProfile):
         themes_dict={
             "themes":themes
         }
-        p = Path(PATH_THEMES)
-        q = p / FILENAME_THEME
-        file_exists = exists(q)
-        if not file_exists:
-            q.touch(exist_ok=True)
-        with open(q, "w") as write_file:
-            json.dump(themes_dict, write_file,indent=4)
+       
         return themes
 
             

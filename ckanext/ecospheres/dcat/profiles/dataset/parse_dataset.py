@@ -87,7 +87,6 @@ def afficher(data):
 
 
 def parse_dataset(self, dataset_dict, dataset_ref):
-
     """------------------------------------------<Littéraux>------------------------------------------"""
 
     for key, predicate in (
@@ -281,7 +280,6 @@ def parse_dataset(self, dataset_dict, dataset_ref):
                                           }
 
 
-    # print("\nsouscategories: ",list(subcategories.values()))
 
     if not subcategories and not categories:
         #TODO: Theme ecosphere non trouvé 
@@ -301,8 +299,6 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     if categories:
         dataset_dict["category"]=list(categories.values())
 
-    if not dataset_dict.get("category",None):
-        print("\ncategory absente ")
 
 
     """-------------------------------------------<subcategory>-------------------------------------------"""        
@@ -317,9 +313,6 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     
     if subcategories:
         dataset_dict["subcategory"]=list(subcategories.values())
-
-    if not dataset_dict.get("subcategory",None):
-        print("subcategory absente\n")
 
 
     """-------------------------------------------<theme>-------------------------------------------"""        
@@ -373,9 +366,9 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     _spatial_coverage(self,dataset_ref, DCT.spatial,dataset_dict)
 
     """-------------------------------------------<TERRITORY>-------------------------------------------"""        
-    import random
-    mocked_territories=["paris","lyon","brest","lille"]
-    dataset_dict["territory"]=random.choice(mocked_territories)
+    # import random
+    # mocked_territories=["paris","lyon","brest","lille"]
+    # dataset_dict["territory"]=random.choice(mocked_territories)
 
     ############################################   Etc. ############################################
 
