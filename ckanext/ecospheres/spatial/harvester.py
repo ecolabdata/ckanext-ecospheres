@@ -65,29 +65,48 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             # d'autant que de besoin, conversion des codes de langue
             # sur 3 caractères en codes sur 2 caractères, comme attendu en RDF
             language=ISO_639_2.get(language, language)
+        
         dataset_dict = build_dataset_dict_from_schema('dataset', language=language)
 
+        # --- various metadata from package_dict ---
         for target_field, package_field in {
+            # dataset_dict key -> package_dict key
             'owner_org': 'owner_org'
         }:
-            dataset_dict.set_value(target_field, package_field.get(iso_field))
+            dataset_dict.set_value(target_field, package_dict.get(package_field))
 
+        # --- various metadata from package_dict's extras ---
+        extras_map = {
+            # extras key -> dataset_dict key
+            'graphic-preview-file': 'graphic_preview'
+        }
+        for elem in package_dict['extras']:
+            if elem['key'] in extras_map:
+                dataset_dict.set_value(extras_map[elem['key']], elem['value'])
+
+        # --- various metadata from iso_values ---
         for target_field, iso_field in {
+            # dataset_dict key -> iso_values key
             'free_tag': 'tags',
             'title': 'title',
             'notes': 'abstract',
             'name': 'guid',
-            'accrual_periodicity': 'frequency-of-update'
+            'accrual_periodicity': 'frequency-of-update',
+            'provenance': 'lineage',
+            'provenance': 'maintenance-note', # TODO: provenance or version_info ? 
+            'identifier': 'unique-resource-identifier'
         }:
             dataset_dict.set_value(target_field, iso_values.get(iso_field))
         # NB: package name should always be its guid, for easier
         # handling of packages relationships and duplicate removal
 
-        # uri
-        # identifier (= identifiant du jeu de données)
+        if not dataset_dict.get('title'):
+            dataset_dict.set_value('title', iso_values.get('alternate-title'))
 
-        if 'dataset-reference-date' in iso_values:
+        # --- dates ----
+        if iso_values.get('dataset-reference-date'):
             type_date_map = {
+                # ISO CI_DateTypeCode -> dataset_dict key
                 'creation': 'created',
                 'publication': 'issued',
                 'revision': 'modified',
@@ -96,18 +115,22 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 if date_object['type'] in type_date_map:
                     dataset_dict.set_value(type_date_map[date_object['type']], date_object['value'])
         
-        # temporal
-        # temporal > start_date
-        # temporal > end_date
+        if iso_values.get('temporal-extent-begin') or iso_values.get('temporal-extent-end'):
+            temporal_dict = dataset_dict.new_item('temporal')
+            temporal_dict.set_value('start_date', iso_values.get('temporal-extent-begin'))
+            temporal_dict.set_value('end_date', iso_values.get('temporal-extent-end'))
 
-        if 'responsible-organisation' in iso_values:
+        # --- organizations ---
+        if iso_values.get('responsible-organisation'):
             base_role_map = {
+                # ISO CI_RoleCode -> dataset_dict key
                 'owner': 'rights_holder',
                 'publisher': 'publisher',
                 'author': 'creator',
                 'pointOfContact': 'contact_point'
                 }
             other_role_map = {
+                # ISO CI_RoleCode -> dcat:hadRole GeoDCAT-AP URI
                 'resourceProvider': GEODCAT.resourceProvider,
                 'custodian': GEODCAT.custodian,
                 'user': GEODCAT.user,
@@ -123,7 +146,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                     org_dict = dataset_dict.new_item(base_role_map[org_object['role']])
                 elif org_object['role'] in other_role_map:
                     qa_dict = dataset_dict.new_item('qualified_attribution')
-                    qa_dict.set_value('had_role', other_role_map[org_object['role']])
+                    qa_dict.set_value('had_role', str(other_role_map[org_object['role']]))
                     org_dict = qa_dict.new_item('agent')
                 else:
                     continue
@@ -132,6 +155,8 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                     org_dict.set_value('email', org_object['contact-info'].get('email'))
                     org_dict.set_value('url', org_object['contact-info'].get('online-resource'))
         
+        # uri = landing_page
+
         # in_series
         # in_series > uri
         # in_series > url
