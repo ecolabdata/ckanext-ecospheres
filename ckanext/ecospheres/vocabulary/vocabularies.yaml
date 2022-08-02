@@ -1,0 +1,142 @@
+# Index des vocabulaires du guichet Ecosphères
+#
+# name: identifiant du vocabulaire.
+# url: >
+#   URL pour les requêtes de mise à jour du vocabulaire. 
+#   NE PAS UTILISER si une mise à jour manuelle est requise.
+# parser: >
+#   Fonction du module ckanext.ecospheres.vocabulary.parser qui prend
+#   en argument URL et renvoie un graphe RDF contenant le
+#   le vocabulaire. Il est nécessaire de fournir une telle
+#   fonction de dé-sérialisation lorsque que le registre source
+#   ne fournit pas de RDF avec un vocabulaire facilement exploitable
+#   (par ex SKOS).
+# about: >
+#   URL d'une page décrivant le vocabulaire, et/ou permettant à
+#   une personne d'accéder aux données.
+# schemes: >
+#   Si renseigné, seuls les éléments rattachés à l'un
+#   des ensembles listés (skos:inScheme) doivent être inclus dans
+#   le vocabulaire considéré.
+# comment: observations.
+# base_uri: >
+#   L'URI de base pour tous les termes du vocabulaires, s'il y a lieu.
+#   Cette information sert essentiellement au mapping des
+#   métadonnées INSPIRE et n'est renseignée que lorsqu'elle est utile.
+# maintenance_frequency: >
+#   Fréquence de mise à jour automatique du vocabulaire, en nombre de
+#   jour.
+# available: >
+#   Booléen indiquant si le vocabulaire est effectivement disponible.
+#
+
+
+- name: adms_licence_type
+  url: http://purl.org/adms/licencetype/1.1
+  schemes:
+    - http://purl.org/adms/licencetype/1.0
+  comment: Target contains all ADMS-AP vocabulary.
+  available: False
+
+- name: adms_publisher_type
+  url: http://purl.org/adms/publishertype/1.0
+  schemes:
+    - http://purl.org/adms/publishertype/1.0
+  comment: Target contains all ADMS-AP vocabulary.
+  available: False
+
+- name: ecospheres_data_standard
+  available: False
+
+- name: ecospheres_territory
+  available: False
+
+- name: ecospheres_theme
+  url: https://registre.data.developpement-durable.gouv.fr/ecospheres/themes-ecospheres
+  available: False
+
+- name: eu_access_right
+  url: http://publications.europa.eu/resource/authority/access-right
+  available: False
+
+- name: eu_administrative_territory_unit
+  url: http://publications.europa.eu/resource/authority/atu
+  available: False
+
+- name: eu_file_type
+  url: http://publications.europa.eu/resource/authority/file-type
+  comment: 2022.08.02 > Invalid XML ?
+  available: False
+
+- name: eu_frequency
+  url: http://publications.europa.eu/resource/authority/frequency
+  available: False
+
+- name: eu_language
+  url: http://publications.europa.eu/resource/authority/language
+  available: False
+
+- name: eu_licence
+  url: http://publications.europa.eu/resource/authority/licence
+  available: False
+
+- name: eu_theme
+  url: http://publications.europa.eu/resource/authority/data-theme
+  available: False
+
+- name: insee_official_geographic_code
+  about: http://rdf.insee.fr/geo/index.html
+  comment: Downloadable ZIP file with file creation date in name.
+  available: False
+
+- name: insee_individual_territories
+  about: https://github.com/InseeFr/Ontologies/blob/master/insee-geo.ttl
+  comment: Objects "france", "franceMetropolitaine", "territoireDeLaRepubliqueFrancaise".
+  available: False
+
+- name: insee_gazetteer
+  about: https://raw.githubusercontent.com/InseeFr/Ontologies/master/insee-geo.ttl
+  available: False
+
+- name: inspire_limitation_on_public_access
+  url: http://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess/LimitationsOnPublicAccess.fr.rdf
+  about: https://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess
+  base_uri: http://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess
+  available: False
+
+- name: inspire_maintenance_frequency
+  url: https://inspire.ec.europa.eu/metadata-codelist/MaintenanceFrequency/MaintenanceFrequency.fr.rdf
+  about: https://inspire.ec.europa.eu/metadata-codelist/MaintenanceFrequency
+  base_uri: http://inspire.ec.europa.eu/metadata-codelist/MaintenanceFrequency
+  available: False
+
+- name: inspire_role
+  url: https://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/ResponsiblePartyRole.fr.rdf
+  about: https://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole
+  base_uri: http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole
+  available: False
+
+- name: inspire_theme
+  url: https://inspire.ec.europa.eu/theme/theme.fr.rdf
+  about: https://inspire.ec.europa.eu/theme
+  available: False
+
+- name: inspire_topic_category
+  url: https://inspire.ec.europa.eu/metadata-codelist/TopicCategory/TopicCategory.fr.rdf
+  about: https://inspire.ec.europa.eu/metadata-codelist/TopicCategory
+  base_uri: http://inspire.ec.europa.eu/metadata-codelist/TopicCategory
+  available: False
+
+- name: spdx_license
+  url: https://spdx.org/licenses/licenses.json
+  about: https://github.com/spdx/license-list-data
+  parser: spdx_license_to_skos
+  available: False
+
+- name: ogc_epsg
+  url: http://www.opengis.net/def/crs/EPSG/0
+  parser: ogc_epsg_to_skos
+  maintenance_frequency: 100
+  available: False
+
+
