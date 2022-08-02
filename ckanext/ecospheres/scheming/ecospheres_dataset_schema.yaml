@@ -35,6 +35,8 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       display_property: skos:prefLabel
       value_type: uri
       known_values: require
+      vocabularies:
+        - adms_publisher_type
       # TODO: ajouter un display_snippet basé semblable à link mais capable
       # plus généralement de récupérer le label, quelle que soit la propriété
       # utilisée (éventuellement autre que skos:prefLabel)
@@ -201,6 +203,8 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       display_property: skos:prefLabel
       value_type: uri
       known_values: allow
+      vocabularies:
+        - ecospheres_data_standard
       # TODO: ajouter un display_snippet basé semblable à link mais capable
       # plus généralement de récupérer le label, quelle que soit la propriété
       # utilisée (éventuellement autre que skos:prefLabel). Si l'URI ne pointe
@@ -262,6 +266,8 @@ dataset_fields:
 
 # TITLE {*}
 # > dct:title
+# - pour les métadonnées INSPIRE, on utilisera le titre alternatif
+#   si et seulement si le titre n'est pas renseigné
 - field_name: title
   label: 
     fr: Titre
@@ -424,6 +430,8 @@ dataset_fields:
     multiple_values: True
     value_type: uri
     known_values: require
+    vocabularies:
+      - inspire_role
     # TODO: ajouter un display_snippet basé semblable à link mais capable
     # plus généralement de récupérer le label, quelle que soit la propriété
     # utilisée
@@ -664,6 +672,8 @@ dataset_fields:
   multiple_values: True
   value_type: uri
   known_values: require
+  vocabularies:
+      - ecospheres_theme
   # display_snippet: multiple_text
   # TODO: ajouter un display_snippet qui interroge l'URI pour récupérer
   # l'étiquette.
@@ -681,6 +691,8 @@ dataset_fields:
   multiple_values: True
   value_type: uri
   known_values: require
+  vocabularies:
+      - ecospheres_theme
   # display_snippet: multiple_text
   # TODO: ajouter un display_snippet qui interroge l'URI pour récupérer
   # l'étiquette.
@@ -700,6 +712,10 @@ dataset_fields:
   multiple_values: True
   value_type: uri
   known_values: require
+  vocabularies:
+      - inspire_theme
+      - inspire_topic_category
+      - eu_theme
 
 # FREE_TAG [{*}]
 # {"en": ["big", "large"], "fr": ["grande"]}
@@ -726,6 +742,7 @@ dataset_fields:
     en: Metadata about metadata
   value_type: node
   repeating_subfields:
+
   # MODIFIED
   # > dct:modified
   - field_name: modified
@@ -733,8 +750,19 @@ dataset_fields:
       fr: Date de modification
       en : Modified date
     preset: datetime
-    help_text: Date de dernière modification des métadonnées.
+    help_text: Date de dernière modification des métadonnées dans le catalogue d'origine.
     value_type: literal
+  
+  # HARVESTED
+  # - hors DCAT, affiché dans CKAN mais non exposé
+  - field_name: harvested
+    label: 
+      fr: Date de moissonnage
+      en : Harvest date
+    preset: datetime
+    help_text: Date du dernier moissonnage de la fiche de métadonnées.
+    value_type: literal
+
   # LANGUAGE []
   # > dct:language
   # [+ DCAT-AP]
@@ -750,8 +778,11 @@ dataset_fields:
     multiple_values: True
     value_type: uri
     known_values: require
+    vocabularies:
+      - eu_language
     # TODO: ajouter un display_snippet qui interroge les URI pour 
     # récupérer leurs étiquettes.
+  
   # IDENTIFIER 
   # > dct:identifier
   - field_name: identifier
@@ -761,6 +792,7 @@ dataset_fields:
     display_snippet: null
     help_text: Identifiant de la fiche de métadonnées.
     value_type: literal
+  
   # CONTACT_POINT [{}]
   # > dcat:contactPoint -> vcard:Kind
   - field_name: contact_point
@@ -771,6 +803,30 @@ dataset_fields:
     help_text: Entité à contacter pour obtenir des informations sur les métadonnées.
     value_type: node
     <<: *common_contact_fields
+  
+  # IN_CATALOG [{}]
+  # > dcat:inCatalog -> dcat:Catalog
+  - field_name: in_catalog
+    label:
+      fr: Catalogue source
+      en: Source catalog
+    value_type: node
+    repeating_subfields:
+    # TITLE {*}
+    # > dct:title
+    - field_name: title
+      label:
+        fr: Nom
+        en: Name
+      value_type: literal
+      translatable_values: True
+    # HOMEPAGE
+    # > foaf:homepage
+    - field_name: homepage
+      label:
+        fr: URL
+        en: URL
+      value_type: uri
 
 
 # ------ Couverture spatiale ------
@@ -808,6 +864,10 @@ dataset_fields:
     display_property: skos:prefLabel
     value_type: uri
     known_values: require
+    vocabularies:
+      - eu_administrative_territory_unit
+      - insee_official_geographic_code
+      - insee_individual_territories
     # TODO: ajouter un display_snippet basé semblable à link mais capable
     # plus généralement de récupérer le label, quelle que soit la propriété
     # utilisée (éventuellement autre que skos:prefLabel)
@@ -823,6 +883,8 @@ dataset_fields:
     help_text: Type de lieu, index de référence pour l'identifiant (commune, département...).
     value_type: uri
     known_values: require
+    vocabularies:
+      - insee_gazetteer
     # TODO: ajouter un display_snippet basé semblable à link mais capable
     # plus généralement de récupérer le label, quelle que soit la propriété
     # utilisée (éventuellement autre que skos:prefLabel)
@@ -876,6 +938,8 @@ dataset_fields:
   multiple_values: True
   value_type: uri
   known_values: require
+  vocabularies:
+    - ecospheres_territory
 
 # TERRITORY_FULL []
 # - reprend la liste de "territory" en y ajoutant les
@@ -891,6 +955,8 @@ dataset_fields:
   multiple_values: True
   value_type: uri
   known_values: require
+  vocabularies:
+    - ecospheres_territory
 
 # ------- Etc. ------
 
@@ -916,6 +982,9 @@ dataset_fields:
     display_property: skos:prefLabel
     value_type: uri
     known_values: require
+    vocabularies:
+      - inspire_limitation_on_public_access
+      - eu_access_right
     # TODO: ajouter un display_snippet basé semblable à link mais capable
     # plus généralement de récupérer le label, quelle que soit la propriété
     # utilisée (éventuellement autre que skos:prefLabel)
@@ -947,6 +1016,8 @@ dataset_fields:
   multiple_values: True
   value_type: uri
   known_values: require
+  vocabularies:
+    - ogc_epsg
 
 # CONFORMS_TO [{}]
 # > dct:conformsTo -> dct:Standard
@@ -973,6 +1044,9 @@ dataset_fields:
     en:  Update frequency
   value_type: uri
   known_values: require
+  vocabularies:
+    - inspire_maintenance_frequency
+    - eu_frequency
   # display_snippet: link.html
   # TODO: ajouter un display_snippet basé semblable à link mais capable
   # plus généralement de récupérer le label, quelle que soit la propriété
@@ -990,6 +1064,8 @@ dataset_fields:
   multiple_values: True
   value_type: uri
   known_values: require
+  vocabularies:
+    - eu_language
   # TODO: ajouter un display_snippet qui interroge les URI pour récupérer
   # leurs étiquettes.
 
@@ -1099,6 +1175,8 @@ dataset_fields:
       display_property: skos:prefLabel
       value_type: uri
       known_values: require
+      vocabularies:
+        - eu_file_type
       # TODO: ajouter un display_snippet basé semblable à link mais capable
       # plus généralement de récupérer le label, quelle que soit la propriété
       # utilisée (éventuellement autre que skos:prefLabel)
@@ -1251,6 +1329,9 @@ resource_fields:
       en: URL
     value_type: uri
     known_values: require
+    vocabularies:
+      - eu_licence
+      - spdx_license
     # display_snippet: link.html
     # display_property: skos:prefLabel
     # TODO: ajouter un display_snippet basé semblable à link mais capable
@@ -1268,6 +1349,8 @@ resource_fields:
     multiple_values: True
     value_type: uri
     known_values: require
+    vocabularies:
+      - adms_licence_type
     # TODO: ajouter un display_snippet qui interroge les URI pour récupérer
     # leurs étiquettes.
   # LABEL {*}
