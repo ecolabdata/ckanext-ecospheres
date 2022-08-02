@@ -81,6 +81,29 @@ class TestEcospheresDatasetSchema(object):
             if 'repeating_subfields' in field:
                 fields += field['repeating_subfields']
 
+    def test_know_values_always_comes_with_a_vocabulary(self):
+        """Vérifie que la propriété vocabularies liste au moins un vocabulaire quand know_values est présente."""
+        schema = _get_schema('ecospheres_dataset_schema')
+        fields = schema['dataset_fields'] + schema['resource_fields']
+        while fields:
+            field = fields.pop()
+            vocabularies = field.get('vocabularies')
+            assert field.get('known_values') is None or isinstance(vocabularies, list)
+            assert field.get('known_values') is None or len(vocabularies) >= 1
+            if 'repeating_subfields' in field:
+                fields += field['repeating_subfields']
+
+    def test_no_vocabulary_without_know_values(self):
+        """Vérifie que la propriété vocabularies n'est présente que conjointement à know_values."""
+        schema = _get_schema('ecospheres_dataset_schema')
+        fields = schema['dataset_fields'] + schema['resource_fields']
+        while fields:
+            field = fields.pop()
+            vocabularies = field.get('vocabularies')
+            assert field.get('known_values') is not None or vocabularies is None
+            if 'repeating_subfields' in field:
+                fields += field['repeating_subfields']
+
     def test_all_nodes_have_repeating_subfields(self):
         """Vérifie que tous les champs de type noeud ont des sous-champs."""
         schema = _get_schema('ecospheres_dataset_schema')
@@ -121,3 +144,5 @@ class TestEcospheresDatasetSchema(object):
                 field.get('field_name')
             if sfields:
                 fields += sfields
+
+
