@@ -1,12 +1,13 @@
 # encoding: utf-8
 
-from rdflib.namespace import Namespace
+from datetime import datetime
+from lxml import etree
+import requests
 
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 from ckan.model.package import Package
 from ckan.lib.helpers import json
-from lxml import etree
 
 from ckanext.spatial.interfaces import ISpatialHarvester
 from ckanext.harvest.harvesters.base import HarvesterBase
@@ -14,7 +15,9 @@ from ckanext.harvest.harvesters.base import HarvesterBase
 from ckanext.ecospheres.spatial.utils import build_dataset_dict_from_schema
 from ckanext.ecospheres.spatial.maps import ISO_639_2
 
-GEODCAT = Namespace('http://data.europa.eu/930/')
+from ckanext.ecospheres.vocabulary.reader import get_uri_from_label, \
+    get_uri_from_identifier
+
 
 class FrSpatialHarvester(plugins.SingletonPlugin):
     '''Customization of spatial metadata harvest.
@@ -77,8 +80,8 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
 
         # --- various metadata from package_dict's extras ---
         extras_map = {
-            # extras key -> dataset_dict key
-            'graphic-preview-file': 'graphic_preview'
+            # ckanext-spatial extras key -> dataset_dict key
+            'graphic-preview-file': 'graphic_preview'   
         }
         for elem in package_dict['extras']:
             if elem['key'] in extras_map:
@@ -91,7 +94,6 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             'title': 'title',
             'notes': 'abstract',
             'name': 'guid',
-            'accrual_periodicity': 'frequency-of-update',
             'provenance': 'lineage',
             'provenance': 'maintenance-note', # TODO: provenance or version_info ? 
             'identifier': 'unique-resource-identifier'
@@ -102,6 +104,8 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
 
         if not dataset_dict.get('title'):
             dataset_dict.set_value('title', iso_values.get('alternate-title'))
+
+        name = dataset_dict.get('name')
 
         # --- dates ----
         if iso_values.get('dataset-reference-date'):
@@ -120,7 +124,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             temporal_dict.set_value('start_date', iso_values.get('temporal-extent-begin'))
             temporal_dict.set_value('end_date', iso_values.get('temporal-extent-end'))
 
-        # --- organizations ---
+        # --- organisations ---
         if iso_values.get('responsible-organisation'):
             base_role_map = {
                 # ISO CI_RoleCode -> dataset_dict key
@@ -129,33 +133,79 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 'author': 'creator',
                 'pointOfContact': 'contact_point'
                 }
-            other_role_map = {
-                # ISO CI_RoleCode -> dcat:hadRole GeoDCAT-AP URI
-                'resourceProvider': GEODCAT.resourceProvider,
-                'custodian': GEODCAT.custodian,
-                'user': GEODCAT.user,
-                'distributor': GEODCAT.distributor,
-                'originator': GEODCAT.originator,
-                'principalInvestigator': GEODCAT.principalInvestigator,
-                'processor': GEODCAT.processor
-            }
             for org_object in iso_values['responsible-organisation']:
                 if not 'role' in org_object or not 'organisation-name' in org_object:
                     continue
-                if org_object['role'] in base_role_map:
-                    org_dict = dataset_dict.new_item(base_role_map[org_object['role']])
-                elif org_object['role'] in other_role_map:
-                    qa_dict = dataset_dict.new_item('qualified_attribution')
-                    qa_dict.set_value('had_role', str(other_role_map[org_object['role']]))
-                    org_dict = qa_dict.new_item('agent')
+                org_role = org_object['role']
+                if org_role in base_role_map:
+                    org_dict = dataset_dict.new_item(base_role_map[org_role])
                 else:
-                    continue
+                    role_uri = get_uri_from_identifier('inspire_role', org_role)
+                    if role_uri:
+                        qa_dict = dataset_dict.new_item('qualified_attribution')
+                        qa_dict.set_value('had_role', role_uri)
+                        org_dict = qa_dict.new_item('agent')
+                    else:
+                        continue
                 org_dict.set_value('name', org_object['organisation-name'])
                 if 'contact-info' in org_object:
                     org_dict.set_value('email', org_object['contact-info'].get('email'))
                     org_dict.set_value('url', org_object['contact-info'].get('online-resource'))
         
-        # uri = landing_page
+        # --- metadata's metadata ---
+        meta_dict = dataset_dict.new_item('is_primary_topic_of')
+        meta_dict.set_value('harvested', datetime.now().astimezone().isoformat())
+        meta_dict.set_value('modified', iso_values.get('metadata-date'))
+        meta_dict.set_value('identifier', name)
+
+        meta_language = iso_values.get('metadata-language')
+        if meta_language:
+            meta_language_uri = get_uri_from_label('eu_language', meta_language)
+            if meta_language_uri:
+                meta_dict.set_value('language', meta_language_uri)
+
+        if iso_values.get('metadata-point-of-contact'):
+            for org_object in iso_values['metadata-point-of-contact']:
+                org_dict = meta_dict.new_item('contact_point')
+                if 'contact-info' in org_object:
+                    org_dict.set_value('email', org_object['contact-info'].get('email'))
+                    org_dict.set_value('url', org_object['contact-info'].get('online-resource'))
+                    # TODO: le numéro de téléphone n'est pas récupéré dans 'contact-info',
+                    # "gmd:phone/gmd:CI_Telephone/gmd:voice/gco:CharacterString/text()"
+
+        catalog_dict = meta_dict.new_item('in_catalog')
+
+        for elem in package_dict['extras']:
+        # the following are "default extras" from the
+        # harvest source
+
+            if elem['key'] == 'catalog_title':
+                catalog_dict.set_value('title', elem['value'])
+            
+            elif elem['key'] == 'catalog_homepage':
+                catalog_dict.set_value('homepage', elem['value'])
+        
+        # --- references ---
+            elif elem['key'] == 'catalog_base_url' and name:
+                landing_page = '{}/{}'.format(elem['value'], name)
+                response = requests.get(landing_page)
+                if response.status_code != requests.codes.ok:
+                    dataset_dict.set_value('landing_page', landing_page)
+                    dataset_dict.set_value('uri', landing_page)
+            
+            elif elem['key'] == 'attributes_base_url' and name:
+                attributes_page = '{}/{}'.format(elem['value'], name)
+                response = requests.get(attributes_page)
+                if response.status_code != requests.codes.ok:
+                    dataset_dict.set_value('attributes_page', attributes_page)
+
+        # page
+
+        # --- themes and keywords ---
+
+        # --- spatial coverage ---
+
+        # --- relations ---
 
         # in_series
         # in_series > uri
@@ -167,8 +217,26 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         # series_member > url
         # series_member > title
 
-        # landing_page
-        # attributes_page
+        # --- etc. ---
+
+        frequency = iso_values.get('frequency-of-update')
+        # might either be a code or some label
+        if frequency:
+            frequency_uri = get_uri_from_identifier(
+                'inspire_maintenance_frequency', frequency)
+            if frequency_uri:
+                # it was a code
+                dataset_dict.set_value('accrual_periodicity', frequency_uri)
+            else:
+                # it wasn't a code -> try to get the code from the label
+                frequency_uri = get_uri_from_label('inspire_maintenance_frequency', frequency)
+                if frequency_uri:
+                    dataset_dict.set_value('accrual_periodicity', frequency_uri)
+
+        # access_rights
+        # crs
+        # conforms_to
+        # ...
 
         return dataset_dict
 
