@@ -1177,6 +1177,7 @@ dataset_fields:
       known_values: require
       vocabularies:
         - eu_file_type
+        - ecospheres_iana_media_type
       # TODO: ajouter un display_snippet basé semblable à link mais capable
       # plus généralement de récupérer le label, quelle que soit la propriété
       # utilisée (éventuellement autre que skos:prefLabel)
