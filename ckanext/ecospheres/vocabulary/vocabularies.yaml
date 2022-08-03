@@ -19,10 +19,6 @@
 #   des ensembles listés (skos:inScheme) doivent être inclus dans
 #   le vocabulaire considéré.
 # comment: observations.
-# base_uri: >
-#   L'URI de base pour tous les termes du vocabulaires, s'il y a lieu.
-#   Cette information sert essentiellement au mapping des
-#   métadonnées INSPIRE et n'est renseignée que lorsqu'elle est utile.
 # maintenance_frequency: >
 #   Fréquence de mise à jour automatique du vocabulaire, en nombre de
 #   jour.
@@ -43,6 +39,9 @@
   schemes:
     - http://purl.org/adms/publishertype/1.0
   comment: Target contains all ADMS-AP vocabulary.
+  available: False
+
+- name: ecospheres_iana_media_type
   available: False
 
 - name: ecospheres_data_standard
@@ -101,19 +100,16 @@
 - name: inspire_limitation_on_public_access
   url: http://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess/LimitationsOnPublicAccess.fr.rdf
   about: https://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess
-  base_uri: http://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess
   available: False
 
 - name: inspire_maintenance_frequency
   url: https://inspire.ec.europa.eu/metadata-codelist/MaintenanceFrequency/MaintenanceFrequency.fr.rdf
   about: https://inspire.ec.europa.eu/metadata-codelist/MaintenanceFrequency
-  base_uri: http://inspire.ec.europa.eu/metadata-codelist/MaintenanceFrequency
   available: False
 
 - name: inspire_role
   url: https://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/ResponsiblePartyRole.fr.rdf
   about: https://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole
-  base_uri: http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole
   available: False
 
 - name: inspire_theme
@@ -124,7 +120,6 @@
 - name: inspire_topic_category
   url: https://inspire.ec.europa.eu/metadata-codelist/TopicCategory/TopicCategory.fr.rdf
   about: https://inspire.ec.europa.eu/metadata-codelist/TopicCategory
-  base_uri: http://inspire.ec.europa.eu/metadata-codelist/TopicCategory
   available: False
 
 - name: spdx_license
