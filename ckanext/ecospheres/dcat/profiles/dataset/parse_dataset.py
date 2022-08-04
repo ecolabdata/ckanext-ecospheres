@@ -8,6 +8,7 @@ try:
     from pathlib import Path
     from os.path import exists
 
+
     from rdflib.namespace import RDF, SKOS
     from ..constants import (
         _IS_PART_OF,
@@ -60,8 +61,27 @@ except Exception as e:
 
 PATH_THEMES="/srv/app/src_extensions"
 FILENAME_THEME="ref_themes.json"
+__location__ = os.path.realpath(os.path.join(
+    os.getcwd(),
+    os.path.dirname(__file__))
+)
 
 
+import yaml
+import os
+def _get_mapping_file():
+    mapping_path = os.path.join(__location__, 'mapping.yaml')
+    with open(mapping_path, 'r') as format_mapping_file:
+        return yaml.safe_load(format_mapping_file)
+
+
+def map_to_valid_format(resource_format, format_mapping):
+    resource_format_lower = resource_format.lower()
+    for key in format_mapping:
+        if resource_format_lower in format_mapping[key]:
+            return key
+    else:
+        return None
 
 def _get_theme_registry_as_json():
     try:
@@ -87,6 +107,11 @@ def afficher(data):
 
 
 def parse_dataset(self, dataset_dict, dataset_ref):
+    from ckanext.ecospheres.registre_loader.loader import Loader
+    loader=Loader()
+
+    mapping_format=_get_mapping_file()
+
     """------------------------------------------<Littéraux>------------------------------------------"""
 
     for key, predicate in (
@@ -248,28 +273,24 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     except Exception as e:
         print(str(e))
 
+    
 
 
     #liste des mots clés du dataset
     list_keywords=list(self._object_value_list(dataset_ref,DCAT.keyword))
-
     title = self._object_value(dataset_ref, DCT.title)
-
     categories={}
     subcategories={}
-
-    for theme_ecosphere in list_themes_ecosphere_as_dict:
-
-        is_match,sous_theme,uri_sous_theme=_check_sous_theme(theme_ecosphere,list_keywords,title)
+    themes_list=loader.themes
+    for theme_ecosphere_pref_label in themes_list:
+        is_match,sous_theme,uri_sous_theme=_check_sous_theme(themes_list[theme_ecosphere_pref_label]["subthemes"],list_keywords,title)
 
         if is_match:
-            
-            pref_label=theme_ecosphere.get("prefLabel",None)
 
-            if not categories.get(pref_label,None):
-                categories[pref_label]={
-                                        "theme":pref_label,
-                                        "uri": theme_ecosphere.get("uri",None)
+            if not categories.get(theme_ecosphere_pref_label,None):
+                categories[theme_ecosphere_pref_label]={
+                                        "theme":theme_ecosphere_pref_label,
+                                        "uri": themes_list[theme_ecosphere_pref_label].get("uri",None)
                                        }
 
 
@@ -278,13 +299,10 @@ def parse_dataset(self, dataset_dict, dataset_ref):
                                             "subtheme":sous_theme,
                                             "uri": uri_sous_theme
                                           }
-
-
-
     if not subcategories and not categories:
         #TODO: Theme ecosphere non trouvé 
         pass
-
+        
     """-------------------------------------------<category>-------------------------------------------"""        
 
     # CATEGORY []
@@ -298,7 +316,7 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     
     if categories:
         dataset_dict["category"]=list(categories.values())
-
+    
 
 
     """-------------------------------------------<subcategory>-------------------------------------------"""        
@@ -560,5 +578,16 @@ def parse_dataset(self, dataset_dict, dataset_ref):
                     value = self._object_value(distribution, predicate)
                     if value:
                         resource_dict[key] = value
+
+
+        resource_format = resource_dict['format'].split('/')[-1].lower()
+        has_format = map_to_valid_format(
+            resource_format,
+            _get_mapping_file()
+        )
+        resource_dict['format']=has_format
+
+
+
         dataset_dict['resources'].append(resource_dict)
     return dataset_dict

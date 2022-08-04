@@ -1,0 +1,13 @@
+---
+- common:
+    themes: 
+      src: /srv/app/src_extensions/ckanext-ecospheres/vocabularies/themes_jsonld.json
+      url: url
+    territoires: 
+      src: /srv/app/src_extensions/ckanext-ecospheres/vocabularies/territoires.json
+      url: url
+
+- dcat: 
+- inspire: 
+    
+  

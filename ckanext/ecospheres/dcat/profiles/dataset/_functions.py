@@ -48,34 +48,32 @@ def get_langs():
     
 def _check_sous_theme(theme_ecosphere,list_keywords,title) -> (bool,str,str):
 
-    if isinstance(theme_ecosphere,dict):
-        for th_child in theme_ecosphere.get("narrower",None):
+    for th_child in theme_ecosphere:
 
-            alt_labels_sous_theme=th_child.get("altLabel",None)
-            pref_label_sous_theme=th_child.get("prefLabel",None)
-            uri_sous_theme=th_child.get("uri",None)
+        alt_labels_sous_theme=th_child.get("alt_label",None)
+        pref_label_sous_theme=th_child.get("pref_label",None)
+        uri_sous_theme=th_child.get("uri",None)
 
 
-            #on verifie si le pref_label_sous_theme correspend à un mot clé
+        #on verifie si le pref_label_sous_theme correspend à un mot clé
+        for kw in list_keywords:
+            if kw.lower() == unidecode.unidecode(pref_label_sous_theme.lower()):
+                return  True, pref_label_sous_theme, uri_sous_theme
+
+
+        #on verifie si le alt_labels_sous_theme correspend à un mot clé 
+        if alt_labels_sous_theme:
             for kw in list_keywords:
-                if kw.lower() == unidecode.unidecode(pref_label_sous_theme.lower()):
-                    return  True, pref_label_sous_theme, uri_sous_theme
-
-
-            #on verifie si le alt_labels_sous_theme correspend à un mot clé 
-            if alt_labels_sous_theme:
-                for kw in list_keywords:
-                    for alt_lab in alt_labels_sous_theme:
-                       if kw.lower() == unidecode.unidecode(alt_lab.lower()):
+                for alt_lab in alt_labels_sous_theme:
+                    if kw.lower() == unidecode.unidecode(alt_lab.lower()):
                         return  True, pref_label_sous_theme, uri_sous_theme  
 
 
-            #on essaye de faire matcher les regex avec le titre du dataset 
-            if regexp:=th_child.get("regexp",None):
-                for _regexp_ in regexp:
-                    if re.search(_regexp_,title):
-                        # print(f'regex: {_regexp_} \n title: {title}')
-                        return  True, pref_label_sous_theme, uri_sous_theme  
+        #on essaye de faire matcher les regex avec le titre du dataset 
+        if regexp:=th_child.get("regexp",None):
+            for _regexp_ in regexp:
+                if re.search(_regexp_,title):
+                    return  True, pref_label_sous_theme, uri_sous_theme  
 
     return None,None,None
 

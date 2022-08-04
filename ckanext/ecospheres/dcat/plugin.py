@@ -13,12 +13,10 @@ from ckan.model import Session, meta
 from sqlalchemy import Column, Date, Integer, Text, create_engine, inspect
 
 
-def object_as_dict(obj):
-    return {c.key: getattr(obj, c.key)
-            for c in inspect(obj).mapper.column_attrs}
 
 
-
+from ckanext.ecospheres.registre_loader.loader import Loader
+loader=Loader()
 class DcatFrenchPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IValidators)
     plugins.implements(plugins.ITemplateHelpers)
@@ -26,8 +24,6 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.IClick)
     plugins.implements(plugins.IBlueprint)
-
-
 
     # ------------- IClick ---------------#
     def get_commands(self):
@@ -48,6 +44,9 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
                 }
 
     
+
+
+   
     # ------------- IValidators ---------------#
     def get_validators(self):
         return {
@@ -59,6 +58,13 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
     # ------------- IFacets ---------------#
 
     def dataset_facets(self, facets_dict, package_type):
+        """_summary_
+        Cette fonction permet de specifier les filtres à appliquer aux jeux de données.
+        Example:  facets_dict['category'] = plugins.toolkit._('Thématiques') -> permet d'ajouter un filtre sur le champ
+        indexé "category"
+        NB: On ne peut ajouter que des champ indexé par solr. Pour ajouter un filtre 
+
+        """
         facets_dict = collections.OrderedDict()
         facets_dict['organization'] = plugins.toolkit._('Organisations')
         facets_dict['category'] = plugins.toolkit._('Thématiques')
@@ -87,6 +93,10 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
 
     def before_index(self, search_data):
+        """_summary_
+        Cette fonction est appelé avant qu"un jeux de données ne soit indexé.
+        On peut choisir quels champs indexer en les ajoutant à search_data
+        """
         validated_dict = json.loads(search_data['validated_data_dict'])
         if categories:=validated_dict.get("category",None):
             search_data["category"]=[categorie["theme"] for categorie in categories]
@@ -109,7 +119,16 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         return search_data
 
 
+    
     def before_search(self, search_params):
+        """_summary_
+        Cette fonction permet d'intercepter la requete avant de faire une recherche pour enrichir les paramtres de recherche,
+        dans ce cas ci, on extrait les dates de début et de fin pour les ajouter au champ fq qui sera interpreté par le moteur de recherche
+        solr
+        A noter, pour ajouter des paramtres extra à une requetes dans CKAN et les recuperer avec la clé "extras", il faut préfixer le nom du paramtres par "ext_"
+
+        
+        """
         # /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z&ext_enddate=2023-07-20T11:48:38.540Z
         # /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z
         # /dataset/?q=&ext_enddate=2022-07-20T11:48:38.540Z
@@ -152,30 +171,20 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
     # ------------- IBlueprint ---------------#
     def _get_territoires(self):
-        query = meta.Session.query(Territories).autoflush(True)
         return  {
-            "territoires":[object_as_dict(terr) for terr in query.all()]
-            }
-
-
-    def _get_themes(self):
-        themes=Themes.get_themes()
-        res={}
-        for theme in themes:
-            theme_dict=object_as_dict(theme[0])
-            if theme_dict["pref_label"] not in res:
-                res[theme_dict["pref_label"]]={
-                    "subthemes":[],
-                    "total":theme_dict.get("total",0)
+                'territoires':loader.territoires
                 }
 
-            subthemes_dict=object_as_dict(theme[1])
-            res[theme_dict["pref_label"]]["subthemes"].append(subthemes_dict)
-        
-        return res
+    def _get_themes(self):
+        return loader.themes
 	
 
+    
     def get_blueprint(self):
+        """
+        Exposition des API 
+
+        """
         blueprint = Blueprint('dcatapfrench_custom_api', self.__module__)
         rules = [ 
             ('/territoires', 'get_territoires', self._get_territoires),
@@ -183,6 +192,5 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
             ]
         for rule in rules:
             blueprint.add_url_rule(*rule)
-
         return blueprint
 

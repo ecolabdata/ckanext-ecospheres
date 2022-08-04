@@ -6,6 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError as SAError, IntegrityError
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import relationship
+from ckanext.ecospheres.models.utils import object_as_dict
 
 log = logging.getLogger(__name__)
 
@@ -58,7 +59,29 @@ class Themes(DeclarativeBase,DomainObject):
         return cls.Session.query(cls,Subthemes)\
                    .join(Subthemes,
                          Subthemes.theme_id == cls.pref_label).all()
+    
+    
+    @classmethod
+    def get_theme(cls):
+        res={}
+        themes= cls.Session.query(cls,Subthemes)\
+                   .join(Subthemes,
+                         Subthemes.theme_id == cls.pref_label).all()
+        if not themes:
+            return res
+        for theme in themes:
+            theme_dict=object_as_dict(theme[0])
+            if theme_dict["pref_label"] not in res:
+                res[theme_dict["pref_label"]]={
+                    "subthemes":[],
+                    "total":theme_dict.get("total",0),
+                    "uri":theme_dict.get("uri",None)
+                }
 
+            subthemes_dict=object_as_dict(theme[1])
+            res[theme_dict["pref_label"]]["subthemes"].append(subthemes_dict)
+        
+        return res    
 
 
 class Subthemes(DeclarativeBase,DomainObject):

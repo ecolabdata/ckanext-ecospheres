@@ -11,9 +11,8 @@ import re
 
 def afficher(data):
     print(json.dumps(data, indent=4, sort_keys=True))
-def object_as_dict(obj):
-    return {c.key: getattr(obj, c.key)
-            for c in inspect(obj).mapper.column_attrs}
+
+
 ###############Constantes & Variables ######################
 log = logging.getLogger(__name__)
 TITLE='title'
@@ -26,14 +25,15 @@ aggregation_mapping={
 	_IS_PART_OF: "in_series",
 	_HAS_PART: "serie_datasets",
 }
+
 identifier_name_map={}
 
 
 ############################################################
 
-
+from ckanext.ecospheres.registre_loader.loader import Loader
+loader=Loader()
 class DCATfrRDFHarvester(DCATRDFHarvester):
-
 
     p.implements(IDCATRDFHarvester, inherit=True)
     def before_download(self, url, harvest_job):
@@ -50,75 +50,7 @@ class DCATfrRDFHarvester(DCATRDFHarvester):
 
     def before_update(self, harvest_object, dataset_dict, temp_dict):
         pass
-        # spatial=dataset_dict.get("spatial",None)
-        # if not spatial:
-        #     org=self.__get_organization_infos(harvest_object)
-        #     code_region_mocked="D37"
-        #     territoire=Territories.by_code_region('D37')
-        #     if territoire:
-        #         territoire=object_as_dict(territoire)
-        #         territory=territoire["name"]
-        #         print("territoire: ",territory)
-        #         westlimit=territoire['westlimit']
-        #         southlimit=territoire['southlimit']
-        #         eastlimit=territoire['eastlimit']
-        #         northlimit=territoire['northlimit']
-        #         spatial=f"{westlimit},{southlimit},{eastlimit},{northlimit}"
-        #         print("spatial: ",spatial)
-        #         print("territory: ",self._get_territory(org))
-
-        # a7069e54-9e35-406a-af21-29e68a7ed187
-
-        # import ckan.plugins as p
-        # user = p.toolkit.get_action('get_site_user')(
-        #         {'ignore_auth': True, 'defer_commit': True},
-        #         {}) 
-        # _user_name = user['name']
-        # ctx = {'ignore_auth': True,
-        #         'user': _user_name}
-        # org_dict = {'id': "a7069e54-9e35-406a-af21-29e68a7ed187"}
-        # act = p.toolkit.get_action('organization_show')
-        # org = act(context=ctx, data_dict=org_dict)
-
-        # extras=org["extras"]
-        # for extra_element in extras:
-        #     if extra_element["key"]=="Territoire":
-        #         ter=(extra_element["value"])     
-
-
-        # import re
-        # res=re.match(r'{(.*)}',ter)
-        # resultats=res.group(1)
-        # departements=resultats.split(',')
-        # territoires=[]
-        # if len(departements):
-        #     for dep in departements:
-        #         territoireResultSet=Territories.by_code_region(dep)
-        #         territoire_dict=object_as_dict(territoireResultSet)
-
-        #         #nom du territoire de l'organisation
-        #         territoires.append(territoire_dict.get("name",None))
-                
-        #         #coordonnées de l'organisation
-        #         westlimit=territoire['westlimit']
-        #         southlimit=territoire['southlimit']
-        #         eastlimit=territoire['eastlimit']
-        #         northlimit=territoire['northlimit']
-        #         spatial=f"{westlimit},{southlimit},{eastlimit},{northlimit}"
-
-
-        # print("liste des territoires: ",territoires)
-
-        # import re
-        # identifier=dataset_dict["identifier"]
-        # if re.match(r'^(https://).*$',identifier):
-        #     res=re.match(r'^.*\/(.*)$',dataset_dict["identifier"])
-        #     if res:
-        #         print(f'groups:\t{res.group(1)}')
-        # else:
-        #     print("identifier is not an url")
-
-            
+        
     def after_update(self, harvest_object, dataset_dict, temp_dict):
         return None
     
@@ -164,12 +96,9 @@ class DCATfrRDFHarvester(DCATRDFHarvester):
             territoires=[]
             if len(departements):
                 for dep in departements:
-                    territoireResultSet=Territories.by_code_region(dep)
-                    territoire_dict=object_as_dict(territoireResultSet)
-
+                    territoire_dict=loader.get_territorie_by_code_region(dep)
                     #nom du territoire de l'organisation
                     territoires.append(territoire_dict.get("name",None))
-                    
                     #coordonnées de l'organisation
                     westlimit=territoire_dict['westlimit']
                     southlimit=territoire_dict['southlimit']
@@ -180,32 +109,6 @@ class DCATfrRDFHarvester(DCATRDFHarvester):
                     spatial=f"{westlimit},{southlimit},{eastlimit},{northlimit}"
 
             dataset_dict["territory"]=territoires
-
-
-        print("liste des territoires: ",territoires)
-
-
-
-
-
-
-            # code_region_mocked="D37"
-            # territoire=Territories.by_code_region(code_region_mocked)
-            # if territoire:
-            #     territoire=object_as_dict(territoire)
-            #     territory=territoire["name"]
-            #     dataset_dict["territory"]=territory
-            #     # print("territoire: ",territory)
-            #     westlimit=territoire['westlimit']
-            #     southlimit=territoire['southlimit']
-            #     eastlimit=territoire['eastlimit']
-            #     northlimit=territoire['northlimit']
-            #     spatial=f"{westlimit},{southlimit},{eastlimit},{northlimit}"
-            #     # print("spatial: ",spatial)
-            #     dataset_dict["spatial"]=spatial
-            #     # print("territory: ",self._get_territory(org))
-
-
 
         self.__before_create(harvest_object,dataset_dict)
         

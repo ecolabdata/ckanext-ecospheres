@@ -682,7 +682,11 @@ dataset_fields:
     fr: Mots-clés
     en: Keywords
   # display_snippet: null
-
+  repeating_subfields:
+    - field_name: name
+      label:
+        fr: Tag
+        en: Tag
 
         
 - field_name: keywords

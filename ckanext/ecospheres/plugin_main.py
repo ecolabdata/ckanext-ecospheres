@@ -11,4 +11,3 @@ class EcospheresPlugin(plugins.SingletonPlugin):
         toolkit.add_public_directory(config_, 'public')
         # toolkit.add_resource('fanstatic',
         #     'ecospheres')
-    
