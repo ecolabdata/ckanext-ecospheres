@@ -8,21 +8,84 @@ EPSG_NAMESPACES = {
        'epsg': 'urn:x-ogp:spec:schema-xsd:EPSG:2.2:dataset'
     }
 
-class VocabularyTable(list):
+
+class DataTableConstraint:
+    """Table constraints.
+    
+    This is an abstract class.
+    All table constraints are subclasses of this class.
+
+    """
+
+class DataTableUniqueConstraint(tuple, DataTableConstraint):
+    """Unique constraint.
+
+    :py:class:`DataTableUniqueConstraint` objects are
+    tuples of table fields.
+
+    """
+    def __repr__(self):
+        return '({}) IS UNIQUE'.format(', '.join(f for f in self))
+
+class DataTableNotNullConstraint(str, DataTableConstraint):
+    """Not null constraint.
+
+    :py:class:`DataTableUniqueConstraint` objects are
+    the names of the fields that should not be empty.
+
+    """
+    def __repr__(self):
+        return f'{self} IS NOT NULL'
+
+class DataValidationAnomaly(dict):
+    """Anomaly detected during validation.
+
+    The dictionnary is the invalid record itself.
+
+    Attributes
+    ----------
+    constraint : DataTableConstraint
+        The constraint that was not respected.
+
+    """
+    def __init__(self, record, constraint):
+        self.update(record)
+        self.constraint = constraint
+
+class DataValidationResponse(list):
+    """Result of data validation.
+
+    This is a list of the detected anomalies, if any.
+
+    The boolean value of a :py:class:`DataValidationResponse`
+    object is the global result of the validation : ``True``
+    if all records are valid (ie the list is empty), else
+    ``False``.
+
+    Attributes
+    ----------
+    anomalies : list(DataValidationAnomaly)
+        List of invalid records.
+
+    """
+    def __bool__(self):
+        return len(self) == 0
+
+class VocabularyDataTable(list):
     """Pseudo table with vocabulary data.
     
     This class is meant to organise parsed vocabulary prior to
-    database storage. A :py:class:`VocabularyTable` object
+    database storage. A :py:class:`VocabularyDataTable` object
     contains the data meant for the database table with the same
-    name as its attribute :py:attr:`VocabularyTable.name`.
+    name as its attribute :py:attr:`VocabularyDataTable.name`.
 
     Each item of the list represents a database record. It is
     a dictionnary whose keys are the names of the table fields.
     Its values are the values of the fields (ie. some vocabulary
     data) or ``None`` if no data was provided.
 
-    :py:class:`VocabularyTable` objects are usually created
-    and filled through a :py:class:`VocabularyData` object.
+    :py:class:`VocabularyDataTable` objects are usually created
+    and filled through a :py:class:`VocabularyDataCluster` object.
     
     Parameters
     ----------
@@ -34,6 +97,11 @@ class VocabularyTable(list):
         name, such prefixed will be added.
     fields : tuple(str)
         Names of the table fields.
+    unique : list(str or tuple(str)), optional
+        List of fields names or tuples of fields names
+        that should be unique across the table.
+    not_null : list(str), optional
+        List of fields names that should not be empty.
 
     Attributes
     ----------
@@ -41,15 +109,97 @@ class VocabularyTable(list):
         The table name.
     fields : tuple(str)
         Names of the table fields.
+    constraints : list(DataTableConstraint)
+        List of the table constraints.
 
     """
 
-    def __init__(self, vocabulary, name, fields):
-        self.fields = tuple(fields or ())
+    def __init__(
+        self, vocabulary, name, fields,
+        not_null=None, unique=None
+    ):
+        no_duplicate_fields = []
+        for f in fields or ():
+            if not f in no_duplicate_fields:
+                no_duplicate_fields.append(f)
+        self.fields = tuple(no_duplicate_fields)
+
         if not name.startswith(f'{vocabulary}_'):
             name = f'{vocabulary}_{name}'
         self.name = name
+
+        self.constraints = []
+
+        for field in not_null or []:
+            constraint = DataTableNotNullConstraint(field)
+            if field in self.fields and not constraint in self.constraints:
+                self.constraints.append(constraint)
+
+        for u in unique or []:
+            if isinstance(u, str):
+                u = (u, )
+            constraint = DataTableUniqueConstraint(sorted(u))
+            if all(f in self.fields for f in u) \
+                and not constraint in self.constraints:
+                self.constraints.append(constraint)
+
+    def validate(self, delete=True):
+        """Validate the table data.
+
+        This method validate the table data against its
+        not null and unique constraints, if any.
+
+        By default, unvalid records are deleted from
+        the table. This may be prevented using the
+        `delete` parameter.
+
+        Invalid records are returned through the response
+        :py:attr:`DataValidationResponse.anomalies` attribute,
+        so the parser can handle them.
+
+        Parameters
+        ----------
+        delete : bool, default True
+            If ``True``, unvalid records will be deleted
+            from the table.
         
+        Returns
+        -------
+        DataValidationResponse
+
+        """
+        if not self.constraints:
+            return DataValidationResponse()
+
+        anomalies = []
+
+        known = {
+            c: [] for c in self.constraints
+            if isinstance(c, DataTableUniqueConstraint)
+        }
+        for item in self:
+            for constraint in self.constraints:
+                if isinstance(constraint, DataTableNotNullConstraint):
+                    if not item[constraint]:
+                        anomalies.append(DataValidationAnomaly(item, constraint))
+                if isinstance(constraint, DataTableUniqueConstraint):
+                    t = tuple(item[f] for f in constraint)
+                    if t in known[constraint]:
+                        anomalies.append(DataValidationAnomaly(item, constraint))
+                    else:
+                        known[constraint].append(t)
+
+        if delete:
+            for anomalie in anomalies:
+                if anomalie in self:
+                    # item might have been deleted already if more than
+                    # one anomaly
+                    self.remove(anomalie)
+                    # for completely duplicated lines, this will leave only
+                    # the last one
+
+        return DataValidationResponse(anomalies)
+
     def add(self, *data, **kwdata):
         """Add some data to the table.
         
@@ -64,7 +214,7 @@ class VocabularyTable(list):
         
         Examples
         --------
-        >>> table = VocabularyTable(
+        >>> table = VocabularyDataTable(
         ...     'somevoc', 'special', ('field_1', 'field_2')
         ... )
         >>> table.add()
@@ -92,24 +242,25 @@ class VocabularyTable(list):
                     item[field] = value
         return item
 
-class VocabularyData(dict):
-    """Vocabulary data.
+class VocabularyDataCluster(dict):
+    """Vocabulary data cluster.
 
     This class is meant to organise parsed vocabulary prior to
     database storage.
 
-    A :py:class:`VocabularyData` is a dictionnary. Its keys are
-    database table names. Its values :py:class:`VocabularyTable`
+    A :py:class:`VocabularyDataCluster` is a dictionnary. Its keys are
+    database table names. Its values :py:class:`VocabularyDataTable`
     are objects containing the data to be loaded into said
     tables.
 
     The labels' table and the alternative labels' table are
     created during initialization and can be accessed through
-    the attributes :py:attr:`VocabularyData.label` and 
-    :py:attr:`VocabularyData.altlabel`.
+    the attributes :py:attr:`VocabularyDataCluster.label` and 
+    :py:attr:`VocabularyDataCluster.altlabel`.
 
-    Additionnal tables may be added with :py:meth:`VocabularyData.table`
-    and will be accessible through an attribute named after the
+    Additionnal tables may be added with :py:meth:`VocabularyDataCluster.table`.
+
+    All tables are accessible through an attribute named after the
     table.
 
     Parameters
@@ -117,9 +268,12 @@ class VocabularyData(dict):
     vocabulary : str
         Name of the vocabulary, ie its ``name``
         property in ``vocabularies.yaml``.
-    label : VocabularyTable
+
+    Attributes
+    ----------
+    label : VocabularyDataTable
         The table containing the vocabulary labels.
-        This table has three fields :
+        This table has three fields:
 
         * ``uri`` is the vocabulary item URI.
         * ``language`` is a ISO 639-1 language code
@@ -127,39 +281,41 @@ class VocabularyData(dict):
         * ``label`` is the preferred label for the
           language.
         
-        ``uri, language`` should be unique.
-    altlabel : VocabularyTable
+        Constraints:
+        * ``uri`` and ``label`` fields are not empty.
+        * the table never contains more than one
+          label for a given language and vocabulary.
+        
+    altlabel : VocabularyDataTable
         The table containing the vocabulary alternative
         labels. Same structure as `label` whithout
-        unicity consideration. Alternative labels are
+        unicity constraint. Alternative labels are
         used to find matching vocabulary items during
         harvest. Users will never see them.
-
-    Attributes
-    ----------
-    name : str
-        The table name.
-    fields : tuple(str)
-        Names of the table fields.
-
+    
     """
 
     def __init__(self, vocabulary):
         self.vocabulary = vocabulary
-        table = VocabularyTable(
+        table = VocabularyDataTable(
             self.vocabulary,
             name='label',
-            fields=('uri', 'language', 'label')
+            fields=('uri', 'language', 'label'),
+            unique=[('uri', 'language')],
+            not_null=['uri', 'label']
         )
         self[table.name] = table
-        self.labels = table
-        table = VocabularyTable(
+        self.label = table
+        setattr(self, table.name, table)
+        table = VocabularyDataTable(
             self.vocabulary,
             name='altlabel',
-            fields=('uri', 'language', 'label')
+            fields=('uri', 'language', 'label'),
+            not_null=['uri', 'label']
         )
         self[table.name] = table
-        self.altlabels = table
+        self.altlabel = table
+        setattr(self, table.name, table)
 
     def table(self, name, fields):
         """Add a custom table and returns its name.
@@ -188,18 +344,18 @@ class VocabularyData(dict):
 
         Examples
         --------
-        >>> somevoc = VocabularyData('somevoc')
-        >>> somevoc.table('special', ('field_1', 'field_2'))
+        >>> cluster = VocabularyDataCluster('somevoc')
+        >>> cluster.table('special', ('field_1', 'field_2'))
         'somevoc_special'
-        >>> somevoc.table('somevoc_special', ('field_1', 'field_2')) is None
+        >>> cluster.table('somevoc_special', ('field_1', 'field_2')) is None
         True
 
         """
         if name in self:
             return
-        table = VocabularyTable(self.vocabulary, name, fields)
+        table = VocabularyDataTable(self.vocabulary, name, fields)
         self[table.name] = table
-        self.__setattr__(table.name, table)
+        setattr(self, table.name, table)
         return table.name
 
 def spdx_license_to_skos(url, strict=False):
