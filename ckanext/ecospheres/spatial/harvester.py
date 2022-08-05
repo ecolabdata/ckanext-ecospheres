@@ -9,6 +9,7 @@ from lxml import etree
 from ckanext.spatial.interfaces import ISpatialHarvester
 from ckanext.harvest.harvesters.base import HarvesterBase
 
+from ckanext.ecospheres.spatial.utils import build_dataset_dict_from_schema
 
 class FrSpatialHarvester(plugins.SingletonPlugin):
     '''Customization of spatial metadata harvest.
@@ -53,7 +54,27 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         package_dict = data_dict['package_dict']
         iso_values = data_dict['iso_values'] 
         xml_tree = data_dict['xml_tree']
-        
+
+        dataset_dict = build_dataset_dict_from_schema('dataset',
+            language=iso_values['metadata-language'])
+
+        for target_field, package_field in {
+            'owner_org': 'owner_org'
+        }:
+            dataset_dict.set_value(target_field, package_field.get(iso_field))
+
+        for target_field, iso_field in {
+            'free_tag': 'tags',
+            'title': 'title',
+            'notes': 'abstract',
+            'name': 'guid',
+        }:
+            dataset_dict.set_value(target_field, iso_values.get(iso_field))
+
+        return dataset_dict
+
+        # OLD : to be deleted
+
         # adding some useful categories from iso_values
         for key in ('lineage', 'topic-category', 'equivalent-scale', 'metadata-point-of-contact', 'use-constraints', 'aggregation-info', 'temporal-extent-begin', 'temporal-extent-end', 'bbox'):
             value = iso_values[key]
@@ -183,3 +204,4 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         print("package_dict: ",package_dict)
         return package_dict
         
+
