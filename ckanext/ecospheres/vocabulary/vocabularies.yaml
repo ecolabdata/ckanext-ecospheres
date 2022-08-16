@@ -125,12 +125,17 @@
 - name: spdx_license
   url: https://spdx.org/licenses/licenses.json
   about: https://github.com/spdx/license-list-data
-  parser: spdx_license_to_skos
+  parser: spdx_license
   available: False
 
 - name: ogc_epsg
-  url: http://www.opengis.net/def/crs/EPSG/0
-  parser: ogc_epsg_to_skos
+  url: https://apps.epsg.org/api/v1/CoordRefSystem
+  about: http://www.opengis.net/def/crs/EPSG/0
+  comment: >
+    Data is acquired from the IOGP registry since their API allows fetching
+    more than one CRS by request. Labels are provided, not OGC's URIs. See
+    parser description for more details.
+  parser: iogp_epsg
   maintenance_frequency: 100
   available: False
 
