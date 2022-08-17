@@ -65,8 +65,9 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
 
         language = iso_values.get('metadata-language') or 'fr'
         if len(language) > 2:
-            # d'autant que de besoin, conversion des codes de langue
-            # sur 3 caractères en codes sur 2 caractères, comme attendu en RDF
+            # if possible (and as expected), the RDF language tag
+            # will use the 2 letters ISO language codes instead of
+            # the 3 letters ones
             language=ISO_639_2.get(language, language)
         
         dataset_dict = build_dataset_dict_from_schema('dataset', language=language)
@@ -177,7 +178,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
 
         for elem in package_dict['extras']:
         # the following are "default extras" from the
-        # harvest source
+        # harvest source, not harvested metadata
 
             if elem['key'] == 'catalog_title':
                 catalog_dict.set_value('title', elem['value'])
