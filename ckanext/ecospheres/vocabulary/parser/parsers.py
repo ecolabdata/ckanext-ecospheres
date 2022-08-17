@@ -222,6 +222,107 @@ def spdx_license(vocabulary, url, **kwargs):
 
     return result
 
+def iogp_epsg(vocabulary, url, **kwargs):
+    """Build a vocabulary cluster from the OGC's EPSG coordinates reference systems register's data.
+
+    Parameters
+    ----------
+    vocabulary : str
+        Name of the vocabulary, ie its ``name``
+        property in ``vocabularies.yaml``.
+    url : str
+        Base URL of the EPSG register. Should return
+        a XML document listing all coordinates reference
+        systems (CRS) URIs.
+
+    Returns
+    -------
+    VocabularyParsingResult
+
+    """
+    result = VocabularyParsingResult(vocabulary)
+
+    # first request to know the number of entries
+    try:
+        json_data = utils.fetch_data(url)
+    except Exception as error:
+        result.exit(error)
+        return result
+    
+    if not 'TotalResults' in json_data:
+        result.exit(
+            exceptions.UnexpectedDataError(
+                'Missing key "TotalResults" in the JSON data.'
+            )
+        )
+        return result
+    
+    # second request to fetch them
+    try:
+        json_data = utils.fetch_data(
+            url, params={'pageSize': json_data['TotalResults']}
+            )
+    except Exception as error:
+        result.exit(error)
+        return result
+    
+    if not 'Results' in json_data:
+        result.exit(
+            exceptions.UnexpectedDataError(
+                'Missing key "Results" in the JSON data.'
+            )
+        )
+        return result
+
+    for crs_data in json_data['Results']:
+        valid = True
+
+        name = crs_data['Name']
+        if not name:
+            result.log_error(
+                exceptions.UnexpectedDataError('Missing name.', detail=crs_data),
+            )
+            valid = False
+
+        identifier = crs_data['Code']
+        if not identifier:
+            result.log_error(
+                exceptions.UnexpectedDataError('Missing identifier.', detail=crs_data),
+            )
+            valid = False
+        
+        code_space = crs_data['DataSource']
+        if not code_space == 'EPSG':
+            result.log_error(
+                exceptions.UnexpectedDataError('Code space is not EPSG.', detail=crs_data),
+            )
+            valid = False
+        # any code space other than EPSG (ie nothing for now) is
+        # discarded, since it won't be possible to build the OGC URI
+
+        if valid:
+            uri = f'http://www.opengis.net/def/crs/EPSG/0/{identifier}'
+            result.add_label(
+                uri=uri,
+                label=f'{code_space} {identifier} : {name}'
+            )
+            # alternative labels: 'code:identifier', name
+            # alone and identifier alone
+            result.add_label(
+                uri=uri,
+                label=f'{code_space}:{identifier}'
+            )
+            result.add_label(
+                uri=uri,
+                label=f'{name}'
+            )
+            result.add_label(
+                uri=uri,
+                label=f'{identifier}'
+            )
+
+    return result
+
 def ogc_epsg(vocabulary, url, limit=None, **kwargs):
     """Build a vocabulary cluster from the OGC's EPSG coordinates reference systems register's data.
 
@@ -235,7 +336,7 @@ def ogc_epsg(vocabulary, url, limit=None, **kwargs):
         a XML document listing all coordinates reference
         systems (CRS) URIs.
     limit : int, optional
-        Maximim number of CRS whose data should be fetched
+        Maximum number of CRS whose data should be fetched
         (one query by CRS). If ``None``, all listed CRS
         URIs are queried. In that case, execution takes
         approximatively 2 hours, with around 7k HTTP requests
