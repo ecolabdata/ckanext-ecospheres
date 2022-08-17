@@ -130,11 +130,13 @@
 
 - name: ogc_epsg
   url: https://apps.epsg.org/api/v1/CoordRefSystem
-  about: http://www.opengis.net/def/crs/EPSG/0
+  about: https://apps.epsg.org/api/swagger/ui/index
   comment: >
     Data is acquired from the IOGP registry since their API allows fetching
     more than one CRS by request. Labels are provided, not OGC's URIs. See
     parser description for more details.
+    The base URL for the OGC registry would have been:
+    http://www.opengis.net/def/crs/EPSG/0.
   parser: iogp_epsg
   maintenance_frequency: 100
   available: False
