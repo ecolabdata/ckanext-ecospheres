@@ -7,13 +7,19 @@ file.
 A parser should take two positional arguments:
 
 * The name of the vocabulary for which the
-  parser is being used.
+  parser is being used, ie the value of its
+  ``name`` property in ``vocabularies.yaml``.
 * The URL provided by the ``vocabularies.yaml``
   file, ie the ``url`` property for the vocabulary.
   This is the location to fetch the data from.
 
 Parsers may use optional arguments and they should
-allow arbitrary keywords parameters.
+allow arbitrary keywords parameters. If the values
+for the optional arguments are expected to be provided
+by the ``vocabularies.yaml`` file, then their names
+and types should match some properties of this file.
+If not, then they should not match the name of
+any property used in the ``vocabularies.yaml`` file.
 
 All vocabulary parsers should return a
 :py:class:`VocabularyParsingResult` object.
@@ -21,7 +27,7 @@ All vocabulary parsers should return a
 Initializating the result should be one of the first
 steps for the parser:
 
-    >>> res = VocabularyParsingResult(vocabulary)
+    >>> res = VocabularyParsingResult(name)
 
 The :py:mod:`ckanext.ecospheres.vocabulary.parser.utils`
 module provides some convenient tools to fetch and parse
@@ -118,9 +124,12 @@ object:
 
 """
 
-import requests, re, json
+import re, json
 from lxml import etree
-from rdflib import Graph, URIRef, Literal, SKOS, RDF
+from rdflib import (
+    Graph, URIRef, Literal, SKOS, RDF, RDFS,
+    DCTERMS as DCT, FOAF
+)
 from io import BytesIO
 
 from ckanext.ecospheres.vocabulary.parser import utils, exceptions
@@ -132,14 +141,112 @@ EPSG_NAMESPACES = {
        'epsg': 'urn:x-ogp:spec:schema-xsd:EPSG:2.2:dataset'
     }
 
-def spdx_license(vocabulary, url, **kwargs):
+RDF_LABELS = [
+    SKOS.prefLabel, DCT.title, RDFS.label, FOAF.name,
+    SKOS.altLabel, DCT.identifier, SKOS.notation
+]
+"""Ordered list of RDF properties that might provide a label.
+
+The order of the list is the order the properties
+will be considered when the vocabulary is parsed. Once one
+of these was found, the value is used as label, any other
+would provide an alternative label. 
+
+"""
+
+def basic_rdf(
+    name, url, format='xml', schemes=None, 
+    languages=None, rdf_types=None, **kwargs
+):
+    """Build a vocabulary cluster from RDF data using simple SKOS vocabulary.
+
+    This parser will register as a vocabulary item any URI 
+    typed as ``skos:Concept`` and/or having a ``skos:inScheme``
+    property.
+
+    Parameters
+    ----------
+    name : str
+        Name of the vocabulary.
+    url : str
+        Base URL of the SPDX register. Should return
+        a JSON document listing all licenses, with keys
+        ``reference``, ``licenseId`` and ``name``.
+    format : {'xml', 'turtle', 'n3', 'json-ld', 'nt', 'trig'}, optional
+        Encoding format of the RDF data. Parsing will
+        fail if this parameter isn't properly set.
+    schemes : list(str or URIRef), optional
+        A list of schemes' URIs. If provided, only the
+        concepts from the listed schemes are considered.
+    languages : list(str or None), optional
+        A list of allowed languages for labels. If 
+        provided, only labels explicitely tagged with one
+        of the languages from the list will be considered.
+        To accept labels without a language tag, ``None``
+        should be added to the list.
+    rdf_types : list(str or URIRef), optional
+        A list of RDF classes URIs. If provided, items
+        typed as an object of one of those classes will
+        be considered as vocabulary items and only them.
+    
+    Returns
+    -------
+    VocabularyParsingResult
+
+    """
+
+    result = VocabularyParsingResult(name)
+
+    try:
+        rdf_data = utils.fetch_data(url, format='text')
+        graph = Graph()
+        graph.parse(data=rdf_data, format=format)
+    except Exception as error:
+        result.exit(error)
+        return result
+
+    uris = []
+    for uri, p, o in graph:
+        if isinstance(uri, URIRef) and not uri in uris and (
+            schemes and any(
+                (uri, SKOS.inScheme, URIRef(scheme)) in graph
+                for scheme in schemes
+            ) and (
+                not rdf_types or any(
+                    (uri, RDF.type, URIRef(rdf_type)) in graph
+                    for rdf_type in rdf_types
+                )
+            )
+            or not schemes and (
+                not rdf_types and (
+                    (uri, RDF.type, SKOS.Concept) in graph
+                    or (uri, SKOS.inScheme, None) in graph
+                )
+                or rdf_types and any(
+                    (uri, RDF.type, URIRef(rdf_type)) in graph
+                    for rdf_type in rdf_types
+                )
+            ) 
+        ):
+            uris.append(uri)
+
+    for uri in uris:
+        for property in RDF_LABELS:
+            for label in graph.objects(uri, property):
+                if isinstance(label, Literal) and (
+                    not languages or label.language in languages 
+                ):
+                    result.add_label(uri, label.language, str(label))
+
+    return result
+
+def spdx_license(name, url, **kwargs):
     """Build a vocabulary cluster from the SPDX license register's data.
 
     Parameters
     ----------
-    vocabulary : str
-        Name of the vocabulary, ie its ``name``
-        property in ``vocabularies.yaml``.
+    name : str
+        Name of the vocabulary.
     url : str
         Base URL of the SPDX register. Should return
         a JSON document listing all licenses, with keys
@@ -151,7 +258,7 @@ def spdx_license(vocabulary, url, **kwargs):
 
     """
 
-    result = VocabularyParsingResult(vocabulary)
+    result = VocabularyParsingResult(name)
 
     try:
         json_data = utils.fetch_data(url)
@@ -222,14 +329,13 @@ def spdx_license(vocabulary, url, **kwargs):
 
     return result
 
-def iogp_epsg(vocabulary, url, **kwargs):
+def iogp_epsg(name, url, **kwargs):
     """Build a vocabulary cluster from the OGC's EPSG coordinates reference systems register's data.
 
     Parameters
     ----------
-    vocabulary : str
-        Name of the vocabulary, ie its ``name``
-        property in ``vocabularies.yaml``.
+    name : str
+        Name of the vocabulary.
     url : str
         Base URL of the EPSG register. Should return
         a XML document listing all coordinates reference
@@ -240,7 +346,7 @@ def iogp_epsg(vocabulary, url, **kwargs):
     VocabularyParsingResult
 
     """
-    result = VocabularyParsingResult(vocabulary)
+    result = VocabularyParsingResult(name)
 
     # first request to know the number of entries
     try:
@@ -323,14 +429,13 @@ def iogp_epsg(vocabulary, url, **kwargs):
 
     return result
 
-def ogc_epsg(vocabulary, url, limit=None, **kwargs):
+def ogc_epsg(name, url, limit=None, **kwargs):
     """Build a vocabulary cluster from the OGC's EPSG coordinates reference systems register's data.
 
     Parameters
     ----------
     vocabulary : str
-        Name of the vocabulary, ie its ``name``
-        property in ``vocabularies.yaml``.
+        Name of the vocabulary.
     url : str
         Base URL of the EPSG register. Should return
         a XML document listing all coordinates reference
@@ -347,7 +452,7 @@ def ogc_epsg(vocabulary, url, limit=None, **kwargs):
     VocabularyParsingResult
 
     """
-    result = VocabularyParsingResult(vocabulary)
+    result = VocabularyParsingResult(name)
 
     runs = 0
 
