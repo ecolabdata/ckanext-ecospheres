@@ -1,6 +1,7 @@
 
 import json
 from pathlib import Path
+from ckanext import __path__ as ckanext_path
 
 class DataConstraint:
     """Constraint.
@@ -999,18 +1000,29 @@ class VocabularyDataCluster(dict):
             self.altlabel.add(*data, **kwdata)
         return response
 
-    def dump(self, dirpath):
+    def dump(self, dirpath=None):
         """Dump the cluster data as JSON.
         
         Parameters
         ----------
-        dirpath : str or pathlib.Path
+        dirpath : str or pathlib.Path, optional
             Path of the directory were data should be
             stored. The file will be named after the
             vocabulary, with a ``'.json'`` extension.
+            If not provided, the file is stored in
+            a ``vocabularies`` subdirectory that will be
+            created (if not existing already) in the
+            parent directory of the extension, ie. the
+            GIT root.
         
         """
-        path = Path(dirpath) / f'{self.vocabulary}.json'
-        with open(path, 'w') as target:
+        if dirpath:
+            base_path = Path(dirpath)
+        else:
+            base_path = Path(ckanext_path[0]).parent / 'vocabularies'
+            if not base_path.exists() or not base_path.is_dir():
+                base_path.mkdir()
+        path = base_path / f'{self.vocabulary}.json'
+        with open(path, 'w', encoding='utf-8') as target:
             json.dump(self, target, ensure_ascii=False, indent=4)
 
