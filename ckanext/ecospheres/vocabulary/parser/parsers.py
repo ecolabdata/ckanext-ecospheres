@@ -31,12 +31,21 @@ steps for the parser:
 
 The :py:mod:`ckanext.ecospheres.vocabulary.parser.utils`
 module provides some convenient tools to fetch and parse
-raw data.
+raw data, notably the :py:func:`ckanext.ecospheres.vocabulary.parser.utils.fetch_data`
+function.
 
-Any error met during execution should be logged, either
+Arbitrary keywords parameters should be passed down
+any time the parser calls :py:func:`ckanext.ecospheres.vocabulary.parser.utils.fetch_data`.
+:py:func:`ckanext.ecospheres.vocabulary.parser.utils.fetch_data` will
+then pass down any relevant parameter (ie. any parameter with an expected name)
+to :py:func:`requests.get`, such as proxy mapping, etc.
+
+    >>> data = utils.fetch_data(url, format=format, **kwargs)
+
+Any error met during execution should be logged by the parser, either
 as a "critical failure" or as a "simple error".
 
-Declare a critical failure with the
+To declare a critical failure with the
 :py:meth:`VocabularyParsingResult.exit` method:
 
     >>> res.exit(exception_object)
@@ -45,7 +54,7 @@ Declare a critical failure with the
 As in the exemple above, the (failed) parsing result should
 immediately be returned after declaring a critical failure.
 
-Log a simple error with the
+To log a simple error with the
 :py:meth:`VocabularyParsingResult.log_error` method:
 
     >>> res.log_error(exception_object)
@@ -133,6 +142,7 @@ from rdflib import (
 from io import BytesIO
 
 from ckanext.ecospheres.vocabulary.parser import utils, exceptions
+from ckanext.ecospheres.vocabulary.parser.utils import VocabularyGraph
 from ckanext.ecospheres.vocabulary.parser.result import VocabularyParsingResult
 
 
@@ -141,28 +151,12 @@ EPSG_NAMESPACES = {
        'epsg': 'urn:x-ogp:spec:schema-xsd:EPSG:2.2:dataset'
     }
 
-RDF_LABELS = [
-    SKOS.prefLabel, DCT.title, RDFS.label, FOAF.name,
-    SKOS.altLabel, DCT.identifier, SKOS.notation
-]
-"""Ordered list of RDF properties that might provide a label.
-
-The order of the list is the order the properties
-will be considered when the vocabulary is parsed. Once one
-of these was found, the value is used as label, any other
-would provide an alternative label. 
-
-"""
-
 def basic_rdf(
     name, url, format='xml', schemes=None, 
-    languages=None, rdf_types=None, **kwargs
+    languages=None, rdf_types=None, recursive=False,
+    hierarchy=False, **kwargs
 ):
     """Build a vocabulary cluster from RDF data using simple SKOS vocabulary.
-
-    This parser will register as a vocabulary item any URI 
-    typed as ``skos:Concept`` and/or having a ``skos:inScheme``
-    property.
 
     Parameters
     ----------
@@ -175,7 +169,7 @@ def basic_rdf(
     format : {'xml', 'turtle', 'n3', 'json-ld', 'nt', 'trig'}, optional
         Encoding format of the RDF data. Parsing will
         fail if this parameter isn't properly set.
-    schemes : list(str or URIRef), optional
+    schemes : list(str or rdflib.term.URIRef), optional
         A list of schemes' URIs. If provided, only the
         concepts from the listed schemes are considered.
     languages : list(str or None), optional
@@ -184,10 +178,21 @@ def basic_rdf(
         of the languages from the list will be considered.
         To accept labels without a language tag, ``None``
         should be added to the list.
-    rdf_types : list(str or URIRef), optional
+    rdf_types : list(str or rdflib.term.URIRef), optional
         A list of RDF classes URIs. If provided, items
         typed as an object of one of those classes will
         be considered as vocabulary items and only them.
+    recursive : bool, default False
+        If ``True``, the function will try and get additional
+        data by sending a request to every vocabulary URI.
+        Do not change the value of this parameter if not
+        necessary to retrieve the labels or any relevant
+        information as it will make the parsing much slower.
+    hierarchy : bool, default False
+        If ``True``, an additional ``[name]_hierarchy``
+        table will be added to the cluster and populated with
+        relationships provided by ``skos:broader`` and
+        ``skos:narrower`` properties.
     
     Returns
     -------
@@ -198,47 +203,93 @@ def basic_rdf(
     result = VocabularyParsingResult(name)
 
     try:
-        rdf_data = utils.fetch_data(url, format='text')
-        graph = Graph()
+        rdf_data = utils.fetch_data(url, format='text', **kwargs)
+        graph = VocabularyGraph()
         graph.parse(data=rdf_data, format=format)
     except Exception as error:
         result.exit(error)
         return result
 
-    uris = []
-    for uri, p, o in graph:
-        if isinstance(uri, URIRef) and not uri in uris and (
-            schemes and any(
-                (uri, SKOS.inScheme, URIRef(scheme)) in graph
-                for scheme in schemes
-            ) and (
-                not rdf_types or any(
-                    (uri, RDF.type, URIRef(rdf_type)) in graph
-                    for rdf_type in rdf_types
+    uris = graph.find_vocabulary_items(schemes=schemes, rdf_types=rdf_types)
+    all_uris = uris.copy()
+    relationships = []
+    
+    while uris:
+        uri = uris.pop()
+        labels = graph.find_labels(uri, languages=languages)
+        if hierarchy:
+            parents = graph.find_parents(uri)
+            for parent in parents:
+                if not (parent, uri) in relationships:
+                    relationships.append((parent, uri))
+
+        if recursive:
+            try:
+                concept_data = utils.fetch_data(uri, format='text', **kwargs)
+                concept_graph = VocabularyGraph()
+                concept_graph.parse(data=concept_data, format=format)
+                new_uris = concept_graph.find_vocabulary_items(
+                    schemes=schemes, rdf_types=rdf_types
+                    )
+                for new_uri in new_uris:
+                    if not new_uri in all_uris:
+                        all_uris.append(new_uri)
+                        uris.append(new_uri)
+                new_labels = concept_graph.find_labels(uri, languages=languages)
+                for new_label in new_labels:
+                    if not new_label in labels:
+                        labels.append(new_label)
+                # this means that if a label had been found from the previous
+                # request, any label returned here will be seen as an
+                # alternative label, even if a "better" property was holding
+                # the label
+                if hierarchy:
+                    parents = concept_graph.find_parents(uri)
+                    for parent in parents:
+                        if not (parent, uri) in relationships:
+                            relationships.append((parent, uri))
+            except Exception as error:
+                result.log_error(error)
+        
+        for label in labels:
+            result.add_label(str(uri), label.language, str(label))
+        
+        if not labels:
+            result.log_error(
+                exceptions.UnexpectedDataError(
+                    'missing label', detail=str(uri)
                 )
             )
-            or not schemes and (
-                not rdf_types and (
-                    (uri, RDF.type, SKOS.Concept) in graph
-                    or (uri, SKOS.inScheme, None) in graph
-                )
-                or rdf_types and any(
-                    (uri, RDF.type, URIRef(rdf_type)) in graph
-                    for rdf_type in rdf_types
-                )
-            ) 
-        ):
-            uris.append(uri)
 
-    for uri in uris:
-        for property in RDF_LABELS:
-            for label in graph.objects(uri, property):
-                if isinstance(label, Literal) and (
-                    not languages or label.language in languages 
-                ):
-                    result.add_label(uri, label.language, str(label))
+    if relationships:
+        table_name = result.data.table('hierarchy', ('parent', 'child'))
+        table = result.data[table_name]
+        table.set_not_null_constraint('parent')
+        table.set_not_null_constraint('child')
+        result.data.set_reference_constraint(
+            referenced_table=table_name,
+            referenced_fields=('parent',),
+            referencing_table='label',
+            referencing_fields=('uri',)
+        )
+        result.data.set_reference_constraint(
+            referenced_table=table_name,
+            referenced_fields=('child',),
+            referencing_table='label',
+            referencing_fields=('uri',)
+        )
+        for relationship in relationships:
+            table.add(*relationship)
+        response = result.data.validate()
+        if not response:
+            for anomaly in response:
+                result.log_error(exceptions.InvalidDataError(anomaly))
+
+    if not result.data:
+        result.exit(exceptions.NoVocabularyDataError())
 
     return result
+
 
 def spdx_license(name, url, **kwargs):
     """Build a vocabulary cluster from the SPDX license register's data.
@@ -261,7 +312,7 @@ def spdx_license(name, url, **kwargs):
     result = VocabularyParsingResult(name)
 
     try:
-        json_data = utils.fetch_data(url)
+        json_data = utils.fetch_data(url, **kwargs)
     except Exception as error:
         result.exit(error)
         return result
@@ -269,7 +320,7 @@ def spdx_license(name, url, **kwargs):
     if not 'licenses' in json_data:
         result.exit(
             exceptions.UnexpectedDataError(
-                'Missing key "licenses" in the JSON data.'
+                'missing key "licenses" in the JSON data'
             )
         )
         return result
@@ -281,7 +332,7 @@ def spdx_license(name, url, **kwargs):
         if not uri:
             result.log_error(
                 exceptions.UnexpectedDataError(
-                    'Missing key "reference" for the license.',
+                    'missing key "reference" for the license',
                     detail=json.dumps(license, ensure_ascii=False)
                 )
             )
@@ -293,7 +344,7 @@ def spdx_license(name, url, **kwargs):
         if not name:
             result.log_error(
                 exceptions.UnexpectedDataError(
-                    'Missing key "name" for the license.',
+                    'missing key "name" for the license',
                     detail=json.dumps(license, ensure_ascii=False)
                 )
             )
@@ -303,7 +354,7 @@ def spdx_license(name, url, **kwargs):
         if not identifier:
             result.log_error(
                 exceptions.UnexpectedDataError(
-                    'Missing key "licenseId" for the license.',
+                    'missing key "licenseId" for the license',
                     detail=json.dumps(license, ensure_ascii=False)
                 )
             )
@@ -350,7 +401,7 @@ def iogp_epsg(name, url, **kwargs):
 
     # first request to know the number of entries
     try:
-        json_data = utils.fetch_data(url)
+        json_data = utils.fetch_data(url, **kwargs)
     except Exception as error:
         result.exit(error)
         return result
@@ -358,7 +409,7 @@ def iogp_epsg(name, url, **kwargs):
     if not 'TotalResults' in json_data:
         result.exit(
             exceptions.UnexpectedDataError(
-                'Missing key "TotalResults" in the JSON data.'
+                'missing key "TotalResults" in the JSON data'
             )
         )
         return result
@@ -366,7 +417,7 @@ def iogp_epsg(name, url, **kwargs):
     # second request to fetch them
     try:
         json_data = utils.fetch_data(
-            url, params={'pageSize': json_data['TotalResults']}
+            url, params={'pageSize': json_data['TotalResults']}, **kwargs
             )
     except Exception as error:
         result.exit(error)
@@ -375,7 +426,7 @@ def iogp_epsg(name, url, **kwargs):
     if not 'Results' in json_data:
         result.exit(
             exceptions.UnexpectedDataError(
-                'Missing key "Results" in the JSON data.'
+                'missing key "Results" in the JSON data'
             )
         )
         return result
@@ -386,21 +437,21 @@ def iogp_epsg(name, url, **kwargs):
         name = crs_data['Name']
         if not name:
             result.log_error(
-                exceptions.UnexpectedDataError('Missing name.', detail=crs_data),
+                exceptions.UnexpectedDataError('missing name', detail=crs_data),
             )
             valid = False
 
         identifier = crs_data['Code']
         if not identifier:
             result.log_error(
-                exceptions.UnexpectedDataError('Missing identifier.', detail=crs_data),
+                exceptions.UnexpectedDataError('missing identifier', detail=crs_data),
             )
             valid = False
         
         code_space = crs_data['DataSource']
         if not code_space == 'EPSG':
             result.log_error(
-                exceptions.UnexpectedDataError('Code space is not EPSG.', detail=crs_data),
+                exceptions.UnexpectedDataError('code space is not EPSG', detail=crs_data),
             )
             valid = False
         # any code space other than EPSG (ie nothing for now) is
@@ -457,7 +508,7 @@ def ogc_epsg(name, url, limit=None, **kwargs):
     runs = 0
 
     try:
-        raw_data = utils.fetch_data(url, format='bytes')
+        raw_data = utils.fetch_data(url, format='bytes', **kwargs)
         main_tree = etree.parse(BytesIO(raw_data))
         main_root = main_tree.getroot()
     except Exception as error:
@@ -473,7 +524,7 @@ def ogc_epsg(name, url, limit=None, **kwargs):
         crs_url = elem.text
 
         try:
-            raw_crs_data = utils.fetch_data(crs_url, format='bytes')
+            raw_crs_data = utils.fetch_data(crs_url, format='bytes', **kwargs)
             crs_tree = etree.parse(BytesIO(raw_crs_data))
             crs_root = crs_tree.getroot()
         except Exception as error:
@@ -485,14 +536,14 @@ def ogc_epsg(name, url, limit=None, **kwargs):
         name = crs_root.xpath('gml:name/text()', namespaces=EPSG_NAMESPACES)
         if not name:
             result.log_error(
-                exceptions.UnexpectedDataError('Missing name.', detail=crs_url),
+                exceptions.UnexpectedDataError('missing name', detail=crs_url),
             )
             valid = False
 
         identifier = crs_root.xpath('gml:identifier/text()', namespaces=EPSG_NAMESPACES)
         if not identifier:
             result.log_error(
-                exceptions.UnexpectedDataError('Missing identifier.', detail=crs_url),
+                exceptions.UnexpectedDataError('missing identifier', detail=crs_url),
             )
             valid = False
         
