@@ -14,16 +14,17 @@
 # about: >
 #   URL d'une page décrivant le vocabulaire, et/ou permettant à
 #   une personne d'accéder aux données.
-# schemes: >
-#   Si renseigné, seuls les éléments rattachés à l'un
-#   des ensembles listés (skos:inScheme) doivent être inclus dans
-#   le vocabulaire considéré.
 # comment: observations libres.
 # maintenance_frequency: >
 #   Fréquence de mise à jour automatique du vocabulaire, en nombre de
 #   jour.
 # available: >
 #   Booléen indiquant si le vocabulaire est effectivement disponible.
+#
+# Lorsque la fonction de désérialisation admet des arguments optionnels,
+# leurs valeurs peuvent être fournies via le présent fichier, en ajoutant
+# au vocabulaire des propriétés dont le nom et le type de valeur
+# correspondent à ceux des arguments du parser.
 #
 
 
@@ -52,6 +53,9 @@
 
 - name: ecospheres_theme
   url: https://registre.data.developpement-durable.gouv.fr/ecospheres/themes-ecospheres
+  format: 'json-ld'
+  recursive: True
+  hierarchy: True
   available: False
 
 - name: eu_access_right
