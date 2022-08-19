@@ -39,6 +39,9 @@ class VocabularyParsingError(Exception):
     def __str__(self):
         return self.message
 
+    def __repr__(self):
+        return f'{type(self).__name__}: {self.message}'
+
 class InvalidDataError(VocabularyParsingError):
     """Error to be logged by the parser when some anomaly was found while validating the data.
     
@@ -84,4 +87,28 @@ class UnexpectedDataError(VocabularyParsingError):
         More informations about the error.
 
     """
+
+class NoVocabularyDataError(VocabularyParsingError):
+    """Error to be logged by vocabulary parsers when no vocabulary data was found in the fetched content.
+    
+    Parameters
+    ----------
+    message : str, optional
+        Short description of the error.
+    detail : str, optional
+        More informations about the error.
+
+    Attributes
+    ----------
+    message : str
+        Description of the error.
+    detail : str
+        More informations about the error.
+
+    """
+
+    def __init__(self, message=None, detail=None):
+        if not message:
+            message = 'could not find any vocabulary data in fetched content'
+        super().__init__(message=message, detail=detail)
 
