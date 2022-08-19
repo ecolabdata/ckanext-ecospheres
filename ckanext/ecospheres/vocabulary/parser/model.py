@@ -616,9 +616,11 @@ class VocabularyDataCluster(dict):
     database storage.
 
     A :py:class:`VocabularyDataCluster` is a dictionnary. Its keys are
-    database table names. Its values :py:class:`VocabularyDataTable`
-    are objects containing the data to be loaded into said
-    tables.
+    database table names. Its values are :py:class:`VocabularyDataTable`
+    objects containing the data to be loaded into said tables.
+
+    All tables (ie the :py:class:`VocabularyDataTable` objects) are
+    also accessible through attributes named after the table.
 
     The labels' table and the alternative labels' table are
     created during initialization and can be accessed through
@@ -627,8 +629,8 @@ class VocabularyDataCluster(dict):
 
     Additionnal tables may be added with :py:meth:`VocabularyDataCluster.table`.
 
-    All tables are accessible through an attribute named after the
-    table.
+    A cluster has a boolean value of ``False`` when none of its
+    tables holds any data.
 
     Parameters
     ----------
@@ -720,6 +722,9 @@ class VocabularyDataCluster(dict):
             referencing_table='label',
             none_as_value=False
         )
+
+    def __bool__(self):
+        return any(table for table in self.values())
 
     def table(self, name, fields):
         """Add a custom table and returns its name.
