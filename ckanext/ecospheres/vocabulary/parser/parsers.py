@@ -201,67 +201,69 @@ def basic_rdf(
     """
 
     result = VocabularyParsingResult(name)
-
-    try:
-        rdf_data = utils.fetch_data(url, format='text', **kwargs)
-        graph = VocabularyGraph()
-        graph.parse(data=rdf_data, format=format)
-    except Exception as error:
-        result.exit(error)
-        return result
-
-    uris = graph.find_vocabulary_items(schemes=schemes, rdf_types=rdf_types)
-    all_uris = uris.copy()
-    relationships = []
     
-    while uris:
-        uri = uris.pop()
-        labels = graph.find_labels(uri, languages=languages)
-        if hierarchy:
-            parents = graph.find_parents(uri)
-            for parent in parents:
-                if not (parent, uri) in relationships:
-                    relationships.append((parent, uri))
+    pile = [url]
+    uris = []
+    labels = []
+    relationships = []
 
-        if recursive:
-            try:
-                concept_data = utils.fetch_data(uri, format='text', **kwargs)
-                concept_graph = VocabularyGraph()
-                concept_graph.parse(data=concept_data, format=format)
-                new_uris = concept_graph.find_vocabulary_items(
-                    schemes=schemes, rdf_types=rdf_types
-                    )
-                for new_uri in new_uris:
-                    if not new_uri in all_uris:
-                        all_uris.append(new_uri)
-                        uris.append(new_uri)
-                new_labels = concept_graph.find_labels(uri, languages=languages)
-                for new_label in new_labels:
-                    if not new_label in labels:
-                        labels.append(new_label)
-                # this means that if a label had been found from the previous
-                # request, any label returned here will be seen as an
-                # alternative label, even if a "better" property was holding
-                # the label
-                if hierarchy:
-                    parents = concept_graph.find_parents(uri)
-                    for parent in parents:
-                        if not (parent, uri) in relationships:
-                            relationships.append((parent, uri))
-            except Exception as error:
-                result.log_error(error)
+    while pile:
+        uri = pile.pop()
+
+        try:
+            rdf_data = utils.fetch_data(uri, format='text', **kwargs)
+            graph = VocabularyGraph()
+            graph.parse(data=rdf_data, format=format)
+        except Exception as error:
+            if uri == url:
+                result.exit(error)
+                return result
+            result.log_error(error)
+            continue
         
-        for label in labels:
-            result.add_label(str(uri), label.language, str(label))
+        new_uris = graph.find_vocabulary_items(
+            schemes=schemes, rdf_types=rdf_types
+        ) # uri should be one of those if it's a concept
         
-        if not labels:
-            result.log_error(
-                exceptions.UnexpectedDataError(
-                    'missing label', detail=str(uri)
-                )
+        for new_uri in new_uris:
+            new_uri = str(new_uri)
+            if not new_uri in uris:
+                uris.append(new_uri)
+                if recursive and not new_uri == url:
+                    pile.append(new_uri)
+                    # this means that if a label is
+                    # found from the current URI, any
+                    # label returned when the function will
+                    # interrogate the new URI will be seen as
+                    # an alternative label, even if a "better"
+                    # property is holding the label
+            
+            new_labels = graph.find_labels(new_uri, languages=languages)
+            for new_label in new_labels:
+                label_row = (new_uri, new_label.language, str(new_label))
+                if not label_row in labels:
+                    labels.append(label_row)
+
+            if hierarchy:
+                children = graph.find_children(new_uri)
+                for child in children:
+                    child = str(child)
+                    if not (new_uri, child) in relationships:
+                        relationships.append((new_uri, child))
+    
+    for label in labels:
+        result.add_label(*label)
+        if label[0] in uris:
+            uris.remove(label[0])
+
+    for uri in uris:
+        result.log_error(
+            exceptions.UnexpectedDataError(
+                'missing label', detail=uri
             )
+        )
 
-    if relationships:
+    if hierarchy:
         table_name = result.data.table('hierarchy', ('parent', 'child'))
         table = result.data[table_name]
         table.set_not_null_constraint('parent')
