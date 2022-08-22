@@ -133,44 +133,36 @@ class VocabularyGraph(Graph):
 
         Returns
         -------
-        list(rdflib.term.URIRef)
+        list(str)
 
         """
-        uris = []
-        for uri, p, obj in self:
-            if isinstance(uri, URIRef) and not uri in uris and (
-                schemes and any(
-                    (uri, SKOS.inScheme, URIRef(scheme)) in self
-                    for scheme in schemes
-                ) and (
-                    not rdf_types or any(
-                        (uri, RDF.type, URIRef(rdf_type)) in self
-                        for rdf_type in rdf_types
-                    )
-                )
-                or not schemes and (
-                    not rdf_types and (
-                        (uri, RDF.type, SKOS.Concept) in self
-                        or any(
-                            (uri, predicate, None) in self
-                            for predicate in CONCEPTS_ARE_SUBJECTS_OF
-                        )
-                    )
-                    or rdf_types and any(
-                        (uri, RDF.type, URIRef(rdf_type)) in self
-                        for rdf_type in rdf_types
-                    )
-                ) 
-            ):
-                uris.append(uri)
-            elif (
-                isinstance(obj, URIRef) and not obj in uris and not schemes
-                and not rdf_types and any(
-                    (None, predicate, obj) in self
-                    for predicate in CONCEPTS_ARE_OBJECTS_OF
-                )
-            ):
-                uris.append(obj)
+        if rdf_types:
+            types_uris = []
+            for rdf_type in rdf_types:
+                types_uris += [
+                    s for s in self.subjects(RDF.type, URIRef(rdf_type))
+                ]
+        
+        if schemes:
+            schemes_uris = []
+            for scheme in schemes:
+                schemes_uris += [
+                    s for s in self.subjects(SKOS.inScheme, URIRef(scheme))
+                ]
+        
+        if schemes and rdf_types:
+            return [uri for uri in schemes_uris if uri in types_uris]
+        if schemes:
+            return schemes_uris
+        if rdf_types:
+            return types_uris
+        
+        uris = [s for s in self.subjects(RDF.type, SKOS.Concept)]
+        for predicate in CONCEPTS_ARE_SUBJECTS_OF:
+            uris += [s for s in self.subjects(predicate)]
+        for predicate in CONCEPTS_ARE_OBJECTS_OF:
+            uris += [o for o in self.objects(predicate=predicate)]
+        
         return uris
 
     def find_labels(self, uri, languages=None):
@@ -228,4 +220,28 @@ class VocabularyGraph(Graph):
             if isinstance(parent, URIRef) and not parent in parents:
                 parents.append(parent)
         return parents
+
+    def find_children(self, uri):
+        """Return all narrower concepts for the given URI.
+        
+        Parameters
+        ----------
+        uri : str or rdflib.term.URIRef
+            URI of a vocabulary item.
+        
+        Returns
+        -------
+        list(rdflib.term.URIRef)
+
+        """
+        children = []
+        uri = URIRef(uri)
+        for child in self.subjects(SKOS.broader, uri):
+            if isinstance(child, URIRef) and not child in children:
+                children.append(child)
+        for child in self.objects(uri, SKOS.narrower):
+            if isinstance(child, URIRef) and not child in children:
+                children.append(child)
+        return children
+
 
