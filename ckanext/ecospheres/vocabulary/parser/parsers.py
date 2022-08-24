@@ -342,8 +342,8 @@ def spdx_license(name, url, **kwargs):
         else:
             uri = re.sub('[.]html$', '', uri)
 
-        name = license.get('name')
-        if not name:
+        label = license.get('name')
+        if not label:
             result.log_error(
                 exceptions.UnexpectedDataError(
                     'missing key "name" for the license',
@@ -366,7 +366,7 @@ def spdx_license(name, url, **kwargs):
             result.add_label(
                 uri=uri,
                 language='en',
-                label=f'{identifier} : {name}'
+                label=f'{identifier} : {label}'
             )
             # the identifier and name alone are stored
             # as alternative labels
@@ -377,8 +377,11 @@ def spdx_license(name, url, **kwargs):
             result.add_label(
                 uri=uri,
                 language='en',
-                label=name
+                label=label
             )
+
+    if not result.data:
+        result.exit(exceptions.NoVocabularyDataError())
 
     return result
 
@@ -436,8 +439,8 @@ def iogp_epsg(name, url, **kwargs):
     for crs_data in json_data['Results']:
         valid = True
 
-        name = crs_data['Name']
-        if not name:
+        label = crs_data['Name']
+        if not label:
             result.log_error(
                 exceptions.UnexpectedDataError('missing name', detail=crs_data),
             )
@@ -463,9 +466,9 @@ def iogp_epsg(name, url, **kwargs):
             uri = f'http://www.opengis.net/def/crs/EPSG/0/{identifier}'
             result.add_label(
                 uri=uri,
-                label=f'{code_space} {identifier} : {name}'
+                label=f'{code_space} {identifier} : {label}'
             )
-            # alternative labels: 'code:identifier', name
+            # alternative labels: 'code:identifier', label
             # alone and identifier alone
             result.add_label(
                 uri=uri,
@@ -473,12 +476,15 @@ def iogp_epsg(name, url, **kwargs):
             )
             result.add_label(
                 uri=uri,
-                label=f'{name}'
+                label=f'{label}'
             )
             result.add_label(
                 uri=uri,
                 label=f'{identifier}'
             )
+
+    if not result.data:
+        result.exit(exceptions.NoVocabularyDataError())
 
     return result
 
@@ -535,8 +541,8 @@ def ogc_epsg(name, url, limit=None, **kwargs):
         
         valid = True
 
-        name = crs_root.xpath('gml:name/text()', namespaces=EPSG_NAMESPACES)
-        if not name:
+        label = crs_root.xpath('gml:name/text()', namespaces=EPSG_NAMESPACES)
+        if not label:
             result.log_error(
                 exceptions.UnexpectedDataError('missing name', detail=crs_url),
             )
@@ -557,7 +563,7 @@ def ogc_epsg(name, url, limit=None, **kwargs):
         if valid:
             result.add_label(
                 uri=crs_url,
-                label=f'{code_space[0]} {identifier[0]} : {name[0]}'
+                label=f'{code_space[0]} {identifier[0]} : {label[0]}'
             )
             # alternative labels: 'code:identifier', name
             # alone and identifier alone
@@ -567,12 +573,119 @@ def ogc_epsg(name, url, limit=None, **kwargs):
             )
             result.add_label(
                 uri=crs_url,
-                label=f'{name[0]}'
+                label=f'{label[0]}'
             )
             result.add_label(
                 uri=crs_url,
                 label=f'{identifier[0]}'
             )
+
+    if not result.data:
+        result.exit(exceptions.NoVocabularyDataError())
+
+    return result
+
+def ecospheres_territory(name, url, **kwargs):
+    """Build a vocabulary cluster with Ecospheres' territories.
+
+    The cluster build by this parser contains an additional
+    ``[name]_spatial (uri, westlimit, southlimit, eastlimit,
+    northlimit)`` table storing extend coordinates for
+    all territories.
+
+    Parameters
+    ----------
+    name : str
+        Name of the vocabulary.
+    url : str
+        URL of the territories' data.
+
+    Returns
+    -------
+    VocabularyParsingResult
+
+    Notes
+    -----
+    Since territories are not included in DCAT exports, this
+    parser doesn't bother to look for real URIs and uses
+    instead some identifiers without namespace.
+
+    """
+    result = VocabularyParsingResult(name)
+
+    try:
+        json_data = utils.fetch_data(url, **kwargs)
+    except Exception as error:
+        result.exit(error)
+        return result
+    
+    territory_types = (
+        'zones-maritimes', 'outre-mer', 'départements-métropole',
+        'régions-métropole'
+    )
+
+    table_name = result.data.table(
+        'spatial', ('uri', 'westlimit', 'southlimit', 'eastlimit', 'northlimit')
+        )
+    table = result.data[table_name]
+    table.set_not_null_constraint('uri')
+    table.set_unique_constraint('uri')
+    table.set_not_null_constraint('westlimit')
+    table.set_not_null_constraint('southlimit')
+    table.set_not_null_constraint('eastlimit')
+    table.set_not_null_constraint('northlimit')
+    result.data.set_reference_constraint(
+        referenced_table=table_name,
+        referenced_fields=('uri',),
+        referencing_table='label'
+    )
+
+    for territory_type in territory_types:
+        if not territory_type in json_data:
+            result.log_error(
+                exceptions.UnexpectedDataError(
+                    f"no registerded territory of type '{territory_type}'"
+                )
+            )
+            continue
+
+        for id, territory in json_data[territory_type].items():
+            label = territory.get('name')
+            if not label:
+                result.log_error(
+                    exceptions.UnexpectedDataError(
+                        f"missing name for territory '{id}'"
+                    )
+                )
+                continue
+
+            if not 'spatial' in territory:
+                result.log_error(
+                    exceptions.UnexpectedDataError(
+                        f"missing coordinates for territory '{id}'"
+                    )
+                )
+                continue
+            westlimit = territory['spatial'].get('westlimit')
+            southlimit = territory['spatial'].get('southlimit')
+            eastlimit = territory['spatial'].get('eastlimit')
+            northlimit = territory['spatial'].get('northlimit')
+            if (
+                westlimit is None or southlimit is None or
+                eastlimit is None or northlimit is None
+            ):
+                result.log_error(
+                    exceptions.UnexpectedDataError(
+                        f"missing coordinates for territory '{id}'"
+                    )
+                )
+                continue
+            
+            result.add_label(id, language='fr', label=label)
+            result.data[table_name].add(id, westlimit, southlimit, eastlimit, northlimit)
+    
+    if not result.data:
+        result.exit(exceptions.NoVocabularyDataError())
 
     return result
 
