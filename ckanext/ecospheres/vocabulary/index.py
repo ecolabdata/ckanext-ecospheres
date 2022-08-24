@@ -60,6 +60,13 @@ class VocabularyIndex:
     To force the update of the (modified) index:
         >>> VocabularyIndex(True)
 
+    Parameters
+    ----------
+    update : bool, default False
+        If ``True``, data will be fetched from the
+        ``vocabularies.yaml`` rather than using
+        memorized information.
+
     """
 
     VOCABULARY_INDEX = {}
@@ -78,7 +85,7 @@ class VocabularyIndex:
                     ] = VocabularyUnit(**vocabulary_params)
             
     @classmethod
-    def load(cls, name, **kwargs):
+    def load(cls, name, update=False, **kwargs):
         """Return parsed vocabulary data from a vocabulary name.
 
         This function reads the parsing parameters stored for the
@@ -89,6 +96,10 @@ class VocabularyIndex:
         ----------
         name : str
             Name of the vocabulary.
+        update : bool, default False
+            Force update of vocabulary properties from the
+            ``vocabularies.yaml`` file. All vocabularies are
+            update, not just the one targeted by this method.
         **kwargs : str
             Keyword parameters passed down to :py:func:`requests.get`,
             such as authentification info, proxy mapping, etc.
@@ -98,7 +109,7 @@ class VocabularyIndex:
         ckanext.ecospheres.vocabulary.parser.result.VocabularyParsingResult
 
         """
-        VocabularyIndex(**kwargs)
+        VocabularyIndex(update)
         if name in cls.VOCABULARY_INDEX:
             params = {'name': name, 'url': None}
             params.update(kwargs)
