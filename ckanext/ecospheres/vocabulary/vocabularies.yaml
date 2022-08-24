@@ -49,7 +49,9 @@
   available: False
 
 - name: ecospheres_territory
-  available: False
+  url: https://raw.githubusercontent.com/benoitdavidfr/territoiresecospheres/main/territoires.json
+  parser: ecospheres_territory
+  available: True
 
 - name: ecospheres_theme
   url: https://registre.data.developpement-durable.gouv.fr/ecospheres/themes-ecospheres
