@@ -15,8 +15,7 @@ from ckanext.harvest.harvesters.base import HarvesterBase
 from ckanext.ecospheres.spatial.utils import build_dataset_dict_from_schema
 from ckanext.ecospheres.spatial.maps import ISO_639_2
 
-from ckanext.ecospheres.vocabulary.reader import get_uri_from_label, \
-    get_uri_from_identifier
+from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 
 
 class FrSpatialHarvester(plugins.SingletonPlugin):
@@ -141,7 +140,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 if org_role in base_role_map:
                     org_dict = dataset_dict.new_item(base_role_map[org_role])
                 else:
-                    role_uri = get_uri_from_identifier('inspire_role', org_role)
+                    role_uri = VocabularyReader.get_uri_from_label('inspire_role', org_role)
                     if role_uri:
                         qa_dict = dataset_dict.new_item('qualified_attribution')
                         qa_dict.set_value('had_role', role_uri)
@@ -161,7 +160,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
 
         meta_language = iso_values.get('metadata-language')
         if meta_language:
-            meta_language_uri = get_uri_from_label('eu_language', meta_language)
+            meta_language_uri =  VocabularyReader.get_uri_from_label('eu_language', meta_language)
             if meta_language_uri:
                 meta_dict.set_value('language', meta_language_uri)
 
@@ -221,18 +220,15 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         # --- etc. ---
 
         frequency = iso_values.get('frequency-of-update')
-        # might either be a code or some label
+        # might either be a code or some label, but codes are
+        # stored as alternative labels, so get_uri_from_label
+        # will work in both cases
         if frequency:
-            frequency_uri = get_uri_from_identifier(
-                'inspire_maintenance_frequency', frequency)
+            frequency_uri =  VocabularyReader.get_uri_from_label(
+                'inspire_maintenance_frequency', frequency
+            )
             if frequency_uri:
-                # it was a code
                 dataset_dict.set_value('accrual_periodicity', frequency_uri)
-            else:
-                # it wasn't a code -> try to get the code from the label
-                frequency_uri = get_uri_from_label('inspire_maintenance_frequency', frequency)
-                if frequency_uri:
-                    dataset_dict.set_value('accrual_periodicity', frequency_uri)
 
         # access_rights
         # crs
