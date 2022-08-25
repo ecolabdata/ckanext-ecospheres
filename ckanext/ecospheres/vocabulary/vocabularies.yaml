@@ -120,8 +120,6 @@
 - name: inspire_limitation_on_public_access
   url: http://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess/LimitationsOnPublicAccess.fr.rdf
   about: https://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess
-  rdf_types:
-    - http://rdf.insee.fr/def/geo#TerritoireFrancais
   comment: English only.
   available: True
 
