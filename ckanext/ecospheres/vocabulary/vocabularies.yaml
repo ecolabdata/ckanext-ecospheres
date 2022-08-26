@@ -42,9 +42,6 @@
   comment: Target contains all ADMS-AP vocabulary.
   available: True
 
-- name: ecospheres_iana_media_type
-  available: False
-
 - name: ecospheres_data_standard
   available: False
 
@@ -93,6 +90,11 @@
 - name: eu_theme
   url: https://op.europa.eu/o/opportal-service/euvoc-download-handler?cellarURI=http%3A%2F%2Fpublications.europa.eu%2Fresource%2Fcellar%2F34802596-0286-11ed-acce-01aa75ed71a1.0001.02%2FDOC_1&fileName=data-theme-skos.rdf
   about: http://publications.europa.eu/resource/authority/data-theme
+  available: True
+
+- name: iana_media_type
+  url: https://op.europa.eu/o/opportal-service/euvoc-download-handler?cellarURI=http%3A%2F%2Fpublications.europa.eu%2Fresource%2Fcellar%2F63af65e1-f70c-11ec-b94a-01aa75ed71a1.0001.03%2FDOC_1&fileName=filetypes-skos-ap-act.rdf
+  uri_property: http://purl.org/dc/terms/conformsTo
   available: True
 
 - name: insee_official_geographic_code
