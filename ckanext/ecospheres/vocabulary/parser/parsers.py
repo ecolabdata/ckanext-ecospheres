@@ -135,10 +135,7 @@ object:
 
 import re, json
 from lxml import etree
-from rdflib import (
-    Graph, URIRef, Literal, SKOS, RDF, RDFS,
-    DCTERMS as DCT, FOAF
-)
+from rdflib import URIRef, Literal
 from io import BytesIO
 
 from ckanext.ecospheres.vocabulary.parser import utils, exceptions
@@ -154,7 +151,7 @@ EPSG_NAMESPACES = {
 def basic_rdf(
     name, url, format='xml', schemes=None, 
     languages=None, rdf_types=None, recursive=False,
-    hierarchy=False, **kwargs
+    hierarchy=False, uri_property=None, **kwargs
 ):
     """Build a vocabulary cluster from RDF data using simple SKOS vocabulary.
 
@@ -193,6 +190,10 @@ def basic_rdf(
         table will be added to the cluster and populated with
         relationships provided by ``skos:broader`` and
         ``skos:narrower`` properties.
+    uri_property : str, default None
+        URI of a property that holds the URIs of vocabulary
+        items, to use instead of the original URIs of source
+        graph.
     
     Returns
     -------
@@ -206,6 +207,8 @@ def basic_rdf(
     uris = []
     labels = []
     relationships = []
+    if uri_property:
+        map_uris = {}
 
     while pile:
         uri = pile.pop()
@@ -227,6 +230,15 @@ def basic_rdf(
         
         for new_uri in new_uris:
             new_uri = str(new_uri)
+
+            if uri_property:
+                res_uri = graph.value(URIRef(new_uri), URIRef(uri_property))
+                if res_uri and (
+                    isinstance(res_uri, URIRef) or
+                    isinstance(res_uri, Literal) and res_uri.datatype == URIRef('http://purl.org/dc/terms/URI')
+                ):
+                    map_uris[new_uri] = str(res_uri)
+
             if not new_uri in uris:
                 uris.append(new_uri)
                 if recursive and not new_uri == url:
@@ -237,7 +249,7 @@ def basic_rdf(
                     # interrogate the new URI will be seen as
                     # an alternative label, even if a "better"
                     # property is holding the label
-            
+
             new_labels = graph.find_labels(new_uri, languages=languages)
             for new_label in new_labels:
                 label_row = (new_uri, new_label.language, str(new_label))
@@ -250,7 +262,24 @@ def basic_rdf(
                     child = str(child)
                     if not (new_uri, child) in relationships:
                         relationships.append((new_uri, child))
-    
+
+    if uri_property:
+        new_labels = []
+        new_relationships = []
+        new_uris = []
+        for uri, language, label in labels:
+            if uri in map_uris:
+                new_labels.append((map_uris[uri], language, label))
+        for parent, child in relationships:
+            if child in map_uris and parent in map_uris:
+                new_relationships((map_uris[child], map_uris[parent]))
+        for uri in uris:
+            if uri in map_uris:
+                new_uris.append(map_uris[uri])
+        labels = new_labels
+        relationships = new_relationships
+        uris = new_uris
+
     for label in labels:
         result.add_label(*label)
         if label[0] in uris:
