@@ -1,5 +1,5 @@
 
-![CKAN GUICHET DE DONNEES](https://img.shields.io/badge/CKAN%20Guichet%20de%20de%20données-2.0.0%20%20développement%20-success.svg)
+![CKAN GUICHET DE DONNEES](https://img.shields.io/badge/CKAN%20Guichet%20de%20données-2.0.0%20%20développement%20-success.svg)
 ![Ahmed boukerram](https://img.shields.io/badge/mise%20à%20jour%20-Août%202022-red)
 
 - [1- Installation de l'environnement de développement docker pour CKAN](#installation-de-l-environnement-de-developpement-docker)
@@ -252,8 +252,8 @@ Le calcul interviendra après chaque phase de moissonnage, on attendra que tous 
  
 - L'ingestion et le stockage en base de données des  vocabulaires Territoires et thèmes sont développés, et utilisés notamment pour le mapping des thèmes et des territoires lors du moissonnage. Cependant, après un atelier de travail avec Lislie le mercredi 3 août et vu le nombre de vocabulaires à traiter, on va etre amené à modifier et faire evoluer cette fonctionnalité pour le rendre plus générique.
 - Par conséquent, Leslie s'occupera du parsing des vocabulaires, et de mon côté, je m'occuperai de la partie mise en base.
+- J'ai proposé un schème de base de données pour le stockage des vocabulaires. Ce schèma pourra être révu et fignolé afin de répondre au besoin. 
 - Pour Actionner la mise à jour manuelle d'un/des vocabulaire(s), j'ai prévu de d'exposer un API dans ce but. 
-- Il faut penser à mettre en place un vocabulaire de licences (ouvertes et restreintes)
 
 
 

@@ -1,0 +1,173 @@
+# Index des vocabulaires du guichet Ecosphères
+#
+# name: identifiant du vocabulaire.
+# url: >
+#   URL pour les requêtes de mise à jour du vocabulaire. 
+#   NE PAS UTILISER si une mise à jour manuelle est requise.
+# parser: >
+#   Fonction du module ckanext.ecospheres.vocabulary.parser.parsers
+#   qui prend en argument les propriétés d'un vocabulaire telles que
+#   définies dans le présent fichier, importe les données depuis leur
+#   source et les renvoie sous une forme standardisée prête à être
+#   intégrée en base de données. Si non précisé, la fonction basic_rdf
+#   est utilisée.
+# about: >
+#   URL d'une page décrivant le vocabulaire, et/ou permettant à
+#   une personne d'accéder aux données.
+# comment: observations libres.
+# maintenance_frequency: >
+#   Fréquence de mise à jour automatique du vocabulaire, en nombre de
+#   jour.
+# available: >
+#   Booléen indiquant si le vocabulaire est effectivement disponible.
+#
+# Lorsque la fonction de désérialisation admet des arguments optionnels,
+# leurs valeurs peuvent être fournies via le présent fichier, en ajoutant
+# au vocabulaire des propriétés dont le nom et le type de valeur
+# correspondent à ceux des arguments du parser.
+#
+
+
+- name: adms_licence_type
+  url: http://purl.org/adms/licencetype/1.1
+  schemes:
+    - http://purl.org/adms/licencetype/1.0
+  comment: Target contains all ADMS-AP vocabulary.
+  available: True
+
+- name: adms_publisher_type
+  url: http://purl.org/adms/publishertype/1.0
+  schemes:
+    - http://purl.org/adms/publishertype/1.0
+  comment: Target contains all ADMS-AP vocabulary.
+  available: True
+
+- name: ecospheres_data_standard
+  available: False
+
+- name: ecospheres_territory
+  url: https://raw.githubusercontent.com/benoitdavidfr/territoiresecospheres/main/territoires.json
+  parser: ecospheres_territory
+  available: True
+
+- name: ecospheres_theme
+  url: https://registre.data.developpement-durable.gouv.fr/ecospheres/themes-ecospheres
+  format: 'json-ld'
+  recursive: True
+  hierarchy: True
+  available: True
+
+- name: eu_access_right
+  url: https://op.europa.eu/o/opportal-service/euvoc-download-handler?cellarURI=http%3A%2F%2Fpublications.europa.eu%2Fresource%2Fcellar%2Fe504b3a7-b57e-11ec-b6f4-01aa75ed71a1.0001.03%2FDOC_1&fileName=access-right-skos.rdf
+  about: http://publications.europa.eu/resource/authority/access-right
+  available: True
+
+- name: eu_administrative_territory_unit
+  url: https://op.europa.eu/o/opportal-service/euvoc-download-handler?cellarURI=http%3A%2F%2Fpublications.europa.eu%2Fresource%2Fcellar%2F7c1089f4-581c-11ec-91ac-01aa75ed71a1.0001.02%2FDOC_1&fileName=atu-skos.rdf
+  about: http://publications.europa.eu/resource/authority/atu
+  available: True
+
+- name: eu_file_type
+  url: https://op.europa.eu/o/opportal-service/euvoc-download-handler?cellarURI=http%3A%2F%2Fpublications.europa.eu%2Fresource%2Fcellar%2F63af65e1-f70c-11ec-b94a-01aa75ed71a1.0001.04%2FDOC_1&fileName=filetypes-skos.rdf
+  about: http://publications.europa.eu/resource/authority/file-type
+  available: True
+
+- name: eu_frequency
+  url: https://op.europa.eu/o/opportal-service/euvoc-download-handler?cellarURI=http%3A%2F%2Fpublications.europa.eu%2Fresource%2Fcellar%2Fc7429320-f70c-11ec-b94a-01aa75ed71a1.0001.02%2FDOC_1&fileName=frequencies-skos.rdf
+  about: http://publications.europa.eu/resource/authority/frequency
+  available: True
+
+- name: eu_language
+  url: https://op.europa.eu/o/opportal-service/euvoc-download-handler?cellarURI=http%3A%2F%2Fpublications.europa.eu%2Fresource%2Fcellar%2Fd4ba7363-f70c-11ec-b94a-01aa75ed71a1.0001.05%2FDOC_1&fileName=languages-skos.rdf
+  about: http://publications.europa.eu/resource/authority/language
+  available: True
+
+- name: eu_licence
+  url: https://op.europa.eu/o/opportal-service/euvoc-download-handler?cellarURI=http%3A%2F%2Fpublications.europa.eu%2Fresource%2Fcellar%2F83f89e3c-b581-11ec-b6f4-01aa75ed71a1.0001.02%2FDOC_1&fileName=licences-skos.rdf
+  about: http://publications.europa.eu/resource/authority/licence
+  available: True
+
+- name: eu_theme
+  url: https://op.europa.eu/o/opportal-service/euvoc-download-handler?cellarURI=http%3A%2F%2Fpublications.europa.eu%2Fresource%2Fcellar%2F34802596-0286-11ed-acce-01aa75ed71a1.0001.02%2FDOC_1&fileName=data-theme-skos.rdf
+  about: http://publications.europa.eu/resource/authority/data-theme
+  available: True
+
+- name: iana_media_type
+  url: https://op.europa.eu/o/opportal-service/euvoc-download-handler?cellarURI=http%3A%2F%2Fpublications.europa.eu%2Fresource%2Fcellar%2F63af65e1-f70c-11ec-b94a-01aa75ed71a1.0001.03%2FDOC_1&fileName=filetypes-skos-ap-act.rdf
+  uri_property: http://purl.org/dc/terms/conformsTo
+  available: True
+
+- name: insee_official_geographic_code
+  about: http://rdf.insee.fr/geo/index.html
+  comment: Downloadable ZIP file with file creation date in name.
+  available: False
+
+- name: insee_individual_territories
+  url: https://raw.githubusercontent.com/InseeFr/Ontologies/master/insee-geo.ttl
+  about: https://github.com/InseeFr/Ontologies/blob/master/insee-geo.ttl
+  format: turtle
+  comment: >
+    Objects "france", "franceMetropolitaine", "territoireDeLaRepubliqueFrancaise".
+    French only.
+  rdf_types:
+    - http://rdf.insee.fr/def/geo#TerritoireFrancais
+    - http://rdf.insee.fr/def/geo#Pays
+  available: True
+
+- name: insee_gazetteer
+  url: https://raw.githubusercontent.com/InseeFr/Ontologies/master/insee-geo.ttl
+  about: https://github.com/InseeFr/Ontologies/blob/master/insee-geo.ttl
+  available: False
+
+- name: inspire_limitation_on_public_access
+  url: http://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess/LimitationsOnPublicAccess.fr.rdf
+  about: https://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess
+  comment: English only.
+  available: True
+
+- name: inspire_maintenance_frequency
+  url: https://inspire.ec.europa.eu/metadata-codelist/MaintenanceFrequency/MaintenanceFrequency.fr.rdf
+  about: https://inspire.ec.europa.eu/metadata-codelist/MaintenanceFrequency
+  comment: English only.
+  available: True
+
+- name: inspire_role
+  url: https://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/ResponsiblePartyRole.fr.rdf
+  about: https://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole
+  comment: French only.
+  available: True
+
+- name: inspire_theme
+  url: https://inspire.ec.europa.eu/theme/theme.fr.rdf
+  about: https://inspire.ec.europa.eu/theme
+  rdf_types:
+    - http://purl.org/net/provenance/ns#DataItem
+  comment: French only.
+  available: True
+
+- name: inspire_topic_category
+  url: https://inspire.ec.europa.eu/metadata-codelist/TopicCategory/TopicCategory.fr.rdf
+  about: https://inspire.ec.europa.eu/metadata-codelist/TopicCategory
+  comment: French only.
+  available: True
+
+- name: spdx_license
+  url: https://spdx.org/licenses/licenses.json
+  about: https://github.com/spdx/license-list-data
+  parser: spdx_license
+  available: True
+
+- name: ogc_epsg
+  url: https://apps.epsg.org/api/v1/CoordRefSystem
+  about: https://apps.epsg.org/api/swagger/ui/index
+  comment: >
+    Data is acquired from the IOGP registry since their API allows fetching
+    more than one CRS by request. Labels are provided, not OGC's URIs. See
+    parser description for more details.
+    The base URL for the OGC registry would have been:
+    http://www.opengis.net/def/crs/EPSG/0.
+  parser: iogp_epsg
+  maintenance_frequency: 100
+  available: True
+
+

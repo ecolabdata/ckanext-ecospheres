@@ -1,15 +1,22 @@
 # encoding: utf-8
 
+from datetime import datetime
+from lxml import etree
+import requests
+
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 from ckan.model.package import Package
 from ckan.lib.helpers import json
-from lxml import etree
 
 from ckanext.spatial.interfaces import ISpatialHarvester
 from ckanext.harvest.harvesters.base import HarvesterBase
 
 from ckanext.ecospheres.spatial.utils import build_dataset_dict_from_schema
+from ckanext.ecospheres.spatial.maps import ISO_639_2
+
+from ckanext.ecospheres.vocabulary.reader import VocabularyReader
+
 
 class FrSpatialHarvester(plugins.SingletonPlugin):
     '''Customization of spatial metadata harvest.
@@ -55,21 +62,178 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         iso_values = data_dict['iso_values'] 
         xml_tree = data_dict['xml_tree']
 
-        dataset_dict = build_dataset_dict_from_schema('dataset',
-            language=iso_values['metadata-language'])
+        language = iso_values.get('metadata-language') or 'fr'
+        if len(language) > 2:
+            # if possible (and as expected), the RDF language tag
+            # will use the 2 letters ISO language codes instead of
+            # the 3 letters ones
+            language=ISO_639_2.get(language, language)
+        
+        dataset_dict = build_dataset_dict_from_schema('dataset', language=language)
 
+        # --- various metadata from package_dict ---
         for target_field, package_field in {
+            # dataset_dict key -> package_dict key
             'owner_org': 'owner_org'
         }:
-            dataset_dict.set_value(target_field, package_field.get(iso_field))
+            dataset_dict.set_value(target_field, package_dict.get(package_field))
 
+        # --- various metadata from package_dict's extras ---
+        extras_map = {
+            # ckanext-spatial extras key -> dataset_dict key
+            'graphic-preview-file': 'graphic_preview'   
+        }
+        for elem in package_dict['extras']:
+            if elem['key'] in extras_map:
+                dataset_dict.set_value(extras_map[elem['key']], elem['value'])
+
+        # --- various metadata from iso_values ---
         for target_field, iso_field in {
+            # dataset_dict key -> iso_values key
             'free_tag': 'tags',
             'title': 'title',
             'notes': 'abstract',
             'name': 'guid',
+            'provenance': 'lineage',
+            'provenance': 'maintenance-note', # TODO: provenance or version_info ? 
+            'identifier': 'unique-resource-identifier'
         }:
             dataset_dict.set_value(target_field, iso_values.get(iso_field))
+        # NB: package name should always be its guid, for easier
+        # handling of packages relationships and duplicate removal
+
+        if not dataset_dict.get('title'):
+            dataset_dict.set_value('title', iso_values.get('alternate-title'))
+
+        name = dataset_dict.get('name')
+
+        # --- dates ----
+        if iso_values.get('dataset-reference-date'):
+            type_date_map = {
+                # ISO CI_DateTypeCode -> dataset_dict key
+                'creation': 'created',
+                'publication': 'issued',
+                'revision': 'modified',
+            }
+            for date_object in iso_values['dataset-reference-date']:
+                if date_object['type'] in type_date_map:
+                    dataset_dict.set_value(type_date_map[date_object['type']], date_object['value'])
+        
+        if iso_values.get('temporal-extent-begin') or iso_values.get('temporal-extent-end'):
+            temporal_dict = dataset_dict.new_item('temporal')
+            temporal_dict.set_value('start_date', iso_values.get('temporal-extent-begin'))
+            temporal_dict.set_value('end_date', iso_values.get('temporal-extent-end'))
+
+        # --- organisations ---
+        if iso_values.get('responsible-organisation'):
+            base_role_map = {
+                # ISO CI_RoleCode -> dataset_dict key
+                'owner': 'rights_holder',
+                'publisher': 'publisher',
+                'author': 'creator',
+                'pointOfContact': 'contact_point'
+                }
+            for org_object in iso_values['responsible-organisation']:
+                if not 'role' in org_object or not 'organisation-name' in org_object:
+                    continue
+                org_role = org_object['role']
+                if org_role in base_role_map:
+                    org_dict = dataset_dict.new_item(base_role_map[org_role])
+                else:
+                    role_uri = VocabularyReader.get_uri_from_label('inspire_role', org_role)
+                    if role_uri:
+                        qa_dict = dataset_dict.new_item('qualified_attribution')
+                        qa_dict.set_value('had_role', role_uri)
+                        org_dict = qa_dict.new_item('agent')
+                    else:
+                        continue
+                org_dict.set_value('name', org_object['organisation-name'])
+                if 'contact-info' in org_object:
+                    org_dict.set_value('email', org_object['contact-info'].get('email'))
+                    org_dict.set_value('url', org_object['contact-info'].get('online-resource'))
+        
+        # --- metadata's metadata ---
+        meta_dict = dataset_dict.new_item('is_primary_topic_of')
+        meta_dict.set_value('harvested', datetime.now().astimezone().isoformat())
+        meta_dict.set_value('modified', iso_values.get('metadata-date'))
+        meta_dict.set_value('identifier', name)
+
+        meta_language = iso_values.get('metadata-language')
+        if meta_language:
+            meta_language_uri =  VocabularyReader.get_uri_from_label('eu_language', meta_language)
+            if meta_language_uri:
+                meta_dict.set_value('language', meta_language_uri)
+
+        if iso_values.get('metadata-point-of-contact'):
+            for org_object in iso_values['metadata-point-of-contact']:
+                org_dict = meta_dict.new_item('contact_point')
+                if 'contact-info' in org_object:
+                    org_dict.set_value('email', org_object['contact-info'].get('email'))
+                    org_dict.set_value('url', org_object['contact-info'].get('online-resource'))
+                    # TODO: le numéro de téléphone n'est pas récupéré dans 'contact-info',
+                    # "gmd:phone/gmd:CI_Telephone/gmd:voice/gco:CharacterString/text()"
+
+        catalog_dict = meta_dict.new_item('in_catalog')
+
+        for elem in package_dict['extras']:
+        # the following are "default extras" from the
+        # harvest source, not harvested metadata
+
+            if elem['key'] == 'catalog_title':
+                catalog_dict.set_value('title', elem['value'])
+            
+            elif elem['key'] == 'catalog_homepage':
+                catalog_dict.set_value('homepage', elem['value'])
+        
+        # --- references ---
+            elif elem['key'] == 'catalog_base_url' and name:
+                landing_page = '{}/{}'.format(elem['value'], name)
+                response = requests.get(landing_page)
+                if response.status_code != requests.codes.ok:
+                    dataset_dict.set_value('landing_page', landing_page)
+                    dataset_dict.set_value('uri', landing_page)
+            
+            elif elem['key'] == 'attributes_base_url' and name:
+                attributes_page = '{}/{}'.format(elem['value'], name)
+                response = requests.get(attributes_page)
+                if response.status_code != requests.codes.ok:
+                    dataset_dict.set_value('attributes_page', attributes_page)
+
+        # page
+
+        # --- themes and keywords ---
+
+        # --- spatial coverage ---
+
+        # --- relations ---
+
+        # in_series
+        # in_series > uri
+        # in_series > url
+        # in_series > title
+
+        # series_member
+        # series_member > uri
+        # series_member > url
+        # series_member > title
+
+        # --- etc. ---
+
+        frequency = iso_values.get('frequency-of-update')
+        # might either be a code or some label, but codes are
+        # stored as alternative labels, so get_uri_from_label
+        # will work in both cases
+        if frequency:
+            frequency_uri =  VocabularyReader.get_uri_from_label(
+                'inspire_maintenance_frequency', frequency
+            )
+            if frequency_uri:
+                dataset_dict.set_value('accrual_periodicity', frequency_uri)
+
+        # access_rights
+        # crs
+        # conforms_to
+        # ...
 
         return dataset_dict
 
