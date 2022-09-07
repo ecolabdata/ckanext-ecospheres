@@ -4,10 +4,23 @@ This module should be entirely rewritten to fetch vocabulary
 data from the database rather than from JSON files.
 
 """
+from sqlalchemy import Table, Column, Integer, String, MetaData,select,and_,func
 
 import json
 from pathlib import Path
 from ckanext import __path__ as ckanext_path
+import logging
+from ckanext.ecospheres.vocabulary.loader import (
+                                            _get_generic_schema
+                                            ,_get_hierarchy_schema_table
+                                            ,_get_spatial_schema_table
+                                            ,Session,DB
+                                    )
+
+
+logger = logging.getLogger(__name__)
+
+
 
 class VocabularyReader:
     
@@ -21,6 +34,24 @@ class VocabularyReader:
             with open(path, 'r', encoding='utf-8') as src:
                 data = json.load(src)
             cls.VOCABULARY_DATABASE.update(data)
+
+    @classmethod
+    def _resultset_to_dict(cls, resultset):
+        return {
+            "uri": resultset[0], 
+            "label": resultset[1],
+            "language": resultset[2]
+        }
+    
+    @classmethod 
+    def _select_labels_from_database(cls,_table):
+        with Session(database=DB) as s:
+            try:
+                statement=select([_table.c.uri, _table.c.label,_table.c.language])
+                return [cls._resultset_to_dict(resultset) for resultset in s.execute(statement).fetchall()]
+            except Exception as e:
+                logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
+                return list()
 
     @classmethod
     def labels(cls, vocabulary):
@@ -37,9 +68,10 @@ class VocabularyReader:
         list
 
         """
-        VocabularyReader(vocabulary)
-        label_table = f'{vocabulary}_label'
-        return cls.VOCABULARY_DATABASE[label_table]
+    
+        _table=_get_generic_schema(f"{vocabulary}_label")
+        return cls._select_labels_from_database(_table)
+
 
     @classmethod
     def altlabels(cls, vocabulary):
@@ -56,12 +88,13 @@ class VocabularyReader:
         list
 
         """
-        VocabularyReader(vocabulary)
-        altlabel_table = f'{vocabulary}_altlabel'
-        return cls.VOCABULARY_DATABASE[altlabel_table]
+        
+        _table=_get_generic_schema(f"{vocabulary}_altlabel")
+        return cls._select_labels_from_database(_table)
+
 
     @classmethod
-    def is_known_uri(cls, vocabulary, uri):
+    def is_known_uri(cls, vocabulary, uri,language=None):
         """Is the URI registered in given vocabulary ?
 
         Parameters
@@ -79,10 +112,32 @@ class VocabularyReader:
             contains the URI, else ``False``.
         
         """
-        if not vocabulary or not uri:
-            return False
-        return any(row['uri'] == uri for row in cls.labels(vocabulary))
+    
+        _table=_get_generic_schema(f"{vocabulary}_label")
 
+
+        if not language:
+            language="fr"
+
+        with Session(database=DB) as s:
+            try:
+                statement=select([_table.c.uri, _table.c.label,_table.c.language]).\
+                                    where(and_(_table.c.uri==uri,_table.c.language==language))
+                res=  s.execute(statement).fetchone()
+                print(res)
+                if res:
+                    return cls._resultset_to_dict(res)
+                return None
+            except Exception as e:
+                logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
+                return list()
+
+        # if not vocabulary or not uri:
+        #     return False
+        # return any(row['uri'] == uri for row in cls.labels(vocabulary))
+
+
+        print("test vocabulary")
     @classmethod
     def get_uri_from_label(cls, vocabulary, label, language=None,
         case_sensitive=False):
@@ -113,25 +168,38 @@ class VocabularyReader:
             no match for the label.
         
         """
-        if not vocabulary or not label:
-            return
-        
-        for row in cls.labels(vocabulary):
-            if (
-                (not language or language == row['language']) and
-                (
-                    case_sensitive and label == row['label']
-                    or not case_sensitive and label.lower() == row['label'].lower()
-                )
-            ):
-                return row['uri']
-        
-        for row in cls.altlabels(vocabulary):
-            if (
-                (not language or language == row['language']) and
-                (
-                    case_sensitive and label == row['label']
-                    or not case_sensitive and label.lower() == row['label'].lower()
-                )
-            ):
-                return row['uri']
+        _table=_get_generic_schema(f"{vocabulary}_label")
+        logger.info(f"fetching results from {_table} table")
+        if res:=  cls._get_result_from_db(label, language,
+                                         case_sensitive,_table):
+            logger.info(f"Result found in {_table} table")
+            return res
+        logger.info(f"Not Result found in {_table} table")
+
+
+        _table=_get_generic_schema(f"{vocabulary}_altlabel")
+        logger.info(f"fetching results from {_table} table")
+        return cls._get_result_from_db(label, language,
+                                         case_sensitive,_table)
+
+    @classmethod
+    def _get_result_from_db(cls,label, language,case_sensitive,_table):
+        if case_sensitive:
+            clause=( func.lower(_table.c.label) ==  func.lower(label))
+        else:
+            clause=(_table.c.label == label)
+
+
+        if language:
+            clause=and_(clause,_table.c.language == language)
+        with Session(database=DB) as s:
+            try:
+                statement=select([_table.c.uri, _table.c.label,_table.c.language]).\
+                                    where(clause)
+                res=  s.execute(statement).fetchone()
+                if res:
+                    return res[0]
+                return None
+            except Exception as e:
+                logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
+                return list()

@@ -3,7 +3,7 @@ import ckan.plugins.toolkit as toolkit
 import ckanext.ecospheres.validators as v
 import ckanext.ecospheres.helpers as helpers
 import collections
-from ckanext.ecospheres.commands import ecospherefr as ecospherefr_cli
+# from ckanext.ecospheres.commands import ecospherefr as ecospherefr_cli
 from ckanext.ecospheres.models.territories import Territories
 from ckanext.ecospheres.models.themes import Themes,Subthemes
 import json
@@ -15,19 +15,17 @@ from sqlalchemy import Column, Date, Integer, Text, create_engine, inspect
 
 
 
-from ckanext.ecospheres.registre_loader.loader import Loader
-loader=Loader()
 class DcatFrenchPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IValidators)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IFacets)
     plugins.implements(plugins.IPackageController, inherit=True)
-    plugins.implements(plugins.IClick)
+    # plugins.implements(plugins.IClick)
     plugins.implements(plugins.IBlueprint)
 
-    # ------------- IClick ---------------#
-    def get_commands(self):
-        return ecospherefr_cli.get_commands()
+    # # ------------- IClick ---------------#
+    # def get_commands(self):
+    #     return ecospherefr_cli.get_commands()
 
 
     # ------------- IConfigurer ---------------#

@@ -2,9 +2,11 @@
 
 import requests
 from rdflib import (
-    Graph, URIRef, Literal, SKOS, RDF, RDFS,
-    DCTERMS as DCT, FOAF
+    Graph, URIRef, Literal, 
 )
+from rdflib.namespace import Namespace, RDFS, RDF, SKOS
+FOAF = Namespace("http://xmlns.com/foaf/0.1/")
+DCT = Namespace("http://purl.org/dc/terms/")
 
 LABELS_ARE_VALUES_OF = [
     SKOS.prefLabel, DCT.title, RDFS.label, FOAF.name,

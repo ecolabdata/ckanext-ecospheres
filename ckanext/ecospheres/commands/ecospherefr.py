@@ -18,7 +18,7 @@ def object_as_dict(obj):
     return {c.key: getattr(obj, c.key)
             for c in inspect(obj).mapper.column_attrs}
 
-@click.group()
+# @click.group()
 def ecospherefr():
     """
         empty
@@ -29,7 +29,7 @@ def get_commands():
     return [ecospherefr]
 
 
-@ecospherefr.command()
+# @ecospherefr.command()
 def initdb():
     from ckanext.ecospheres.models import setup_db
     created = setup_db()
@@ -38,15 +38,15 @@ def initdb():
     else:
         click.secho('DCATAPIT DB tables not created', fg=u"yellow")
 
-@ecospherefr.command()
-@click.pass_context
+# @ecospherefr.command()
+# @click.pass_context
 def test(ctx):
     click.secho('Commande de teste', fg=u"green")
     
 
-@ecospherefr.command()
-@click.option('-f', "--filename", required=False, help='Path to a file', type=str)
-@click.option('-t', "--type", required=False, help='[territories]', type=str)
+# @ecospherefr.command()
+# @click.option('-f', "--filename", required=False, help='Path to a file', type=str)
+# @click.option('-t', "--type", required=False, help='[territories]', type=str)
 def load_file(filename,type):
     if type == "territory":
         load_data_from_file_to_db()
