@@ -1067,6 +1067,16 @@ dataset_fields:
     translatable_values: True
     value_type: literal
 
+# RESTRICTED_ACCESS
+# - non exposé dans l'export DCAT, utilisé pour l'élément
+#   Données ouvertes / Accès restreint
+# - booléen déduit de access_rights
+- field_name: restricted_access
+  label:
+    fr: Donnée à accès restreint
+    en: Restricted access
+  value_type: literal
+
 # CRS []
 # > dct:conformsTo
 # - pour les référentiels de coordonnées
