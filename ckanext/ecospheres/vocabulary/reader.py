@@ -141,7 +141,6 @@ class VocabularyReader:
             if label:=cls.__get_theme_altlabels_by_uri(uri_parent):
                 theme_parent_child["altlabel"].append(label["label"])
             
-            
             for uri_child in themes_hierarchy_as_dict[uri_parent]:
                 if child_label:=cls.__get_theme_labels_by_uri(uri_child):
                     if label:=cls.__get_theme_altlabels_by_uri(uri_child):
@@ -251,7 +250,6 @@ class VocabularyReader:
             return res
         logger.info(f"Not Result found in {_table} table")
 
-
         _table=_get_generic_schema(f"{vocabulary}_altlabel")
         logger.info(f"fetching results from {_table} table")
         return cls._get_result_from_db(label, language,
@@ -263,7 +261,6 @@ class VocabularyReader:
             clause=( func.lower(_table.c.label) ==  func.lower(label))
         else:
             clause=(_table.c.label == label)
-
 
         if language:
             clause=and_(clause,_table.c.language == language)
@@ -279,19 +276,12 @@ class VocabularyReader:
                 logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
                 return list()
 
-    @classmethod            
-    def _get_user_name(context):
-        context['defer_commit'] = True  # See ckan/ckan#1714
-        _site_user = p.toolkit.get_action('get_site_user')(context, {})
-        return  _site_user['name']
 
     @classmethod
-    def _get_user_name(self):
-        user = p.toolkit.get_action('get_site_user')(
+    def _get_user_name(cls):
+        return p.toolkit.get_action('get_site_user')(
             {'ignore_auth': True, 'defer_commit': True},
-            {})
-        print("user: ",user["name"])
-        return user['name']
+            {}).get("name")
 
 
     @classmethod

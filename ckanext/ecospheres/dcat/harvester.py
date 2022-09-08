@@ -31,8 +31,6 @@ identifier_name_map={}
 
 ############################################################
 
-from ckanext.ecospheres.registre_loader.loader import Loader
-loader=Loader()
 class DCATfrRDFHarvester(DCATRDFHarvester):
 
     p.implements(IDCATRDFHarvester, inherit=True)
@@ -86,29 +84,31 @@ class DCATfrRDFHarvester(DCATRDFHarvester):
 
         
     def before_create(self, harvest_object, dataset_dict, temp_dict):
-        spatial=dataset_dict.get("spatial",None)
-        if not spatial:
-            org=self.__get_organization_infos(harvest_object)
-            territories_codes=self._get_territory(org)
-            res=re.match(r'{(.*)}',territories_codes)
-            resultats=res.group(1)
-            departements=resultats.split(',')
-            territoires=[]
-            if len(departements):
-                for dep in departements:
-                    territoire_dict=loader.get_territorie_by_code_region(dep)
-                    #nom du territoire de l'organisation
-                    territoires.append(territoire_dict.get("name",None))
-                    #coordonnées de l'organisation
-                    westlimit=territoire_dict['westlimit']
-                    southlimit=territoire_dict['southlimit']
-                    eastlimit=territoire_dict['eastlimit']
-                    northlimit=territoire_dict['northlimit']
-                    #convertir en GEOJSON 
-                    #si plusieurs -> random
-                    spatial=f"{westlimit},{southlimit},{eastlimit},{northlimit}"
+        
+        #TODO mapping des territories avec le nouveau reader
+        # spatial=dataset_dict.get("spatial",None)
+        # if not spatial:
+        #     org=self.__get_organization_infos(harvest_object)
+        #     territories_codes=self._get_territory(org)
+        #     res=re.match(r'{(.*)}',territories_codes)
+        #     resultats=res.group(1)
+        #     departements=resultats.split(',')
+        #     territoires=[]
+        #     if len(departements):
+        #         for dep in departements:
+        #             territoire_dict=loader.get_territorie_by_code_region(dep)
+        #             #nom du territoire de l'organisation
+        #             territoires.append(territoire_dict.get("name",None))
+        #             #coordonnées de l'organisation
+        #             westlimit=territoire_dict['westlimit']
+        #             southlimit=territoire_dict['southlimit']
+        #             eastlimit=territoire_dict['eastlimit']
+        #             northlimit=territoire_dict['northlimit']
+        #             #convertir en GEOJSON 
+        #             #si plusieurs -> random
+        #             spatial=f"{westlimit},{southlimit},{eastlimit},{northlimit}"
 
-            dataset_dict["territory"]=territoires
+        #     dataset_dict["territory"]=territoires
 
         self.__before_create(harvest_object,dataset_dict)
         
