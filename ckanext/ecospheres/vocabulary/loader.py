@@ -12,6 +12,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from contextlib import contextmanager
 import logging
 from sqlalchemy.schema import MetaData
+import ckan.plugins as p
 
 SPECIAL_TABLES=("ecospheres_territory","ecospheres_theme")
 REGEX_PATTERN_ECOSPHERE_SPATIAL = r'.*ecospheres_territory_spatial.*'
@@ -84,8 +85,6 @@ def __create_generique_label_schema_table(table_name,table_schema,data):
                 stm=table_schema.insert().values(data[table_name])
                 logging.info(f"Insetion des données dans la table {table_name}")
                 s.execute(stm)
-                # statement=select([table_schema.c.uri, table_schema.c.label,table_schema.c.language])
-                # print(s.execute(statement).fetchall())
             except Exception as e:
                 logging.error(f"Erreur lors de la création du table {table_name}\t {str(e)}")
 
@@ -119,5 +118,9 @@ def load_vocab():
                 __create_generique_label_schema_table(table_name,table_schema=_table,data=vocab_data)    
     
         except Exception as e:
-            print("Erreur ",str(e))
+            print("Erreur pendant le chargement des vocabulaires",str(e))
+
+
+
+
 

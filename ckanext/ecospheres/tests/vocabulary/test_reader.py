@@ -181,3 +181,19 @@ class TestGetAltLabels(object):
         eu_file_type_altlabels=VocabularyReader.altlabels("eu_file_type")
         assert eu_file_type_altlabels
         assert len(eu_file_type_altlabels) > 0
+
+
+
+class TestGetThemes(object):
+    def test_get_themes(self):
+        print("getting themes")
+        # VocabularyReader.themes()
+
+
+
+class TestReadTypeOrganization(object):
+
+    def test_get_organizations(self):
+        list_organizations= VocabularyReader.get_organization_by_admin()
+        assert list_organizations
+        assert len(list_organizations) > 0

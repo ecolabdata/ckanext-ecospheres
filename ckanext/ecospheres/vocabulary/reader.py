@@ -4,7 +4,12 @@ This module should be entirely rewritten to fetch vocabulary
 data from the database rather than from JSON files.
 
 """
+from ckan.model import GroupExtra, Group,Session as Session_CKAN
+
+from ckan.logic.action.get import organization_list
+
 from sqlalchemy import Table, Column, Integer, String, MetaData,select,and_,func
+import ckan.plugins as p
 
 import json
 from pathlib import Path
@@ -23,7 +28,14 @@ logger = logging.getLogger(__name__)
 
 
 class VocabularyReader:
-    
+    TYPE_ADMINISTRATION={
+                            "AC" : "Administration centrale",
+                            "DR" : "Directions régionales",
+                            "DIRID" : "Directions interrégionales et interdépartementales",
+                            "DD" : "Directions départementales",
+                            "SOM" : "Services d'OutreMer",
+                            "Op" : "Opérateurs"
+                        }
     VOCABULARY_DATABASE = {}
 
     def __new__(cls, vocabulary):
@@ -68,13 +80,81 @@ class VocabularyReader:
         list
 
         """
-    
+        if vocabulary == "ecospheres_theme": 
+            return cls.themes()
         _table=_get_generic_schema(f"{vocabulary}_label")
         return cls._select_labels_from_database(_table)
 
+    @classmethod
+    def __get_themes_hierarchy_as_dict(cls):
+        _table=_get_hierarchy_schema_table("ecospheres_theme_hierarchy")
+        uri_themes_with_hierarchy={}
+        with Session(database=DB) as s:
+            try:
+                statement=select([_table.c.parent, _table.c.child])
+                for uri_parent, uri_child in s.execute(statement).fetchall():
+                    uri_themes_with_hierarchy.setdefault(uri_parent, [])
+                    uri_themes_with_hierarchy[uri_parent].append(uri_child)
+                return uri_themes_with_hierarchy
+            except Exception as e:
+                logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
+                return list()
+        
+    @classmethod
+    def __get_themes_from_db(cls,_table,uri:str):
+        with Session(database=DB) as s:
+            try:
+                statement=select([_table.c.uri, _table.c.label,_table.c.language]).\
+                                    where(_table.c.uri==uri)
+                res=s.execute(statement).fetchone()
+                if res:
+                    return cls._resultset_to_dict(res)
+                return None
+            except Exception as e:
+                logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
+                return list()
 
     @classmethod
-    def altlabels(cls, vocabulary):
+    def __get_theme_labels_by_uri(cls,uri:str):
+        return cls.__get_themes_from_db(
+                                    _get_generic_schema("ecospheres_theme_label"),
+                                        uri)
+
+
+    @classmethod
+    def __get_theme_altlabels_by_uri(cls,uri:str):
+        return cls.__get_themes_from_db(
+                                        _get_generic_schema("ecospheres_theme_altlabel"),
+                                        uri)
+
+    @classmethod
+    def themes(cls):
+        themes_hierarchy_as_dict=cls.__get_themes_hierarchy_as_dict()
+        all_themes_subtheme_hierarchy_as_dict=dict()
+        for uri_parent in themes_hierarchy_as_dict:
+
+            theme_parent_child=cls.__get_theme_labels_by_uri(uri_parent)
+            theme_parent_child.setdefault("child", [])
+            theme_parent_child.setdefault("altlabel", [])
+            
+            #Récuperation des altlabels pour le theme parent
+            if label:=cls.__get_theme_altlabels_by_uri(uri_parent):
+                theme_parent_child["altlabel"].append(label["label"])
+            
+            
+            for uri_child in themes_hierarchy_as_dict[uri_parent]:
+                if child_label:=cls.__get_theme_labels_by_uri(uri_child):
+                    if label:=cls.__get_theme_altlabels_by_uri(uri_child):
+                        child_label.setdefault("altlabel", [])
+                        child_label["altlabel"].append(label["label"])
+                        # print(theme_parent_child["label"]," : ",label["label"])
+
+                    theme_parent_child["child"].append(child_label)
+            all_themes_subtheme_hierarchy_as_dict[theme_parent_child["label"]]=theme_parent_child
+        return all_themes_subtheme_hierarchy_as_dict
+
+    @classmethod
+    def altlabels(cls, vocabulary:str):
         """Return alternative labels' table for the given vocabulary.
         
         Parameters
@@ -88,13 +168,14 @@ class VocabularyReader:
         list
 
         """
-        
+        if vocabulary == "ecospheres_theme": 
+            return cls.themes()
         _table=_get_generic_schema(f"{vocabulary}_altlabel")
         return cls._select_labels_from_database(_table)
 
 
     @classmethod
-    def is_known_uri(cls, vocabulary, uri,language=None):
+    def is_known_uri(cls, vocabulary:str, uri:str,language:str=None):
         """Is the URI registered in given vocabulary ?
 
         Parameters
@@ -115,7 +196,6 @@ class VocabularyReader:
     
         _table=_get_generic_schema(f"{vocabulary}_label")
 
-
         if not language:
             language="fr"
 
@@ -132,12 +212,7 @@ class VocabularyReader:
                 logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
                 return list()
 
-        # if not vocabulary or not uri:
-        #     return False
-        # return any(row['uri'] == uri for row in cls.labels(vocabulary))
 
-
-        print("test vocabulary")
     @classmethod
     def get_uri_from_label(cls, vocabulary, label, language=None,
         case_sensitive=False):
@@ -203,3 +278,49 @@ class VocabularyReader:
             except Exception as e:
                 logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
                 return list()
+
+    @classmethod            
+    def _get_user_name(context):
+        context['defer_commit'] = True  # See ckan/ckan#1714
+        _site_user = p.toolkit.get_action('get_site_user')(context, {})
+        return  _site_user['name']
+
+    @classmethod
+    def _get_user_name(self):
+        user = p.toolkit.get_action('get_site_user')(
+            {'ignore_auth': True, 'defer_commit': True},
+            {})
+        print("user: ",user["name"])
+        return user['name']
+
+
+    @classmethod
+    def get_organization_by_admin(cls):
+        list_of_organizations_as_dict=dict()
+        organizations_as_dict=dict()
+        ctx = {'ignore_auth': True,
+                'user': cls._get_user_name()}
+
+        groups=Session_CKAN.query(Group).filter_by(state='active').all()
+        for group in groups:
+            organizations_as_dict.setdefault(group.id,{})
+            organizations_as_dict[group.id]["name"] = group.name
+            organizations_as_dict[group.id]["title"]=group.title
+            organizations_as_dict[group.id]["description"]=group.description
+            organizations_as_dict[group.id]["created"]=group.created
+            organizations_as_dict[group.id]["image_url"]=group.image_url
+
+        groups_details=Session_CKAN.query(GroupExtra).all()
+        for group_details in groups_details:
+            #verfier si l'organisation est bien présente dans les organisations actives
+            # Quand on supprime une orgonisation, elle sera juste marquée comme inactive, elle reste toujours en base de données
+            if group_details.group_id not in organizations_as_dict:
+                continue
+            organizations_as_dict[group_details.group_id][group_details.key] = group_details.value
+
+
+        for org in organizations_as_dict:
+            list_of_organizations_as_dict.setdefault(cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']],[])
+            list_of_organizations_as_dict[cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]].append(organizations_as_dict[org])
+
+        return list_of_organizations_as_dict

@@ -3,14 +3,12 @@ import ckan.plugins.toolkit as toolkit
 import ckanext.ecospheres.validators as v
 import ckanext.ecospheres.helpers as helpers
 import collections
-# from ckanext.ecospheres.commands import ecospherefr as ecospherefr_cli
-from ckanext.ecospheres.models.territories import Territories
-from ckanext.ecospheres.models.themes import Themes,Subthemes
 import json
 import logging
 from flask import Blueprint
 from ckan.model import Session, meta
 from sqlalchemy import Column, Date, Integer, Text, create_engine, inspect
+from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 
 
 
@@ -20,12 +18,8 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IFacets)
     plugins.implements(plugins.IPackageController, inherit=True)
-    # plugins.implements(plugins.IClick)
     plugins.implements(plugins.IBlueprint)
 
-    # # ------------- IClick ---------------#
-    # def get_commands(self):
-    #     return ecospherefr_cli.get_commands()
 
 
     # ------------- IConfigurer ---------------#
@@ -43,7 +37,6 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
     
 
-
    
     # ------------- IValidators ---------------#
     def get_validators(self):
@@ -51,7 +44,6 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
             'timestamp_to_datetime': v.timestamp_to_datetime,
             'multilingual_text_output': v.multilingual_text_output,
         }
-
 
     # ------------- IFacets ---------------#
 
@@ -160,8 +152,6 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
     def after_search(self,search_results, search_params):
 
-        
-
         return search_results
 
 
@@ -169,24 +159,25 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
     # ------------- IBlueprint ---------------#
     def _get_territoires(self):
-        return  {
-                'territoires':loader.territoires
-                }
-
+        return {
+                "territoires": VocabularyReader.labels(vocabulary="ecospheres_territory")
+               }
     def _get_themes(self):
-        return loader.themes
-	
-
+        return VocabularyReader.themes()
+    
+    def _get_organizations(self):
+        return VocabularyReader.get_organization_by_admin()
     
     def get_blueprint(self):
         """
-        Exposition des API 
+        Exposition des APIs 
 
         """
         blueprint = Blueprint('dcatapfrench_custom_api', self.__module__)
         rules = [ 
-            ('/territoires', 'get_territoires', self._get_territoires),
-            ('/themes', 'get_themes', self._get_themes),
+            ('/api/territoires', 'get_territoires', self._get_territoires),
+            ('/api/themes', 'get_themes', self._get_themes),
+            ('/api/organizations', 'get_organizations', self._get_organizations),
             ]
         for rule in rules:
             blueprint.add_url_rule(*rule)
