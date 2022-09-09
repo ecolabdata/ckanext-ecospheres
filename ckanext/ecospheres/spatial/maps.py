@@ -1,4 +1,25 @@
 
+RESTRICTED_ACCESS_URIS = [
+    'http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL',
+    'http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC',
+    'http://publications.europa.eu/resource/authority/access-right/RESTRICTED',
+    'http://publications.europa.eu/resource/authority/access-right/SENSITIVE',
+    'http://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess/INSPIRE_Directive_Article13_1a',
+    'http://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess/INSPIRE_Directive_Article13_1b',
+    'http://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess/INSPIRE_Directive_Article13_1c',
+    'http://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess/INSPIRE_Directive_Article13_1d',
+    'http://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess/INSPIRE_Directive_Article13_1e',
+    'http://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess/INSPIRE_Directive_Article13_1f',
+    'http://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess/INSPIRE_Directive_Article13_1g',
+    'http://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess/INSPIRE_Directive_Article13_1h'
+]
+"""URI caractéristique d'un jeu de données à accès restreint.
+
+La propriété ``'restricted_access'`` vaut ``True`` si
+``'access_right'`` contient au moins un URI de cette liste,
+sinon elle vaut ``False``.
+
+"""
 
 ISO_639_2 = {
     'aar': 'aa',

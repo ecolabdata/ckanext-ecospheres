@@ -5,8 +5,60 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
 
 
 # ----------------------------------------------------------------------------------------
+# ---------------------------------- Onglets ---------------------------------------------
+# ----------------------------------------------------------------------------------------
+
+tabs:
+
+  tab_data: &tab_data
+    fr: Accès aux données
+    en: Data access
+  
+  tab_details: &tab_details
+    fr: Détails
+    en: Details
+
+  tab_docs: &tab_docs
+    fr: Documentation
+    en: Documentation
+
+  tab_contacts: &tab_contacts
+    fr: Contacts et acteurs
+    en: Relevant parties
+
+  tab_export: &tab_export
+    fr: Export
+    en: Metadata export
+
+# ----------------------------------------------------------------------------------------
 # ---------------------------------- Variables communes ----------------------------------
 # ----------------------------------------------------------------------------------------
+
+.media_type_fields: &media_type_fields
+  repeating_subfields: 
+  # URI
+    - field_name: uri
+      label:
+        fr:  URL
+        en:  URL
+      display_snippet: link.html
+      display_property: skos:prefLabel
+      value_type: uri
+      known_values: require
+      vocabularies:
+        - eu_file_type
+        - iana_media_type
+      # TODO: ajouter un display_snippet basé semblable à link mais capable
+      # plus généralement de récupérer le label, quelle que soit la propriété
+      # utilisée (éventuellement autre que skos:prefLabel)
+    # LABEL
+    # > rdfs:label
+    # [+ GeoDCAT-AP]
+    - field_name: label
+      label:
+        fr: Nom
+        en: Name
+      value_type: literal
 
 .common_field_agent: &common_field_agent
   repeating_subfields:
@@ -191,7 +243,6 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       value_type: literal
       translatable_values: True
 
-
 .standard_fields: &standard_fields
   repeating_subfields:
     # URI
@@ -258,10 +309,10 @@ dataset_fields:
 #   (cf. propriété "is_primary_topic_of")
 - field_name: identifier
   label:
-    fr: Identifiant
-    en: Identifier
+    fr: Identifiant du jeu de données
+    en: Dataset identifier
   display_snippet: null
-  help_text: Identifiant du jeu de données.
+  help_text: Identifiant du jeu de données dans le catalogue source.
   value_type: literal
 
 # TITLE {*}
@@ -337,6 +388,7 @@ dataset_fields:
   preset: fr_date
   help_text: Date de création du jeu de données.
   value_type: literal
+  tab: *tab_details
 
 # ISSUED
 # > dct:issued
@@ -347,6 +399,7 @@ dataset_fields:
   preset: fr_date
   help_text: Date de publication du jeu de données.
   value_type: literal
+  tab: *tab_details
 
 
 # ------ Organisations ------
@@ -364,6 +417,7 @@ dataset_fields:
   repeating_label: Point de contact
   help_text: Entité à contacter pour obtenir des informations sur les données.
   value_type: node
+  tab: *tab_contacts
   <<: *common_contact_fields
 
 
@@ -375,6 +429,7 @@ dataset_fields:
     en: Publisher
   help_text: Organisme ou personne qui assure la publication des données.
   value_type: node
+  tab: *tab_contacts
   <<: *common_field_agent
 
 
@@ -386,6 +441,7 @@ dataset_fields:
     en: Creator
   help_text: Principal responsable de la production des données.
   value_type: node
+  tab: *tab_contacts
   <<: *common_field_agent
 
 
@@ -399,6 +455,7 @@ dataset_fields:
   repeating_label: Propriétaire
   help_text: Organisme ou personne qui détient des droits sur les données.
   value_type: node
+  tab: *tab_contacts
   <<: *common_field_agent
 
 
@@ -418,6 +475,7 @@ dataset_fields:
     Organisme qui est intervenu ou exerce une responsabilité sur
     les données.
   value_type: node
+  tab: *tab_contacts
   repeating_subfields:
   # HAD_ROLE []
   # > dcat:hadRole
@@ -564,6 +622,7 @@ dataset_fields:
   help_text: Lien de la page où sont décrits les champs du jeu de données.
   display_snippet: link.html
   value_type: uri
+  tab: *tab_docs
 
 # PAGE [{}]
 # > foaf:page -> foaf:Document
@@ -579,6 +638,7 @@ dataset_fields:
     fr:  Documentation
     en:  Documentation
   value_type: node or uri
+  tab: *tab_docs
   repeating_subfields:
   # URI
   - field_name: uri
@@ -673,7 +733,8 @@ dataset_fields:
   value_type: uri
   known_values: require
   vocabularies:
-      - ecospheres_theme
+    - ecospheres_theme
+  tab: *tab_details
   # display_snippet: multiple_text
   # TODO: ajouter un display_snippet qui interroge l'URI pour récupérer
   # l'étiquette.
@@ -692,7 +753,8 @@ dataset_fields:
   value_type: uri
   known_values: require
   vocabularies:
-      - ecospheres_theme
+    - ecospheres_theme
+  tab: *tab_details
   # display_snippet: multiple_text
   # TODO: ajouter un display_snippet qui interroge l'URI pour récupérer
   # l'étiquette.
@@ -713,9 +775,9 @@ dataset_fields:
   value_type: uri
   known_values: require
   vocabularies:
-      - inspire_theme
-      - inspire_topic_category
-      - eu_theme
+    - inspire_theme
+    - inspire_topic_category
+    - eu_theme
 
 # FREE_TAG [{*}]
 # {"en": ["big", "large"], "fr": ["grande"]}
@@ -730,6 +792,7 @@ dataset_fields:
   translatable_values: True
   multiple_values: True
   value_type: literal
+  tab: *tab_details
 
 # ------ Métadonnées sur les métadonnées ------
 
@@ -741,6 +804,7 @@ dataset_fields:
     fr: Métadonnées sur les métadonnées
     en: Metadata about metadata
   value_type: node
+  tab: *tab_details
   repeating_subfields:
 
   # MODIFIED
@@ -855,6 +919,7 @@ dataset_fields:
     fr: Couverture géographique
     en: Spatial coverage
   value_type: node or uri
+  tab: *tab_details
   repeating_subfields:
   - field_name: uri
     label: 
@@ -972,6 +1037,7 @@ dataset_fields:
     en: Access conditions
   help_text: Contraintes réglementaires limitant l'accès au jeu de données.
   value_type: node or uri
+  tab: *tab_details
   repeating_subfields:
   # URI
   - field_name: uri
@@ -1001,6 +1067,16 @@ dataset_fields:
     translatable_values: True
     value_type: literal
 
+# RESTRICTED_ACCESS
+# - non exposé dans l'export DCAT, utilisé pour l'élément
+#   Données ouvertes / Accès restreint
+# - booléen déduit de access_rights
+- field_name: restricted_access
+  label:
+    fr: Donnée à accès restreint
+    en: Restricted access
+  value_type: literal
+
 # CRS []
 # > dct:conformsTo
 # - pour les référentiels de coordonnées
@@ -1018,6 +1094,7 @@ dataset_fields:
   known_values: require
   vocabularies:
     - ogc_epsg
+  tab: *tab_details
 
 # CONFORMS_TO [{}]
 # > dct:conformsTo -> dct:Standard
@@ -1032,6 +1109,7 @@ dataset_fields:
     en: Standard
   help_text: Standard, schéma, etc. auquel se conforment les données.
   value_type: node or uri
+  tab: *tab_details
   <<: *standard_fields
 
 # ACCRUAL_PERIODICITY
@@ -1047,6 +1125,7 @@ dataset_fields:
   vocabularies:
     - inspire_maintenance_frequency
     - eu_frequency
+  tab: *tab_details
   # display_snippet: link.html
   # TODO: ajouter un display_snippet basé semblable à link mais capable
   # plus généralement de récupérer le label, quelle que soit la propriété
@@ -1066,6 +1145,7 @@ dataset_fields:
   known_values: require
   vocabularies:
     - eu_language
+  tab: *tab_details
   # TODO: ajouter un display_snippet qui interroge les URI pour récupérer
   # leurs étiquettes.
 
@@ -1081,6 +1161,7 @@ dataset_fields:
   value_type: literal
   multiple_values: True
   translatable_values: True
+  tab: *tab_details
   # TODO: ajouter un display_snippet qui permette à la fois
   # de gérer les listes de valeur et de reconnaître le
   # Markdown
@@ -1093,6 +1174,7 @@ dataset_fields:
     en: Version
   help_text: Version ou millésime du jeu de données.
   value_type: literal
+  tab: *tab_details
 
 # VERSION_NOTES {*}
 # > adms:versionNotes
@@ -1104,6 +1186,7 @@ dataset_fields:
   help_text: Différences entre la version courante des données et les versions antérieures.
   translatable_values: True
   value_type: literal
+  tab: *tab_details
 
 # TEMPORAL_RESOLUTION
 # > dcat:temporalResolution
@@ -1114,6 +1197,7 @@ dataset_fields:
     en: Temporal resolution
   help_text: Plus petit pas de temps significatif dans le contexte du jeu de données.
   value_type: literal
+  tab: *tab_details
   # TODO: Ajouter un display_snippet capable d'afficher
   # des durées lisibles à partir de la forme standardisée
 
@@ -1125,6 +1209,7 @@ dataset_fields:
     en: Spatial resolution in meters
   help_text: Plus petite distance significative dans le contexte du jeu de données, exprimée en mètres.
   value_type: literal
+  tab: *tab_details
 
 # EQUIVALENT_SCALE
 # non exposé, permet uniquement de conserver
@@ -1136,7 +1221,7 @@ dataset_fields:
     fr: Échelle équivalente
     en: Equivalent scale
   value_type: literal
-
+  display_snippet: null
 
 # ------ Champs CKAN hors DCAT ------
 
@@ -1158,38 +1243,57 @@ dataset_fields:
   display_snippet: image.html
   value_type: uri
 
+# ------ Export des métadonnées ------
+
+# AS_INSPIRE_XML
+# non exposé dans l'export DCAT
+- field_name: as_inspire_xml
+  label:
+    fr: Vue XML INSPIRE des métadonnées
+    en: Metadata as INSPIRE conforming XML
+  display_snippet: link.html
+  value_type: uri
+  tab: *tab_export
+
+# AS_DCAT_RDF
+# non exposé dans l'export DCAT
+- field_name: as_dcat_rdf
+  label:
+    fr: Vue DCAT des métadonnées
+    en: Metadata as DCAT conforming RDF file
+  display_snippet: link.html
+  value_type: node
+  tab: *tab_export
+  repeating_subfields:
+    - field_name: format
+      label: 
+        fr: Format
+        en: Format
+      value_type: node or uri
+      <<: *media_type_fields
+    - field_name: download_url
+      label:
+        fr:  Téléchargement
+        en:  Download URL
+      help_text: URL de téléchargement direct du fichier.
+      preset: url
+      value_type: uri
+
+# CKAN_API_SHOW
+# non exposé dans l'export DCAT
+- field_name: ckan_api_show
+  label:
+    fr: Vue des métadonnées via l'API CKAN
+    en: Get metadata through CKAN API
+  display_snippet: link.html
+  value_type: uri
+  tab: *tab_export
+
 
 # ------------------------------------------------------------------------
 # ------------------------------ RESSOURCES ------------------------------
 # ------------------------------------------------------------------------
 # -> dcat:Distribution
-
-.media_type_fields: &media_type_fields
-  repeating_subfields: 
-  # URI
-    - field_name: uri
-      label:
-        fr:  URL
-        en:  URL
-      display_snippet: link.html
-      display_property: skos:prefLabel
-      value_type: uri
-      known_values: require
-      vocabularies:
-        - eu_file_type
-        - iana_media_type
-      # TODO: ajouter un display_snippet basé semblable à link mais capable
-      # plus généralement de récupérer le label, quelle que soit la propriété
-      # utilisée (éventuellement autre que skos:prefLabel)
-    # LABEL
-    # > rdfs:label
-    # [+ GeoDCAT-AP]
-    - field_name: label
-      label:
-        fr: Nom
-        en: Name
-      value_type: literal
-
 
 resource_fields:
 
@@ -1218,7 +1322,7 @@ resource_fields:
 
 # DOWNLOAD_URL []
 # > dcat:downloadURL
-- field_name: url_download
+- field_name: download_url
   label:
     fr:  Téléchargement
     en:  Download URL
