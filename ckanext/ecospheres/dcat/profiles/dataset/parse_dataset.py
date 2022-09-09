@@ -107,8 +107,6 @@ def afficher(data):
 
 
 def parse_dataset(self, dataset_dict, dataset_ref):
-    from ckanext.ecospheres.registre_loader.loader import Loader
-    loader=Loader()
 
     mapping_format=_get_mapping_file()
 
@@ -271,7 +269,7 @@ def parse_dataset(self, dataset_dict, dataset_ref):
         list_themes_ecosphere_as_dict=_get_theme_registry_as_json()
         list_themes_ecosphere_as_dict=list_themes_ecosphere_as_dict.get("themes",None)
     except Exception as e:
-        print(str(e))
+        print("tes: ",str(e))
 
     
 
@@ -281,27 +279,27 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     title = self._object_value(dataset_ref, DCT.title)
     categories={}
     subcategories={}
-    themes_list=loader.themes
-    for theme_ecosphere_pref_label in themes_list:
-        is_match,sous_theme,uri_sous_theme=_check_sous_theme(themes_list[theme_ecosphere_pref_label]["subthemes"],list_keywords,title)
+    # themes_list=loader.themes
+    # for theme_ecosphere_pref_label in themes_list:
+    #     is_match,sous_theme,uri_sous_theme=_check_sous_theme(themes_list[theme_ecosphere_pref_label]["subthemes"],list_keywords,title)
 
-        if is_match:
+    #     if is_match:
 
-            if not categories.get(theme_ecosphere_pref_label,None):
-                categories[theme_ecosphere_pref_label]={
-                                        "theme":theme_ecosphere_pref_label,
-                                        "uri": themes_list[theme_ecosphere_pref_label].get("uri",None)
-                                       }
+    #         if not categories.get(theme_ecosphere_pref_label,None):
+    #             categories[theme_ecosphere_pref_label]={
+    #                                     "theme":theme_ecosphere_pref_label,
+    #                                     "uri": themes_list[theme_ecosphere_pref_label].get("uri",None)
+    #                                    }
 
 
-            if not subcategories.get(sous_theme,None):
-                subcategories[sous_theme]={
-                                            "subtheme":sous_theme,
-                                            "uri": uri_sous_theme
-                                          }
-    if not subcategories and not categories:
-        #TODO: Theme ecosphere non trouvé 
-        pass
+    #         if not subcategories.get(sous_theme,None):
+    #             subcategories[sous_theme]={
+    #                                         "subtheme":sous_theme,
+    #                                         "uri": uri_sous_theme
+    #                                       }
+    # if not subcategories and not categories:
+    #     #TODO: Theme ecosphere non trouvé 
+    #     pass
         
     """-------------------------------------------<category>-------------------------------------------"""        
 
@@ -314,8 +312,8 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     # - les étiquettes des URI seraient à mapper sur la propriété
     #   "tags" lors du moissonnage
     
-    if categories:
-        dataset_dict["category"]=list(categories.values())
+    # if categories:
+    #     dataset_dict["category"]=list(categories.values())
     
 
 
@@ -329,8 +327,8 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     # - les étiquettes des URI seraient à mapper sur la propriété
     #   "tags" lors du moissonnage
     
-    if subcategories:
-        dataset_dict["subcategory"]=list(subcategories.values())
+    # if subcategories:
+    #     dataset_dict["subcategory"]=list(subcategories.values())
 
 
     """-------------------------------------------<theme>-------------------------------------------"""        

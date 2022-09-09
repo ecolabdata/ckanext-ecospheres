@@ -79,7 +79,7 @@
         <foaf:title xml:lang="fr">Bureau de l'état des milieux</foaf:title>
         <foaf:mbox rdf:resource="ckan@mtes.fr"/>
         <foaf:phone rdf:resource="0158585858"/>
-        <dc:type>type</dc:type>
+        <dc:type rdf:resource="https://type_uri"/>
         <foaf:workplaceHomepage rdf:resource="https://statistiques.developpement-durable.gouv.fr/contact"/>
       
         <org:memberOf>
@@ -129,7 +129,7 @@
         <foaf:title xml:lang="fr">Bureau de l'état des milieux</foaf:title>
         <foaf:mbox rdf:resource="ckan@mtes.fr"/>
         <foaf:phone rdf:resource="0158585858"/>
-        <dc:type>type</dc:type>
+        <dc:type rdf:resource="https://type_uri"/>
         <foaf:workplaceHomepage rdf:resource="https://statistiques.developpement-durable.gouv.fr/contact"/>
         <org:memberOf>
           <org:Organization>
@@ -143,6 +143,7 @@
     <prov:qualifiedAttribution>
         <prov:Attribution>
           <ns0:hadRole>owner</ns0:hadRole>
+          <ns0:hadRole>owner_1</ns0:hadRole>
             <prov:agent>
               <prov:Agent>
                 <foaf:givenName>mtes</foaf:givenName>

@@ -187,7 +187,7 @@ class TestGetAltLabels(object):
 class TestGetThemes(object):
     def test_get_themes(self):
         print("getting themes")
-        # VocabularyReader.themes()
+        VocabularyReader.themes()
 
 
 

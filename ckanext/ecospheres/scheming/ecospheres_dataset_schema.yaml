@@ -477,6 +477,7 @@ dataset_fields:
   value_type: node
   tab: *tab_contacts
   repeating_subfields:
+
   # HAD_ROLE []
   # > dcat:hadRole
   - field_name: had_role
@@ -504,24 +505,24 @@ dataset_fields:
     repeating_subfields:
     # NAME {*}
     # > foaf:givenName
-    - field_name: name
-      label: 
-        fr: Nom
-        en: Name
-      translatable_values: True
-      value_type: literal
-    # > foaf:mbox 
-    - field_name: email
-      label:
-        fr: Courriel
-        en: Mail
-      value_type: uri
-    # > foaf:homePage
-    - field_name: url
-      label: 
-        fr: Site internet
-        en: Website
-      value_type: uri
+  - field_name: name
+    label: 
+      fr: Nom
+      en: Name
+    translatable_values: True
+    value_type: literal
+  # > foaf:mbox 
+  - field_name: email
+    label:
+      fr: Courriel
+      en: Mail
+    value_type: uri
+  # > foaf:homePage
+  - field_name: url
+    label: 
+      fr: Site internet
+      en: Website
+    value_type: uri
 
 # ------- Relations -------
 # IN_SERIES []
@@ -647,6 +648,8 @@ dataset_fields:
       en: URL
     display_snippet: link.html
     value_type: uri
+
+
   # TITLE {*}
   # > dct:title
   # [+ GeoDCAT-AP]
@@ -657,6 +660,8 @@ dataset_fields:
     preset: fluent_text
     value_type: literal
     translatable_values: True
+
+
   # DESCRIPTION {*}
   # > dct:description
   # [+ GeoDCAT-AP]
@@ -667,6 +672,8 @@ dataset_fields:
     preset: fluent_markdown
     value_type: literal
     translatable_values: True
+
+
   # URL []
   # > dcat:accessURL
   # [X]
@@ -682,6 +689,8 @@ dataset_fields:
     preset: url
     value_type: uri
     multiple_values: True
+
+
   # MODIFIED
   # > dct:modified
   # [X]
@@ -693,6 +702,8 @@ dataset_fields:
     preset: fr_date
     help_text: Date de dernière modification du document.
     value_type: literal
+
+
   # CREATED
   # > dct:created
   # [X]
@@ -704,6 +715,8 @@ dataset_fields:
     preset: fr_date
     help_text: Date de création du document.
     value_type: literal
+
+    
   # ISSUED
   # > dct:issued
   # [X]

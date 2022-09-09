@@ -8,7 +8,7 @@ from ckan.model import GroupExtra, Group,Session as Session_CKAN
 
 from ckan.logic.action.get import organization_list
 
-from sqlalchemy import Table, Column, Integer, String, MetaData,select,and_,func
+from sqlalchemy import Table, Column, Integer, String, MetaData,select,and_,func,join
 import ckan.plugins as p
 
 import json
@@ -129,6 +129,10 @@ class VocabularyReader:
 
     @classmethod
     def themes(cls):
+        """
+
+
+        """
         themes_hierarchy_as_dict=cls.__get_themes_hierarchy_as_dict()
         all_themes_subtheme_hierarchy_as_dict=dict()
         for uri_parent in themes_hierarchy_as_dict:
@@ -136,6 +140,7 @@ class VocabularyReader:
             theme_parent_child=cls.__get_theme_labels_by_uri(uri_parent)
             theme_parent_child.setdefault("child", [])
             theme_parent_child.setdefault("altlabel", [])
+            theme_parent_child["count"]=0
             
             #Récuperation des altlabels pour le theme parent
             if label:=cls.__get_theme_altlabels_by_uri(uri_parent):
@@ -146,9 +151,9 @@ class VocabularyReader:
                     if label:=cls.__get_theme_altlabels_by_uri(uri_child):
                         child_label.setdefault("altlabel", [])
                         child_label["altlabel"].append(label["label"])
-                        # print(theme_parent_child["label"]," : ",label["label"])
-
+                    child_label["count"]=0
                     theme_parent_child["child"].append(child_label)
+
             all_themes_subtheme_hierarchy_as_dict[theme_parent_child["label"]]=theme_parent_child
         return all_themes_subtheme_hierarchy_as_dict
 
@@ -213,8 +218,7 @@ class VocabularyReader:
 
 
     @classmethod
-    def get_uri_from_label(cls, vocabulary, label, language=None,
-        case_sensitive=False):
+    def get_uri_from_label(cls, vocabulary, label, language=None,case_sensitive=False):
         """Get one URI with matching label in given vocabulary, if any.
 
         This function will consider most RDF properties used for labels, 
@@ -277,19 +281,14 @@ class VocabularyReader:
                 return list()
 
 
-    @classmethod
-    def _get_user_name(cls):
-        return p.toolkit.get_action('get_site_user')(
-            {'ignore_auth': True, 'defer_commit': True},
-            {}).get("name")
+
 
 
     @classmethod
     def get_organization_by_admin(cls):
         list_of_organizations_as_dict=dict()
         organizations_as_dict=dict()
-        ctx = {'ignore_auth': True,
-                'user': cls._get_user_name()}
+       
 
         groups=Session_CKAN.query(Group).filter_by(state='active').all()
         for group in groups:
@@ -299,6 +298,7 @@ class VocabularyReader:
             organizations_as_dict[group.id]["description"]=group.description
             organizations_as_dict[group.id]["created"]=group.created
             organizations_as_dict[group.id]["image_url"]=group.image_url
+            organizations_as_dict[group.id]["count"]=0
 
         groups_details=Session_CKAN.query(GroupExtra).all()
         for group_details in groups_details:
@@ -310,7 +310,10 @@ class VocabularyReader:
 
 
         for org in organizations_as_dict:
-            list_of_organizations_as_dict.setdefault(cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']],[])
-            list_of_organizations_as_dict[cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]].append(organizations_as_dict[org])
+            list_of_organizations_as_dict.setdefault(cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']],{})
+            list_of_organizations_as_dict[cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]].setdefault("orgs",[])
+            list_of_organizations_as_dict[cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]]["orgs"].append(organizations_as_dict[org])
+            list_of_organizations_as_dict[cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]]["count"]=0
+
 
         return list_of_organizations_as_dict

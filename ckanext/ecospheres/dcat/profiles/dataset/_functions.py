@@ -267,7 +267,7 @@ def _qualified_attribution(self, subject, predicate,dataset_dict):
         for key,_predicate in (
                 ("had_role",NS.hadRole) ,# foaf:phone
             ):
-            value=self._object_value(attr, _predicate)
+            value=self._object_value_list(attr, _predicate)
             if value:
                 qualified_attri_dict[key]=value
             
@@ -277,7 +277,7 @@ def _qualified_attribution(self, subject, predicate,dataset_dict):
                 agent_dict={}
                 for key,__predicate in (
                             ("name",FOAF.givenName) ,# foaf:phone
-                            ("mail",FOAF.mbox) ,# foaf:phone
+                            ("email",FOAF.mbox) ,# foaf:phone
                             ("url",FOAF.homePage) ,# foaf:phone
                             ):
                     value=self._object_value(agent,__predicate)
@@ -311,11 +311,12 @@ def _parse_agent(self, subject, predicate,dataset_dict,keybase=None):
                 ("email",FOAF.mbox) , #foaf:mbox 
                 ("phone",FOAF.phone) ,# foaf:phone
                 ("url",FOAF.workplaceHomepage), #foaf:workplaceHomepage
+                ("acronym",FOAF.name), #dido
             ):
                 value=self._object_value(agent, _predicate)
                 if value:
                     agent_dict[key] = value
-            
+                
             # multilangue    
             for key,_predicate in (
                 ("name",FOAF.name), #dido -> présent

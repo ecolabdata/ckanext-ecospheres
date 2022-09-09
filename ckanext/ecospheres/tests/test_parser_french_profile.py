@@ -22,11 +22,11 @@ assert_true = nose.tools.assert_true
 
 class BaseParseTest(object):
 
-    def _extras(self, dataset):
-        extras = {}
-        for extra in dataset.get('extras'):
-            extras[extra['key']] = extra['value']
-        return extras
+    # def _extras(self, dataset):
+    #     extras = {}
+    #     for extra in dataset.get('extras'):
+    #         extras[extra['key']] = extra['value']
+    #     return extras
 
 
         
@@ -62,7 +62,6 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         eq_(dataset["title"]['en'],"en_Données locales de consommation d'électricité, de gaz naturel et de chaleur et de froid - IRIS (à partir de 2018)")
 
 
-
         
         #ct:description
         eq_(dataset['notes']['fr'], "FR Données locales de consommation d'électricité, de gaz naturel et de chaleur et de froid - consommations annuelles et points de livraison d'électricité, de gaz naturel, et de chaleur et de froid, répartis en cinq secteurs (agriculture, industrie, tertiaire, résidentiel et non affecté) ou selon le code NAF à 2 niveaux selon les cas, à la maille IRIS")
@@ -94,12 +93,15 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         # NAME {*} > vcard:fn
         eq_(dataset['contact_point'][0]['name']['fr'],'Point de contact DiDo')
         eq_(dataset['contact_point'][0]['name']['en'],'Point de contact DiDo')
+        
         # EMAIL []
         # > vcard:hasEmail
         eq_(dataset['contact_point'][0]['email'],'ckan@mtes.fr')
+        
         # PHONE []
         # > vcard:hasTelephone
         eq_(dataset['contact_point'][0]['phone'],'0158585858')
+
         # URL 
         # > vcard:hasURL
         eq_(dataset['contact_point'][0]['url'],'https://statistiques.developpement-durable.gouv.fr/contact')
@@ -128,6 +130,12 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         
         eq_(dataset['creator'][0]['title'],"Bureau de l'état des milieux")
         
+        # > dct:type
+        eq_(dataset['creator'][0]['type'],'https://type_uri')
+
+        eq_(dataset['creator'][0]['acronym'],'CGDD/SDES/SDIE/BEM')
+
+
         # > foaf:phone
         eq_(dataset['creator'][0]['phone'],'0158585858')
         
@@ -158,6 +166,8 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
 
         # > foaf:phone
         eq_(dataset['rights_holder'][0]['phone'],'0158585858')
+        
+        eq_(dataset['rights_holder'][0]['acronym'],'CGDD/SDES/SDIE/BEM')
 
         # COMMENT {*}
         eq_(dataset['rights_holder'][0]['comment']['fr'],"Bureau de l'état des milieux")
@@ -188,6 +198,8 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         # > foaf:phone
         eq_(dataset['publisher'][0]['phone'],'0158585858')
 
+        eq_(dataset['publisher'][0]['type'],'https://type_uri')
+
         # COMMENT {*}
         eq_(dataset['publisher'][0]['comment']['fr'],"Bureau de l'état des milieux")
         eq_(dataset['publisher'][0]['comment']['en'],"Bureau de l'état des milieux")
@@ -204,12 +216,12 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         # > prov:qualifiedAttribution -> prov:Attribution
         
         # > dcat:hadRole
-        eq_(dataset['qualified_attribution'][0]['had_role'],'owner')
+        eq_(set(dataset['qualified_attribution'][0]['had_role']),set(['owner','owner_1']))
         
         #foaf:givenName
         eq_(dataset['qualified_attribution'][0]['agent'][0]['name'],'mtes')
         #foaf:mbox
-        eq_(dataset['qualified_attribution'][0]['agent'][0]['mail'],'ckan@mtes.fr')
+        eq_(dataset['qualified_attribution'][0]['agent'][0]['email'],'ckan@mtes.fr')
         #foaf:homePage
         eq_(dataset['qualified_attribution'][0]['agent'][0]['url'],'mtes.website.com')
 
@@ -225,7 +237,7 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
 
         # ATTRIBUTE_PAGE
         # > foaf:page
-        
+        # attributes_page
         #TODO
 
         """-------------------------------------------<page>-------------------------------------------"""        
