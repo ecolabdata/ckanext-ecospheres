@@ -140,7 +140,7 @@ class VocabularyReader:
             theme_parent_child=cls.__get_theme_labels_by_uri(uri_parent)
             theme_parent_child.setdefault("child", [])
             theme_parent_child.setdefault("altlabel", [])
-            theme_parent_child["count"]=0
+            theme_parent_child["count"]=-1
             
             #Récuperation des altlabels pour le theme parent
             if label:=cls.__get_theme_altlabels_by_uri(uri_parent):
@@ -151,7 +151,7 @@ class VocabularyReader:
                     if label:=cls.__get_theme_altlabels_by_uri(uri_child):
                         child_label.setdefault("altlabel", [])
                         child_label["altlabel"].append(label["label"])
-                    child_label["count"]=0
+                    child_label["count"]=-1
                     theme_parent_child["child"].append(child_label)
 
             all_themes_subtheme_hierarchy_as_dict[theme_parent_child["label"]]=theme_parent_child
@@ -298,7 +298,7 @@ class VocabularyReader:
             organizations_as_dict[group.id]["description"]=group.description
             organizations_as_dict[group.id]["created"]=group.created
             organizations_as_dict[group.id]["image_url"]=group.image_url
-            organizations_as_dict[group.id]["count"]=0
+            organizations_as_dict[group.id]["count"]=-1
 
         groups_details=Session_CKAN.query(GroupExtra).all()
         for group_details in groups_details:
@@ -313,7 +313,7 @@ class VocabularyReader:
             list_of_organizations_as_dict.setdefault(cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']],{})
             list_of_organizations_as_dict[cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]].setdefault("orgs",[])
             list_of_organizations_as_dict[cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]]["orgs"].append(organizations_as_dict[org])
-            list_of_organizations_as_dict[cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]]["count"]=0
+            list_of_organizations_as_dict[cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]]["count"]=-1
 
 
         return list_of_organizations_as_dict
