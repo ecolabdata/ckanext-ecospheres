@@ -71,14 +71,14 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         
         dataset_dict = build_dataset_dict_from_schema('dataset', language=language)
 
-        # --- various metadata from package_dict ---
+        # --- various metadata to pick up from package_dict ---
         for target_field, package_field in {
             # dataset_dict key -> package_dict key
             'owner_org': 'owner_org'
         }:
             dataset_dict.set_value(target_field, package_dict.get(package_field))
 
-        # --- various metadata from package_dict's extras ---
+        # --- various metadata to pick up from package_dict's extras ---
         extras_map = {
             # ckanext-spatial extras key -> dataset_dict key
             'graphic-preview-file': 'graphic_preview'   
@@ -87,15 +87,16 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             if elem['key'] in extras_map:
                 dataset_dict.set_value(extras_map[elem['key']], elem['value'])
 
-        # --- various metadata from iso_values ---
+        # --- various metadata to pick up from iso_values ---
         for target_field, iso_field in {
             # dataset_dict key -> iso_values key
-            'free_tag': 'tags',
+            'free_tag': 'keywords',
             'title': 'title',
             'notes': 'abstract',
             'name': 'guid',
             'provenance': 'lineage',
             'provenance': 'maintenance-note', # TODO: provenance or version_info ? 
+            'provenance': 'purpose',
             'identifier': 'unique-resource-identifier'
         }:
             dataset_dict.set_value(target_field, iso_values.get(iso_field))
@@ -124,7 +125,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             temporal_dict.set_value('start_date', iso_values.get('temporal-extent-begin'))
             temporal_dict.set_value('end_date', iso_values.get('temporal-extent-end'))
 
-        # --- organisations ---
+        # --- organizations ---
         if iso_values.get('responsible-organisation'):
             base_role_map = {
                 # ISO CI_RoleCode -> dataset_dict key
@@ -188,6 +189,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         # --- references ---
             elif elem['key'] == 'catalog_base_url' and name:
                 landing_page = '{}/{}'.format(elem['value'], name)
+                # check if it's a valid URL:
                 response = requests.get(landing_page)
                 if response.status_code != requests.codes.ok:
                     dataset_dict.set_value('landing_page', landing_page)
@@ -195,13 +197,33 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             
             elif elem['key'] == 'attributes_base_url' and name:
                 attributes_page = '{}/{}'.format(elem['value'], name)
+                # check if it's a valid URL:
                 response = requests.get(attributes_page)
                 if response.status_code != requests.codes.ok:
                     dataset_dict.set_value('attributes_page', attributes_page)
 
         # page
+        # TODO
 
         # --- themes and keywords ---
+
+        themes = iso_values.get('keyword-inspire-theme')
+        if themes:
+            for theme in themes:
+                theme_uri =  VocabularyReader.get_uri_from_label(
+                    'inspire_theme', theme
+                )
+                if theme_uri:
+                    dataset_dict.set_value('theme', theme_uri)
+                    continue
+                theme_uri =  VocabularyReader.get_uri_from_label(
+                    'inspire_topic_category', theme
+                )
+                if theme_uri:
+                    dataset_dict.set_value('theme', theme_uri)
+        
+
+
 
         # --- spatial coverage ---
 
@@ -229,6 +251,17 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             )
             if frequency_uri:
                 dataset_dict.set_value('accrual_periodicity', frequency_uri)
+
+        states = iso_values.get('progress')
+        # apparently admits more than one value, when DCAT does not
+        # only the last valid value will be stored
+        if states:
+            for state in states:
+                state_uri =  VocabularyReader.get_uri_from_label(
+                    'iso19139_progress_code', state
+                )
+                if state_uri:
+                    dataset_dict.set_value('status', state_uri)
 
         # access_rights
         # crs
