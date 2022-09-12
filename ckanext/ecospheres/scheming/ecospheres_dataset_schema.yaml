@@ -1131,6 +1131,23 @@ dataset_fields:
   # plus généralement de récupérer le label, quelle que soit la propriété
   # utilisée (éventuellement autre que skos:prefLabel).
 
+# STATUS
+# > adms:status
+# [+ DCAT v3]
+# - stockage et exposition sous forme d'URI
+# - affichage de l'étiquette récupérée par interrogation de l'URI
+- field_name: status
+  label:
+    fr:  Maturité
+    en:  Dataset status
+  value_type: uri
+  known_values: require
+  vocabularies:
+    - eu_dataset_status
+    - adms_status
+    - iso19139_progress_code
+  tab: *tab_details
+
 # LANGUAGE []
 # > dct:language
 # - stockage et exposition sous forme d'une liste d'URI
