@@ -55,6 +55,7 @@
   format: 'json-ld'
   recursive: True
   hierarchy: True
+  regexp_property: http://registre.data.developpement-durable.gouv.fr/ecospheres/syntax#regexp
   available: True
 
 - name: eu_access_right
