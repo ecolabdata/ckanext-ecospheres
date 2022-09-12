@@ -485,7 +485,7 @@ class VocabularyDataTable(list):
             row = self[idx]
             for constraint in self.constraints:
                 if isinstance(constraint, TableNotNullConstraint):
-                    if not row[constraint]:
+                    if row[constraint] in (None, ''):
                         anomalies.append(
                             DataValidationAnomaly(row, self.name, constraint)
                         )
@@ -536,7 +536,7 @@ class VocabularyDataTable(list):
 
         for constraint in self.constraints:
             if isinstance(constraint, TableNotNullConstraint):
-                if not row[constraint]:
+                if row[constraint] in (None, ''):
                     anomalies.append(
                         DataValidationAnomaly(row, self.name, constraint)
                     )
