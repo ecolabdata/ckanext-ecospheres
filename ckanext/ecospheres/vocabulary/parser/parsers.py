@@ -151,7 +151,8 @@ EPSG_NAMESPACES = {
 def basic_rdf(
     name, url, format='xml', schemes=None, 
     languages=None, rdf_types=None, recursive=False,
-    hierarchy=False, uri_property=None, **kwargs
+    hierarchy=False, uri_property=None, regexp_property=None,
+    **kwargs
 ):
     """Build a vocabulary cluster from RDF data using simple SKOS vocabulary.
 
@@ -194,6 +195,9 @@ def basic_rdf(
         URI of a property that holds the URIs of vocabulary
         items, to use instead of the original URIs of source
         graph.
+    regexp_property : str, default None
+        URI of a property providing regular expressions to
+        use for mapping free text to the vocabulary concepts.
     
     Returns
     -------
@@ -207,6 +211,7 @@ def basic_rdf(
     uris = []
     labels = []
     relationships = []
+    regexp = []
     if uri_property:
         map_uris = {}
 
@@ -262,6 +267,13 @@ def basic_rdf(
                     child = str(child)
                     if not (new_uri, child) in relationships:
                         relationships.append((new_uri, child))
+            
+            if regexp_property:
+                new_regexp = graph.objects(URIRef(new_uri), URIRef(regexp_property))
+                for exp in new_regexp:
+                    exp = str(exp)
+                    if not (new_uri, exp) in regexp:
+                        regexp.append((new_uri, exp))
 
     if uri_property:
         new_labels = []
@@ -311,6 +323,24 @@ def basic_rdf(
         )
         for relationship in relationships:
             table.add(*relationship)
+        if not regexp_property:
+            response = result.data.validate()
+            if not response:
+                for anomaly in response:
+                    result.log_error(exceptions.InvalidDataError(anomaly))
+
+    if regexp_property:
+        table_name = result.data.table('regexp', ('uri', 'regexp'))
+        table = result.data[table_name]
+        table.set_not_null_constraint('uri')
+        table.set_not_null_constraint('regexp')
+        result.data.set_reference_constraint(
+            referenced_table=table_name,
+            referenced_fields=('uri',),
+            referencing_table='label'
+        )
+        for exp in regexp:
+            table.add(*exp)
         response = result.data.validate()
         if not response:
             for anomaly in response:
