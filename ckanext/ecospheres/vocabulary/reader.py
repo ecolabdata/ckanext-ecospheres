@@ -19,7 +19,7 @@ from ckanext.ecospheres.vocabulary.loader import (
                                             _get_generic_schema
                                             ,_get_hierarchy_schema_table
                                             ,_get_spatial_schema_table
-                                            ,Session,DB
+                                            ,Session,DB,_get_regex_schema_table
                                     )
 
 
@@ -55,12 +55,25 @@ class VocabularyReader:
             "language": resultset[2]
         }
     
+
+
     @classmethod 
     def _select_labels_from_database(cls,_table):
         with Session(database=DB) as s:
-            try:
+            try:    
+                
                 statement=select([_table.c.uri, _table.c.label,_table.c.language])
                 return [cls._resultset_to_dict(resultset) for resultset in s.execute(statement).fetchall()]
+            except Exception as e:
+                logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
+                return list()
+    @classmethod 
+    def _select_labels_from_database_regex(cls,_table):
+        with Session(database=DB) as s:
+            try:    
+                
+                statement=select([_table.c.uri, _table.c.regexp])
+                return  s.execute(statement).fetchall()
             except Exception as e:
                 logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
                 return list()
@@ -127,35 +140,58 @@ class VocabularyReader:
                                         _get_generic_schema("ecospheres_theme_altlabel"),
                                         uri)
 
+
+    @classmethod
+    def _get_all_from_database(cls,_table):
+        with Session(database=DB) as s:
+            try:
+                statement=select([_table.c.uri, _table.c.label,_table.c.language])
+                return s.execute(statement).fetchall()
+            except Exception as e:
+                logging.error(f"Erreur lors de la récuperation des données de la  table {_table}\t {str(e)}")         
+
     @classmethod
     def themes(cls):
-        """
+        all_themes={}   
+        #Récuperation des labels
+        labels=cls._select_labels_from_database(_get_generic_schema("ecospheres_theme_label"))
+        #Récuperation des altlabels
+        labels_dict=dict()
+        for label in labels:
+            labels_dict[label["uri"]] =label
 
+        alt_label_map={}
+        altlabels=cls._select_labels_from_database(_get_generic_schema("ecospheres_theme_altlabel"))
+        for alt_label in altlabels:
+            alt_label_map.setdefault(alt_label["uri"], [])
+            alt_label_map[alt_label['uri']].append(alt_label["label"])
 
-        """
-        themes_hierarchy_as_dict=cls.__get_themes_hierarchy_as_dict()
-        all_themes_subtheme_hierarchy_as_dict=dict()
-        for uri_parent in themes_hierarchy_as_dict:
-
-            theme_parent_child=cls.__get_theme_labels_by_uri(uri_parent)
-            theme_parent_child.setdefault("child", [])
-            theme_parent_child.setdefault("altlabel", [])
-            theme_parent_child["count"]=-1
+        _table_regex=cls._select_labels_from_database_regex(_get_regex_schema_table("ecospheres_theme_regexp"))
+        regexp_map={}
+        for regexp in _table_regex:
+            regexp_map.setdefault(regexp[0],[])
+            regexp_map[regexp[0]].append(regexp[1])
             
-            #Récuperation des altlabels pour le theme parent
-            if label:=cls.__get_theme_altlabels_by_uri(uri_parent):
-                theme_parent_child["altlabel"].append(label["label"])
+        #Récuperation des infos sur la hierarchie des themes
+        hierarchy_table=cls.__get_themes_hierarchy_as_dict()
+        for parent_theme in hierarchy_table:
             
-            for uri_child in themes_hierarchy_as_dict[uri_parent]:
-                if child_label:=cls.__get_theme_labels_by_uri(uri_child):
-                    if label:=cls.__get_theme_altlabels_by_uri(uri_child):
-                        child_label.setdefault("altlabel", [])
-                        child_label["altlabel"].append(label["label"])
-                    child_label["count"]=-1
-                    theme_parent_child["child"].append(child_label)
+            #themes parents
+            temp_theme=labels_dict[parent_theme].copy()
+            temp_theme["child"]=list()
+            temp_theme["count"]=-1
+            temp_theme["altlabel"]=alt_label_map.get(parent_theme,[])
+            all_themes[parent_theme]=temp_theme
 
-            all_themes_subtheme_hierarchy_as_dict[theme_parent_child["label"]]=theme_parent_child
-        return all_themes_subtheme_hierarchy_as_dict
+            #sous-themes
+            for sous_theme in hierarchy_table[parent_theme]:
+                temp_sous_theme=labels_dict[sous_theme].copy()
+                temp_sous_theme["count"]=-1
+                temp_sous_theme["regexp"]=regexp_map.get(sous_theme,None)
+                temp_sous_theme["altlabel"]=alt_label_map.get(sous_theme,[])
+                all_themes[parent_theme]["child"].append(temp_sous_theme)
+
+        return all_themes
 
     @classmethod
     def altlabels(cls, vocabulary:str):
@@ -291,6 +327,8 @@ class VocabularyReader:
        
 
         groups=Session_CKAN.query(Group).filter_by(state='active').all()
+        if not groups:
+            return {"message":"Liste des organisations vide"} 
         for group in groups:
             organizations_as_dict.setdefault(group.id,{})
             organizations_as_dict[group.id]["name"] = group.name

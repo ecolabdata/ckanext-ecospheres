@@ -17,6 +17,7 @@ import ckan.plugins as p
 SPECIAL_TABLES=("ecospheres_territory","ecospheres_theme")
 REGEX_PATTERN_ECOSPHERE_SPATIAL = r'.*ecospheres_territory_spatial.*'
 REGEX_PATTERN_ECOSPHERE_HIERARCHY = r'.*ecospheres_theme_hierarchy.*'
+REGEX_PATTERN_ECOSPHERE_REGEX = r'.*ecospheres_theme_regexp.*'
 
 
 
@@ -59,6 +60,12 @@ def _get_hierarchy_schema_table(table_name):
     return Table(table_name, metadata,
                         Column('parent', String),
                         Column('child', String),
+                        extend_existing=True,
+                    )
+def _get_regex_schema_table(table_name):
+    return Table(table_name, metadata,
+                        Column('uri', String),
+                        Column('regexp', String),
                         extend_existing=True,
                     )
 
@@ -112,6 +119,8 @@ def load_vocab():
                     _table=_get_spatial_schema_table(table_name)
                 elif re.match(REGEX_PATTERN_ECOSPHERE_HIERARCHY,table_name):
                     _table=_get_hierarchy_schema_table(table_name)
+                elif re.match(REGEX_PATTERN_ECOSPHERE_REGEX,table_name):
+                    _table=_get_regex_schema_table(table_name)
                 else:
                     _table = _get_generic_schema(table_name)
                 
