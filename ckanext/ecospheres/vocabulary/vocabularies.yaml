@@ -42,6 +42,13 @@
   comment: Target contains all ADMS-AP vocabulary.
   available: True
 
+- name: adms_status
+  url: http://purl.org/adms/status/1.0
+  schemes:
+    - http://purl.org/adms/status/1.0
+  comment: Target contains all ADMS-AP vocabulary.
+  available: True
+
 - name: ecospheres_data_standard
   available: False
 
@@ -66,6 +73,11 @@
 - name: eu_administrative_territory_unit
   url: https://op.europa.eu/o/opportal-service/euvoc-download-handler?cellarURI=http%3A%2F%2Fpublications.europa.eu%2Fresource%2Fcellar%2F7c1089f4-581c-11ec-91ac-01aa75ed71a1.0001.02%2FDOC_1&fileName=atu-skos.rdf
   about: http://publications.europa.eu/resource/authority/atu
+  available: True
+
+- name: eu_dataset_status
+  url: https://op.europa.eu/o/opportal-service/euvoc-download-handler?cellarURI=http%3A%2F%2Fpublications.europa.eu%2Fresource%2Fcellar%2F35e38627-0286-11ed-acce-01aa75ed71a1.0001.02%2FDOC_1&fileName=datasetstatus-skos.rdf
+  about: http://publications.europa.eu/resource/authority/dataset-status
   available: True
 
 - name: eu_file_type
@@ -150,6 +162,12 @@
   url: https://inspire.ec.europa.eu/metadata-codelist/TopicCategory/TopicCategory.fr.rdf
   about: https://inspire.ec.europa.eu/metadata-codelist/TopicCategory
   comment: French only.
+  available: True
+
+- name: iso19139_progress_code
+  url: https://registre.data.developpement-durable.gouv.fr/plume/ISO19139ProgressCode.json
+  format: json-ld
+  recursive: True
   available: True
 
 - name: spdx_license
