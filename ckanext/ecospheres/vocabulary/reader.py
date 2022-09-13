@@ -5,7 +5,7 @@ data from the database rather than from JSON files.
 
 """
 
-import json
+import json, re
 from pathlib import Path
 from ckanext import __path__ as ckanext_path
 
@@ -59,6 +59,31 @@ class VocabularyReader:
         VocabularyReader(vocabulary)
         altlabel_table = f'{vocabulary}_altlabel'
         return cls.VOCABULARY_DATABASE[altlabel_table]
+
+    @classmethod
+    def table(cls, vocabulary, table_name):
+        """Return the table with given name for the vocabulary, if any.
+
+        Parameters
+        ----------
+        vocabulary : str
+            Name of the vocabulary, ie its ``name``
+            property in ``vocabularies.yaml``.
+        table_name : str
+            Table's name. If not prefixed with the vocabulary
+            name, it will be added.
+        
+        Returns
+        -------
+        list
+            The table or ``None`` if the vocabulary doesn't
+            have a table with the given name.
+
+        """
+        VocabularyReader(vocabulary)
+        if not table_name.startswith(f'{vocabulary}_'):
+            table_name = f'{vocabulary}_{table_name}'
+        return cls.VOCABULARY_DATABASE.get(table_name)
 
     @classmethod
     def is_known_uri(cls, vocabulary, uri):
@@ -135,3 +160,37 @@ class VocabularyReader:
                 )
             ):
                 return row['uri']
+
+    @classmethod
+    def get_uri_from_regexp(cls, vocabulary, terms):
+        """Get one URI whose regular expression matches any of the given terms.
+
+        Parameters
+        ----------
+        vocabulary : str
+            Name of the vocabulary, ie its ``name``
+            property in ``vocabularies.yaml``.
+        terms : list or tuple
+            Metadata values to test against the regular
+            expressions associated with the concepts.
+        
+        Returns
+        -------
+        str or None
+            The first matching URI. ``None`` if the vocabulary
+            doesn't exist, is not available, doesn't have a ``regexp``
+            table or there was no match for any term.
+        
+        """
+        if not vocabulary or not terms:
+            return
+        
+        table = cls.table(vocabulary, 'regexp')
+        if not table:
+            return
+
+        for row in table:
+            pattern = re.compile(row['regexp'], flags=re.I)
+            if any(re.search(pattern, term) for term in terms):
+                return row['uri']
+        
