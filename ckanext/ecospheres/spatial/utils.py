@@ -1,4 +1,6 @@
 
+import json
+
 import ckan.plugins.toolkit as toolkit
 
 from ckanext.ecospheres.spatial.base import EcospheresDatasetDict
@@ -31,4 +33,71 @@ def build_dataset_dict_from_schema(type='dataset', main_language=None):
     dataset_schema = toolkit.get_action('scheming_dataset_schema_show')(None, {'type': type})
     return EcospheresDatasetDict(dataset_schema, main_language=main_language)
 
+def bbox_geojson_from_coordinates(west, east, south, north):
+    """Serialize bounding box coordinates as a GeoJSON geometry.
+
+    Coordinates are assumed to use World Geodetic System 1984 as
+    geographic coordinate reference system and units of decimal degrees.
+
+    Parameters
+    ----------
+    west : numeric
+        West-bound longitude.
+    east : numeric
+        East-bound longitude.
+    south : numeric
+        South-bound latitude.
+    north : numeric
+        North-bound latitude.
+    
+    Returns
+    -------
+    str
+        A GeoJSON dump.
+
+    """
+    geodict = {
+        'type': 'Polygon',
+        'coordinates': [
+            [
+                [west, north],
+                [west, south],
+                [east, south],
+                [east, north],
+                [west, north]
+            ]
+        ] 
+    }
+    return json.dumps(geodict)
+
+def bbox_wkt_from_coordinates(west, east, south, north):
+    """Serialize bounding box coordinates as a WKT geometry.
+
+    Coordinates are assumed to use the OGC:CRS84 reference system.
+
+    Parameters
+    ----------
+    west : numeric
+        West-bound longitude.
+    east : numeric
+        East-bound longitude.
+    south : numeric
+        South-bound latitude.
+    north : numeric
+        North-bound latitude.
+    
+    Returns
+    -------
+    str
+        A WKT literal.
+
+    """
+    return (
+        'POLYGON(('
+        f'{west} {north},'
+        f'{west} {south},'
+        f'{east} {south},'
+        f'{east} {north},'
+        f'{west} {north}))'
+    )
 
