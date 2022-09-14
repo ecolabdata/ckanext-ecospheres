@@ -12,7 +12,10 @@ from ckan.lib.helpers import json
 from ckanext.spatial.interfaces import ISpatialHarvester
 from ckanext.harvest.harvesters.base import HarvesterBase
 
-from ckanext.ecospheres.spatial.utils import build_dataset_dict_from_schema
+from ckanext.ecospheres.spatial.utils import (
+    build_dataset_dict_from_schema, bbox_geojson_from_coordinates,
+    bbox_wkt_from_coordinates
+)
 from ckanext.ecospheres.spatial.maps import ISO_639_2
 
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
@@ -222,10 +225,26 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 if theme_uri:
                     dataset_dict.set_value('theme', theme_uri)
         
-
-
+        # category
+        # subcategory
 
         # --- spatial coverage ---
+
+        # bounding box
+        coordinates = (
+            iso_values.get('west'),
+            iso_values.get('east'),
+            iso_values.get('south'),
+            iso_values.get('north')
+        )
+        if all(coordinate is not None for coordinate in coordinates):
+            wkt = bbox_wkt_from_coordinates(*coordinates)
+            dataset_dict.set_value('bbox', wkt)
+            geojson = bbox_geojson_from_coordinates(*coordinates)
+            dataset_dict.set_value('spatial', geojson)
+
+        # spatial_coverage
+        # territory
 
         # --- relations ---
 
