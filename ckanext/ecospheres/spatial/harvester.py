@@ -2,7 +2,6 @@
 
 from datetime import datetime
 from lxml import etree
-import requests
 
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
@@ -14,7 +13,8 @@ from ckanext.harvest.harvesters.base import HarvesterBase
 
 from ckanext.ecospheres.spatial.utils import (
     build_dataset_dict_from_schema, bbox_geojson_from_coordinates,
-    bbox_wkt_from_coordinates
+    bbox_wkt_from_coordinates, build_attributes_page_url,
+    build_catalog_page_url
 )
 from ckanext.ecospheres.spatial.maps import ISO_639_2
 
@@ -78,7 +78,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         for target_field, package_field in {
             # dataset_dict key -> package_dict key
             'owner_org': 'owner_org'
-        }:
+        }.items():
             dataset_dict.set_value(target_field, package_dict.get(package_field))
 
         # --- various metadata to pick up from package_dict's extras ---
@@ -93,7 +93,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         # --- various metadata to pick up from iso_values ---
         for target_field, iso_field in {
             # dataset_dict key -> iso_values key
-            'free_tag': 'keywords',
+            'free_tags': 'keywords',
             'title': 'title',
             'notes': 'abstract',
             'name': 'guid',
@@ -101,7 +101,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             'provenance': 'maintenance-note', # TODO: provenance or version_info ? 
             'provenance': 'purpose',
             'identifier': 'unique-resource-identifier'
-        }:
+        }.items():
             dataset_dict.set_value(target_field, iso_values.get(iso_field))
         # NB: package name should always be its guid, for easier
         # handling of packages relationships and duplicate removal
@@ -189,20 +189,18 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             elif elem['key'] == 'catalog_homepage':
                 catalog_dict.set_value('homepage', elem['value'])
         
-        # --- references ---
+        # --- references / documentation ---
             elif elem['key'] == 'catalog_base_url' and name:
-                landing_page = '{}/{}'.format(elem['value'], name)
-                # check if it's a valid URL:
-                response = requests.get(landing_page)
-                if response.status_code != requests.codes.ok:
+                landing_page = build_catalog_page_url(elem['value'], name)
+                if landing_page:
                     dataset_dict.set_value('landing_page', landing_page)
                     dataset_dict.set_value('uri', landing_page)
             
             elif elem['key'] == 'attributes_base_url' and name:
-                attributes_page = '{}/{}'.format(elem['value'], name)
-                # check if it's a valid URL:
-                response = requests.get(attributes_page)
-                if response.status_code != requests.codes.ok:
+                attributes_page = build_attributes_page_url(
+                    elem['value'], name
+                )
+                if attributes_page:
                     dataset_dict.set_value('attributes_page', attributes_page)
 
         # page
@@ -210,38 +208,66 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
 
         # --- themes and keywords ---
 
-        themes = iso_values.get('keyword-inspire-theme')
-        if themes:
-            for theme in themes:
+        iso_themes = iso_values.get('keyword-inspire-theme', [])
+        if iso_themes:
+            for theme in iso_themes:
                 theme_uri =  VocabularyReader.get_uri_from_label(
                     'inspire_theme', theme
                 )
                 if theme_uri:
                     dataset_dict.set_value('theme', theme_uri)
-                    continue
-                theme_uri =  VocabularyReader.get_uri_from_label(
-                    'inspire_topic_category', theme
+                
+        iso_topic_categories = iso_values.get('topic-category', [])
+        if iso_topic_categories:
+            for iso_topic_category in iso_topic_categories:
+                topic_category_uri = VocabularyReader.get_uri_from_label(
+                    'inspire_topic_category', iso_topic_category
                 )
-                if theme_uri:
-                    dataset_dict.set_value('theme', theme_uri)
+                if topic_category_uri:
+                    dataset_dict.set_value('theme', topic_category_uri)
         
-        # category
-        # subcategory
+        words = (
+            iso_themes + iso_topic_categories
+            + dataset_dict.get_values('free_tags')
+            + dataset_dict.get_values('title')
+        )
+        if words:
+            for word in words:
+                category_uri = VocabularyReader.get_uri_from_label(
+                    'ecospheres_theme', word
+                )
+                if category_uri:
+                    dataset_dict.set_value('category', category_uri)                
+            category_uris = VocabularyReader.get_uris_from_regexp(
+                'ecospheres_theme', words
+            )
+            if category_uris:
+                dataset_dict.set_value('category', category_uris)
+            for category_uri in category_uris:
+                parent_category_uri = VocabularyReader.get_parents(
+                    'ecospheres_theme', category_uri
+                )
+                if parent_category_uri:
+                    dataset_dict.set_value('category', parent_category_uri)
+            # NB: the method makes sure no value is listed
+            # more than once, hence not test is necessary here
 
         # --- spatial coverage ---
 
         # bounding box
-        coordinates = (
-            iso_values.get('west'),
-            iso_values.get('east'),
-            iso_values.get('south'),
-            iso_values.get('north')
-        )
-        if all(coordinate is not None for coordinate in coordinates):
-            wkt = bbox_wkt_from_coordinates(*coordinates)
-            dataset_dict.set_value('bbox', wkt)
-            geojson = bbox_geojson_from_coordinates(*coordinates)
-            dataset_dict.set_value('spatial', geojson)
+        iso_bbox = iso_values.get('bbox')
+        if iso_bbox:
+            coordinates = (
+                iso_bbox.get('west'),
+                iso_bbox.get('east'),
+                iso_bbox.get('south'),
+                iso_bbox.get('north')
+            )
+            if all(coordinate is not None for coordinate in coordinates):
+                wkt = bbox_wkt_from_coordinates(*coordinates)
+                dataset_dict.set_value('bbox', wkt)
+                geojson = bbox_geojson_from_coordinates(*coordinates)
+                dataset_dict.set_value('spatial', geojson)
 
         # spatial_coverage
         # territory
