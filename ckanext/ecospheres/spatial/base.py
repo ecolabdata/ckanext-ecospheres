@@ -84,6 +84,69 @@ class EcospheresObjectDict(dict):
 
     """
 
+    def get_values(self, field_name, language=None):
+        """Liste toutes les valeurs d'un champ du dictionnaire.
+        
+        Parameters
+        ----------
+        field_name : str
+            Nom d'un champ (une clé) du dictionnaire présumé
+            être référencé et admettre une valeur de type
+            autre que :py:class:`EcospheresSubfieldsList`. Si
+            l'une de ces conditions n'est pas respectée, la
+            méthode renvoie silencieusement une liste vide.
+        language : str, optional
+            Le cas échéant, la langue attendue pour les valeurs.
+            Si non spécifié, toutes les valeurs sont renvoyées.
+            On utilisera autant que possible les codes ISO 639
+            sur deux caractères (ex : ``'fr'``), et plus
+            généralement le code approprié pour désigner la
+            langue en RDF.
+        
+        Returns
+        -------
+        list
+
+        """
+        if (
+            not field_name in self
+            or isinstance(self.get(field_name), EcospheresSubfieldsList)
+        ):
+            return []
+        
+        values = self[field_name]
+
+        if isinstance(values, EcospheresSimpleTranslationDict):
+            if language:
+                if language in values:
+                    return [values[language]]
+                else:
+                    return []
+            else:
+                res = []
+                for value in values.values():
+                    if not value in res:
+                        res.append(value)
+                return res
+        
+        if isinstance(values, EcospheresMultiTranslationsDict):
+            if language:
+                if language in values:
+                    return values[language]
+                else:
+                    return []
+            else:
+                res = []
+                for lang_values in values.values():
+                    for value in lang_values:
+                        if not value in res:
+                            res.append(value)
+                return res
+        
+        if isinstance(values, EcospheresMultiValuesList):
+            return values
+        return [values] if values else []
+
     def set_value(self, field_name, value, language=None):
         """Définit la valeur ou l'une des valeurs d'un champ du dictionnaire.
         
