@@ -650,7 +650,8 @@ def ecospheres_territory(name, url, **kwargs):
     The cluster build by this parser contains an additional
     ``[name]_spatial (uri, westlimit, southlimit, eastlimit,
     northlimit)`` table storing extend coordinates for
-    all territories.
+    all territories and a ``[name]_hierarchy (parent, child)``
+    table where a child is a subdivision of the parent.
 
     Parameters
     ----------
@@ -679,14 +680,16 @@ def ecospheres_territory(name, url, **kwargs):
         return result
     
     territory_types = (
-        'zones-maritimes', 'outre-mer', 'départements-métropole',
-        'régions-métropole'
+        'zones-maritimes', 'régions-métropole', 'outre-mer',
+        'départements-métropole'
     )
+    # the order matters: included territories should be handled
+    # after including territories.
 
-    table_name = result.data.table(
+    territory_table = result.data.table(
         'spatial', ('uri', 'westlimit', 'southlimit', 'eastlimit', 'northlimit')
         )
-    table = result.data[table_name]
+    table = result.data[territory_table]
     table.set_not_null_constraint('uri')
     table.set_unique_constraint('uri')
     table.set_not_null_constraint('westlimit')
@@ -694,9 +697,26 @@ def ecospheres_territory(name, url, **kwargs):
     table.set_not_null_constraint('eastlimit')
     table.set_not_null_constraint('northlimit')
     result.data.set_reference_constraint(
-        referenced_table=table_name,
+        referenced_table=territory_table,
         referenced_fields=('uri',),
         referencing_table='label'
+    )
+
+    hierarchy_table = result.data.table('hierarchy', ('parent', 'child'))
+    table = result.data[hierarchy_table]
+    table.set_not_null_constraint('parent')
+    table.set_not_null_constraint('child')
+    result.data.set_reference_constraint(
+        referenced_table=hierarchy_table,
+        referenced_fields=('parent',),
+        referencing_table='label',
+        referencing_fields=('uri',)
+    )
+    result.data.set_reference_constraint(
+        referenced_table=hierarchy_table,
+        referenced_fields=('child',),
+        referencing_table='label',
+        referencing_fields=('uri',)
     )
 
     for territory_type in territory_types:
@@ -741,8 +761,15 @@ def ecospheres_territory(name, url, **kwargs):
                 continue
             
             result.add_label(id, language='fr', label=label)
-            result.data[table_name].add(id, westlimit, southlimit, eastlimit, northlimit)
+            result.data[territory_table].add(
+                id, westlimit, southlimit, eastlimit, northlimit
+            )
     
+            if 'codeRégion' in territory:
+                result.data[hierarchy_table].add(
+                    territory['codeRégion'], id
+                )
+
     if not result.data:
         result.exit(exceptions.NoVocabularyDataError())
 
