@@ -8,6 +8,7 @@ from sqlalchemy import  inspect
 import ckan.model as model
 from ckanext.ecospheres.models.territories import Territories
 import re
+from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 
 def afficher(data):
     print(json.dumps(data, indent=4, sort_keys=True))
@@ -19,11 +20,11 @@ TITLE='title'
 URL='url'
 IDENTIFIER="identifier"
 DATA="data"
-_IS_PART_OF='isPartOf'
-_HAS_PART='hasPart'
+_IS_PART_OF='in_series'
+_HAS_PART='series_member'
 aggregation_mapping={
 	_IS_PART_OF: "in_series",
-	_HAS_PART: "serie_datasets",
+	_HAS_PART: "series_member",
 }
 
 identifier_name_map={}
@@ -82,33 +83,31 @@ class DCATfrRDFHarvester(DCATRDFHarvester):
             if extra_element["key"]=="Territoire":
                 return extra_element["value"]
 
-        
+    
+
     def before_create(self, harvest_object, dataset_dict, temp_dict):
         
-        #TODO mapping des territories avec le nouveau reader
-        # spatial=dataset_dict.get("spatial",None)
-        # if not spatial:
-        #     org=self.__get_organization_infos(harvest_object)
-        #     territories_codes=self._get_territory(org)
-        #     res=re.match(r'{(.*)}',territories_codes)
-        #     resultats=res.group(1)
-        #     departements=resultats.split(',')
-        #     territoires=[]
-        #     if len(departements):
-        #         for dep in departements:
-        #             territoire_dict=loader.get_territorie_by_code_region(dep)
-        #             #nom du territoire de l'organisation
-        #             territoires.append(territoire_dict.get("name",None))
-        #             #coordonnées de l'organisation
-        #             westlimit=territoire_dict['westlimit']
-        #             southlimit=territoire_dict['southlimit']
-        #             eastlimit=territoire_dict['eastlimit']
-        #             northlimit=territoire_dict['northlimit']
-        #             #convertir en GEOJSON 
-        #             #si plusieurs -> random
-        #             spatial=f"{westlimit},{southlimit},{eastlimit},{northlimit}"
+        spatial=dataset_dict.get("spatial",None)
+        if not spatial:
+            org=self.__get_organization_infos(harvest_object)
+            territories_codes=self._get_territory(org)
+            res=re.match(r'{(.*)}',territories_codes)
+            resultats=res.group(1)
+            #liste des territoires de competence de l'organisation
+            departements=resultats.split(',')
+            # print(departements)
+            territories=[]
+            if departements:
+                for code_dep in departements:
+                    uri,label_territory,_= VocabularyReader.get_territory_by_code_region(code_region=code_dep)
+                    if uri:
 
-        #     dataset_dict["territory"]=territoires
+                        territories.append({
+                                            "label":label_territory.strip(), 
+                                            "uri": uri})
+                        #TODO: ajouter algo calculate GeoJSON
+                        # spatial=VocabularyReader.get_territory_spatial_by_code_region(code_region=code_dep)
+            dataset_dict["territory"]=territories
 
         self.__before_create(harvest_object,dataset_dict)
         

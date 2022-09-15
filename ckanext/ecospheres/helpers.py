@@ -4,6 +4,7 @@ import ckan.model as model
 from ckan.lib.helpers import *
 from ckan.lib.formatters import localised_nice_date
 from dateutil.parser import parse, ParserError
+from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 
 dateformats = [
     '%d-%m-%Y',
@@ -127,3 +128,35 @@ def get_localized_date(date_string):
         return localised_nice_date(dt, show_date=True, with_hours=False)
     except (TypeError, ParserError):
         return ''
+
+
+
+def get_territories_label(territories):
+    import re
+    res=re.match(r'{(.*)}',territories)
+    resultats=res.group(1)
+    #liste des territoires de competence de l'organisation
+    departements=resultats.split(',')
+    depts_labels=list()
+    for code_dep in departements:
+        _,label_territory,_= VocabularyReader.get_territory_by_code_region(code_region=code_dep)
+        if label_territory:
+            depts_labels.append(label_territory)
+
+    return depts_labels
+
+
+def get_type_adminstration_label_by_acronym(acronym):
+    try:
+        return VocabularyReader.TYPE_ADMINISTRATION[acronym]
+    except:
+        return ""
+
+def get_vocabulary_label_by_uri(vocabulary,uri):
+    try:
+        label_dict=VocabularyReader.is_known_uri(vocabulary=vocabulary,uri=uri)
+        return label_dict.get("label")
+    except Exception as e:
+        logger.error(f"erreur lors de la recuperation du label du vocabulaire: {vocabulary} -> {str(e)}")
+        return ""
+

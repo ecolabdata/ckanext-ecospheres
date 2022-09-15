@@ -7,6 +7,7 @@ try:
     import json,logging,re 
     from pathlib import Path
     from os.path import exists
+    from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 
 
     from rdflib.namespace import RDF, SKOS
@@ -47,12 +48,12 @@ try:
                                     _spatial_coverage,
                                     _access_rights,
                                     _conforms_to,
-                                    _accrual_periodicity,
                                     _language,
                                     _provenance,
                                     _version_notes,
                                     _tags_keywords,
-                                    _check_sous_theme
+                                    _check_sous_theme,
+                                    _crs_list
                             )
 except Exception as e: 
     raise ValueError("Erreur lors de l'import de librairies: ",str(e))
@@ -115,6 +116,7 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     for key, predicate in (
                             ('uri', DCT.identifier), #uri du dataset
                             ('identifier', DCT.identifier), #idetifier
+                            ('accrual_periodicity', DCT.accrualPeriodicity), #idetifier
                             ):
         value = self._object_value(dataset_ref, predicate)
         if value:
@@ -265,42 +267,35 @@ def parse_dataset(self, dataset_dict, dataset_ref):
 
     ############################################   Thèmes et mots clés  ############################################
     # récuperation des listes des themes
-    try:
-        list_themes_ecosphere_as_dict=_get_theme_registry_as_json()
-        list_themes_ecosphere_as_dict=list_themes_ecosphere_as_dict.get("themes",None)
-    except Exception as e:
-        print("tes: ",str(e))
+    themes=VocabularyReader.themes()
 
-    
 
 
     #liste des mots clés du dataset
     list_keywords=list(self._object_value_list(dataset_ref,DCAT.keyword))
     title = self._object_value(dataset_ref, DCT.title)
-    categories={}
-    subcategories={}
-    # themes_list=loader.themes
-    # for theme_ecosphere_pref_label in themes_list:
-    #     is_match,sous_theme,uri_sous_theme=_check_sous_theme(themes_list[theme_ecosphere_pref_label]["subthemes"],list_keywords,title)
+    categories=dict()
+    subcategories=dict()
+    
+    
+    for theme in themes:
+        sous_theme,uri_sous_theme=_check_sous_theme(themes[theme]["child"],list_keywords,title)
+        if sous_theme:
+            if sous_theme:
+                theme_label=themes[theme].get("label")
+                if not categories.get(theme_label,None):
+                    categories[theme_label]={
+                                            "theme":theme_label,
+                                            "uri": themes[theme].get("uri")
+                                        }
 
-    #     if is_match:
 
-    #         if not categories.get(theme_ecosphere_pref_label,None):
-    #             categories[theme_ecosphere_pref_label]={
-    #                                     "theme":theme_ecosphere_pref_label,
-    #                                     "uri": themes_list[theme_ecosphere_pref_label].get("uri",None)
-    #                                    }
+            if not subcategories.get(sous_theme,None):
+                subcategories[sous_theme]={
+                                            "subtheme":sous_theme,
+                                            "uri": uri_sous_theme
+                                          }
 
-
-    #         if not subcategories.get(sous_theme,None):
-    #             subcategories[sous_theme]={
-    #                                         "subtheme":sous_theme,
-    #                                         "uri": uri_sous_theme
-    #                                       }
-    # if not subcategories and not categories:
-    #     #TODO: Theme ecosphere non trouvé 
-    #     pass
-        
     """-------------------------------------------<category>-------------------------------------------"""        
 
     # CATEGORY []
@@ -312,9 +307,8 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     # - les étiquettes des URI seraient à mapper sur la propriété
     #   "tags" lors du moissonnage
     
-    # if categories:
-    #     dataset_dict["category"]=list(categories.values())
-    
+    if categories:
+        dataset_dict["category"]=list(categories.values())
 
 
     """-------------------------------------------<subcategory>-------------------------------------------"""        
@@ -327,11 +321,12 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     # - les étiquettes des URI seraient à mapper sur la propriété
     #   "tags" lors du moissonnage
     
-    # if subcategories:
-    #     dataset_dict["subcategory"]=list(subcategories.values())
+    if subcategories:
+        dataset_dict["subcategory"]=list(subcategories.values())
 
 
     """-------------------------------------------<theme>-------------------------------------------"""        
+    themes=[]
     # THEME []
     # > dcat:theme
     # - pour les nomemclatures externes, notamment celle de la commission
@@ -342,24 +337,16 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     # - les étiquettes des URI seraient à mapper sur la propriété
     #   "tags" lors du moissonnage
 
-
-    """-------------------------------------------<subject>-------------------------------------------"""        
-    # > dct:subject
-    # nomenclatures externes, notamment les thèmes ISO
-    # stockage sous la forme d'une liste d'URI
-
-
+    themes_dataset=list(self._object_value_list(dataset_ref,DCAT.theme))
+    if themes_dataset:
+        themes=themes_dataset
+    subject=self._object_value(dataset_ref,DCT.subject)
+    if subject:
+        themes.append(subject)
     
+    dataset_dict["theme"]=themes
     
-    """-------------------------------------------<free_tags>-------------------------------------------"""        
-    # tags=dataset_dict["tags"]
-    # # TODO: juste pour tester
-    # add_tag(tags,['un','deux'])
-    # add_tag(tags,'trois')
-    # dataset_dict["tags"]=tags
-    # dataset_dict["free_tags"]=tags
-    
-    """-------------------------------------------<tags>-------------------------------------------"""        
+    """-------------------------------------------< tags, free_tags >-------------------------------------------"""        
     _tags_keywords(self,dataset_ref,
                             DCAT.keyword,
                             dataset_dict)
@@ -380,11 +367,12 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     
     """-------------------------------------------<spatial_coverage>-------------------------------------------"""        
     _spatial_coverage(self,dataset_ref, DCT.spatial,dataset_dict)
+    
+    
+
+
 
     """-------------------------------------------<TERRITORY>-------------------------------------------"""        
-    # import random
-    # mocked_territories=["paris","lyon","brest","lille"]
-    # dataset_dict["territory"]=random.choice(mocked_territories)
 
     ############################################   Etc. ############################################
 
@@ -393,17 +381,19 @@ def parse_dataset(self, dataset_dict, dataset_ref):
 
 
 
+    """-------------------------------------------<restricted_access>-------------------------------------------"""   
+    #TODO: 
+    import random
+    dataset_dict["restricted_access"]=random.choice([True,False])
+
     """-------------------------------------------<crs>-------------------------------------------"""   
-    # TODO: 
+    _crs_list(self,dataset_ref, DCT.conformsTo,dataset_dict)
 
     """-------------------------------------------<conforms_to>-------------------------------------------"""        
     _conforms_to(self,dataset_ref, DCT.conformsTo,dataset_dict)
     
     
-    """-------------------------------------------<accrual_periodicity>-------------------------------------------"""        
-    _accrual_periodicity(self,dataset_ref,DCT.accrualPeriodicity,dataset_dict)
-
-    
+ 
 
     """-------------------------------------------<language>-------------------------------------------"""        
     _language(self,dataset_ref,DCT.language,dataset_dict)
@@ -520,12 +510,19 @@ def parse_dataset(self, dataset_dict, dataset_ref):
                 resource_dict["other_format"]=other_format_dict
         
         """-------------------------------------------<format>-------------------------------------------"""        
-        for key, predicate in (
-                    ('format', DCAT.mediaType),
-                    ):
-                value = self._object_value(distribution, predicate)
-                if value:
-                    resource_dict[key]=value
+        if media_type:=resource_dict.get("media_type_ressource",None):
+            try:
+                resource_dict["format"]=media_type[0].get('uri')
+            except:
+                pass
+
+
+        if not resource_dict.get("format",None):
+            try:
+                if other_format:=resource_dict.get("other_format",None):
+                    resource_dict["format"]=other_format[0].get('uri')
+            except:
+                pass
 
         """-------------------------------------------<service_conforms_to>-------------------------------------------"""        
         for node in self.g.objects(distribution, DCAT.accessService):
@@ -576,15 +573,6 @@ def parse_dataset(self, dataset_dict, dataset_ref):
                     value = self._object_value(distribution, predicate)
                     if value:
                         resource_dict[key] = value
-
-
-        resource_format = resource_dict['format'].split('/')[-1].lower()
-        has_format = map_to_valid_format(
-            resource_format,
-            _get_mapping_file()
-        )
-        resource_dict['format']=has_format
-
 
 
         dataset_dict['resources'].append(resource_dict)

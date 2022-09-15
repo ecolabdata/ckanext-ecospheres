@@ -10,6 +10,7 @@
 | Vocabulaire   |      Endpoint      |  Method  |Format   |
 |----------|:-------------:|------:|------:|
 | Territoires |  /api/territoires | GET |JSON |
+| Territoires par hierarchie |  /api/territoires_hierarchy | GET |JSON |
 | Thèmes |    /api/themes   |   GET |JSON |
 | Organizations | /api/organizations |    GET |JSON |
 

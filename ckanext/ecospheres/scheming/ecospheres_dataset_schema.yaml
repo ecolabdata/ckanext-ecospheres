@@ -272,10 +272,10 @@ tabs:
 
 
 
-# ------------------------------------------------------------------------------------
-# ---------------------------------- JEU DE DONNEES ----------------------------------
-# ------------------------------------------------------------------------------------
-# -> dcat:Dataset
+# # ------------------------------------------------------------------------------------
+# # ---------------------------------- JEU DE DONNEES ----------------------------------
+# # ------------------------------------------------------------------------------------
+# # -> dcat:Dataset
 
 dataset_fields:
 # NAME
@@ -341,7 +341,7 @@ dataset_fields:
   translatable_values: True
 
 
-# ------- Dates --------
+# # ------- Dates --------
 
 # TEMPORAL [{}]
 # > dct:temporal -> dct:PeriodOfTime
@@ -402,7 +402,7 @@ dataset_fields:
   tab: *tab_details
 
 
-# ------ Organisations ------
+# # ------ Organisations ------
 
 # CONTACT_POINT [{}]
 # > dcat:contactPoint -> vcard:Kind
@@ -495,34 +495,35 @@ dataset_fields:
     # plus généralement de récupérer le label, quelle que soit la propriété
     # utilisée
   
-  # AGENT [{}]
-  # > prov:agent -> prov:Agent
-  - field_name: agent
-    label: 
-      fr: Organisation
-      en: Organization
-    value_type: node
-    repeating_subfields:
-    # NAME {*}
-    # > foaf:givenName
-  - field_name: name
-    label: 
-      fr: Nom
-      en: Name
-    translatable_values: True
-    value_type: literal
-  # > foaf:mbox 
-  - field_name: email
-    label:
-      fr: Courriel
-      en: Mail
-    value_type: uri
-  # > foaf:homePage
-  - field_name: url
-    label: 
-      fr: Site internet
-      en: Website
-    value_type: uri
+#   # AGENT [{}]
+#   # > prov:agent -> prov:Agent
+#   - field_name: agent
+#     label: 
+#       fr: Organisation
+#       en: Organization
+#     value_type: node
+#     repeating_subfields:
+#     # NAME {*}
+#     # > foaf:givenName
+#   - field_name: name
+#     label: 
+#       fr: Nom
+#       en: Name
+#     translatable_values: True
+#     value_type: literal
+#   # > foaf:mbox 
+#   - field_name: email
+#     label:
+#       fr: Courriel
+#       en: Mail
+#     value_type: uri
+
+#   # > foaf:homePage
+#   - field_name: url
+#     label: 
+#       fr: Site internet
+#       en: Website
+#     value_type: uri
 
 # ------- Relations -------
 # IN_SERIES []
@@ -586,12 +587,14 @@ dataset_fields:
         en: Dataset URI
       display_snippet: null
       value_type: uri
+
     # URL
     - field_name: url
       label:
         fr: URL
         en: URL
       value_type: uri
+
     # TITLE {*}
     - field_name: title
       label:
@@ -730,7 +733,7 @@ dataset_fields:
     value_type: literal
 
     
-# ------ Thèmes et mots clés ------
+# # ------ Thèmes et mots clés ------
 
 # CATEGORY []
 # > dcat:theme
@@ -738,6 +741,16 @@ dataset_fields:
 # - déduit de "theme", "subject" et "free_tag" lors du moissonnage
 # - stockage sous forme d'une liste d'URI (appartenant au registre
 #   du guichet)
+# - field_name: category
+#   label: 
+#     fr: Thèmes
+#     en: Topic
+#   multiple_values: True
+#   value_type: uri
+#   known_values: require
+#   vocabularies:
+#     - ecospheres_theme
+#   tab: *tab_details
 - field_name: category
   label: 
     fr: Thèmes
@@ -748,11 +761,23 @@ dataset_fields:
   vocabularies:
     - ecospheres_theme
   tab: *tab_details
-  # display_snippet: multiple_text
-  # TODO: ajouter un display_snippet qui interroge l'URI pour récupérer
-  # l'étiquette.
+  repeating_subfields:
+    - field_name: uri
+      label: 
+        fr: URI
+        en: URI
+      value_type: literal
 
-# SUBCATEGORY []
+    - field_name: theme
+      label: 
+        fr: Thème
+        en: Thème
+      value_type: literal
+      # display_snippet: multiple_text
+      # TODO: ajouter un display_snippet qui interroge l'URI pour récupérer
+      # l'étiquette.
+      
+      # SUBCATEGORY []
 # > dcat:theme
 # - pour le second niveau de thèmes de la nomenclature du guichet
 # - déduit de "theme", "subject" et "free_tag" lors du moissonnage
@@ -760,19 +785,33 @@ dataset_fields:
 #   du guichet)
 - field_name: subcategory
   label: 
-    fr: Sous-thèmes
-    en: Subtopic
+      fr: Sous-thèmes
+      en: Subtopic
   multiple_values: True
   value_type: uri
   known_values: require
   vocabularies:
-    - ecospheres_theme
+      - ecospheres_theme
   tab: *tab_details
+  repeating_subfields:
+    # START_DATE
+    # > dcat:startDate
+    - field_name: uri
+      label: 
+        fr: URI
+        en: URI
+      value_type: literal
+
+    - field_name: subtheme
+      label: 
+        fr: Thème
+        en: Thème
+      value_type: literal
   # display_snippet: multiple_text
   # TODO: ajouter un display_snippet qui interroge l'URI pour récupérer
   # l'étiquette.
 
-# THEME []
+  # THEME []
 # > dcat:theme
 # - pour les nomemclatures externes, notamment celle de la commission
 #   européenne et la nomenclature INSPIRE
@@ -807,7 +846,7 @@ dataset_fields:
   value_type: literal
   tab: *tab_details
 
-# ------ Métadonnées sur les métadonnées ------
+# # ------ Métadonnées sur les métadonnées ------
 
 # IS_PRIMARY_TOPIC_OF [{}]
 # > foaf:isPrimaryTopicOf -> dcat:CatalogRecord
@@ -906,7 +945,7 @@ dataset_fields:
       value_type: uri
 
 
-# ------ Couverture spatiale ------
+# # ------ Couverture spatiale ------
 
 # BBOX
 # > dct:spatial [-> dct:Location] / dcat:bbox
@@ -949,6 +988,8 @@ dataset_fields:
     # TODO: ajouter un display_snippet basé semblable à link mais capable
     # plus généralement de récupérer le label, quelle que soit la propriété
     # utilisée (éventuellement autre que skos:prefLabel)
+
+
   # IN_SCHEME
   # > skos:inScheme
   # [+ GeoDCAT-AP]
@@ -966,6 +1007,8 @@ dataset_fields:
     # TODO: ajouter un display_snippet basé semblable à link mais capable
     # plus généralement de récupérer le label, quelle que soit la propriété
     # utilisée (éventuellement autre que skos:prefLabel)
+
+    
   # IDENTIFIER
   # > dct:identifier
   # [+ GeoDCAT-AP]
@@ -975,6 +1018,8 @@ dataset_fields:
       en: Geographic identifier
     help_text: Code du département, code INSEE de la commune, etc.
     value_type: literal
+
+    
   # LABEL {*}
   # > skos:prefLabel
   # [+ GeoDCAT-AP]
@@ -1018,6 +1063,17 @@ dataset_fields:
   known_values: require
   vocabularies:
     - ecospheres_territory
+  repeating_subfields:
+    - field_name: uri
+      label: 
+        fr: URL
+        en: URL
+    - field_name: label
+      label: 
+        fr: label
+        en: label
+
+
 
 # TERRITORY_FULL []
 # - reprend la liste de "territory" en y ajoutant les
@@ -1036,7 +1092,7 @@ dataset_fields:
   vocabularies:
     - ecospheres_territory
 
-# ------- Etc. ------
+# # ------- Etc. ------
 
 # ACCESS_RIGHTS [{}]
 # > dct:accessRights -> dct:RightsStatement
@@ -1236,7 +1292,7 @@ dataset_fields:
   value_type: literal
   display_snippet: null
 
-# ------ Champs CKAN hors DCAT ------
+# # ------ Champs CKAN hors DCAT ------
 
 # LICENSE_ID
 # calculé à partir des champs "license" des ressources
@@ -1256,7 +1312,7 @@ dataset_fields:
   display_snippet: image.html
   value_type: uri
 
-# ------ Export des métadonnées ------
+# # ------ Export des métadonnées ------
 
 # AS_INSPIRE_XML
 # non exposé dans l'export DCAT

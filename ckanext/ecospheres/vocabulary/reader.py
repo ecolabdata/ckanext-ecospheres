@@ -141,14 +141,6 @@ class VocabularyReader:
                                         uri)
 
 
-    @classmethod
-    def _get_all_from_database(cls,_table):
-        with Session(database=DB) as s:
-            try:
-                statement=select([_table.c.uri, _table.c.label,_table.c.language])
-                return s.execute(statement).fetchall()
-            except Exception as e:
-                logging.error(f"Erreur lors de la récuperation des données de la  table {_table}\t {str(e)}")         
 
     @classmethod
     def themes(cls):
@@ -233,18 +225,18 @@ class VocabularyReader:
             contains the URI, else ``False``.
         
         """
-    
         _table=_get_generic_schema(f"{vocabulary}_label")
+    
+        clause=( _table.c.uri==uri)
 
-        if not language:
-            language="fr"
+        if language:
+            clause=and_(clause,_table.c.language == language)
 
         with Session(database=DB) as s:
             try:
                 statement=select([_table.c.uri, _table.c.label,_table.c.language]).\
-                                    where(and_(_table.c.uri==uri,_table.c.language==language))
+                                    where(clause)
                 res=  s.execute(statement).fetchone()
-                print(res)
                 if res:
                     return cls._resultset_to_dict(res)
                 return None
@@ -355,3 +347,87 @@ class VocabularyReader:
 
 
         return list_of_organizations_as_dict
+
+
+
+
+
+    @classmethod
+    def get_territory_by_code_region(cls,code_region):
+        _table=_get_generic_schema("ecospheres_territory_label")
+        with Session(database=DB) as s:
+            try:
+                statement=select([_table.c.uri, _table.c.label,_table.c.language]).\
+                                    where(_table.c.uri==code_region)
+                res=  s.execute(statement).fetchone()
+                if res:
+                    return res
+                return None
+            except Exception as e:
+                logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
+                return list()
+
+
+    @classmethod
+    def get_territory_spatial_by_code_region(cls,code_region):
+        _table=_get_spatial_schema_table("ecospheres_territory_spatial")
+
+    
+        with Session(database=DB) as s:
+            try:
+                statement=select([_table.c.uri, _table.c.westlimit,_table.c.southlimit,_table.c.eastlimit,_table.c.northlimit]).\
+                                    where(_table.c.uri==code_region)
+                res=  s.execute(statement).fetchone()
+                if res:
+                    return {
+                        "uri": res[0],
+                        "westlimit": res[1],
+                        "southlimit": res[2],
+                        "eastlimit": res[3],
+                        "northlimit": res[4]
+                    }
+                return None
+            except Exception as e:
+                logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
+                return list()
+
+    @classmethod
+    def _get_territories_by_hierarchy(cls):
+        try:
+            vocabulary="territoires"
+            import re
+            for ckanext in ckanext_path:
+                if re.match(r'.*ckanext-ecospheres.*', ckanext):
+                    ckan_ecosphere_index=ckanext_path.index(ckanext)
+
+            path = Path(ckanext_path[ckan_ecosphere_index]).parent / f'vocabularies/{vocabulary}.json'
+            if not path.exists() or not path.is_file():
+                raise FileNotFoundError(f"could not find vocabulary data for '{vocabulary}'")
+            with open(path, 'r', encoding='utf-8') as src:
+                data = json.load(src)
+
+            res_territoires_dict=dict()
+        
+            type_region_keys=['régions-métrople', 'départements-métropole', 'outre-mer', 'zones-maritimes']
+            depts_by_region=dict()
+            for type_region_key in type_region_keys:
+                res_territoires_dict.setdefault(type_region_key,{})
+                if region_data:=data.get(type_region_key,None):
+                    for key in region_data:
+                        res_territoires_dict[type_region_key].setdefault(key,{})
+                        if name:=region_data[key].get('name',None):
+                            res_territoires_dict[type_region_key][key]['name']=name
+                        if code_region:=region_data[key].get('codeRégion',None):
+                            res_territoires_dict[type_region_key][key]['code_region']=code_region
+            for dep in res_territoires_dict['départements-métropole']:
+                depts_by_region.setdefault(res_territoires_dict['départements-métropole'][dep].get('code_region'),[])
+                dept_info_as_dict=res_territoires_dict['départements-métropole'][dep].copy()
+                dept_info_as_dict["code_dept"]=dep
+                depts_by_region[res_territoires_dict['départements-métropole'][dep].get('code_region')].append(dept_info_as_dict)
+
+            res_territoires_dict["depts_by_region"]=depts_by_region
+            return res_territoires_dict
+        except Exception as e:
+            logger.error("erreur lors de la récuperation des territoires par hierarchy")
+            logging.error(str(e))
+            return {}

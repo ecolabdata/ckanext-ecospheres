@@ -10,6 +10,7 @@ from ckan.model import Session, meta
 from sqlalchemy import Column, Date, Integer, Text, create_engine, inspect
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 
+import ast
 
 
 
@@ -33,6 +34,9 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
                 'fr_dcat_aggregated_package_name_to_title':helpers.aggregated_package_name_to_title,
                 'get_localized_value_for_display':helpers.get_localized_value_for_display,
                 'get_localized_date':helpers.get_localized_date,
+                'get_territories_label':helpers.get_territories_label,
+                'get_type_adminstration_label_by_acronym':helpers.get_type_adminstration_label_by_acronym,
+                'get_vocabulary_label_by_uri':helpers.get_vocabulary_label_by_uri,
                 }
 
     
@@ -95,10 +99,13 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
             search_data["subcategory"]=[subcategorie["subtheme"] for subcategorie in subcategories]
        
         if territory:=validated_dict.get("territory",None):
-            search_data["territory"]=territory
+            search_data["territory"]=[ter['label'] for ter in territory]
 
         if modified:=validated_dict.get("modified",None):
             search_data["modified"]=modified.replace("+00:00",'')
+
+        if restricted_access:=validated_dict.get("restricted_access",None):
+            search_data["restricted_access"]=restricted_access
 
         if created:=validated_dict.get("created",None):
             search_data["created"]=created.replace("+00:00",'')
@@ -123,17 +130,20 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         # /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z
         # /dataset/?q=&ext_enddate=2022-07-20T11:48:38.540Z
         # ?q=&ext_startdate=2022-06-21T00:00:00Z&ext_enddate=NOW
-
+        #/?q=&ext_restricted_access=true
+        #/?q=&ext_restricted_access=false
+        #/dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z&ext_restricted_access=false
         extras=search_params.get("extras",None)
-
         if not extras:
             return search_params
         
+        restricted_access=extras.get("ext_restricted_access",None)
+        include_subdivision=extras.get("ext_include_subdivision",None)
         start_date=extras.get("ext_startdate",None)
         end_date=extras.get("ext_enddate",None)
 
 
-        if not start_date and not end_date:
+        if not start_date and not end_date and not restricted_access  and not include_subdivision:
             return search_params
 
         if not start_date :
@@ -145,13 +155,28 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         fq = search_params['fq']
         fq = '{fq} +modified:[{start_date} TO {end_date}]'.format(
                                  fq=fq, start_date=start_date, end_date=end_date)
+        if restricted_access is not None:
+            fq = '{fq} +extras_restricted_access:{restricted_access}'.format(
+                                    fq=fq, restricted_access=restricted_access)
+
+
+        if include_subdivision == True:
+            raise Exception(include_subdivision)
+
+
         search_params['fq'] = fq
         return search_params
     
 
 
     def after_search(self,search_results, search_params):
-
+        search_dicts = search_results.get('results', [])
+        for _dict in search_dicts:
+            _dict_resources = _dict.get('resources', None)
+            for resource in _dict_resources:
+                if resoueces_type:=resource["format"]:
+                    label=helpers.get_vocabulary_label_by_uri("iana_media_type",resoueces_type)
+                    resource["format"]=label
         return search_results
 
 
@@ -168,6 +193,11 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
     def _get_organizations(self):
         return VocabularyReader.get_organization_by_admin()
     
+
+    def _get_territoires_hierarchy(self):
+        return VocabularyReader._get_territories_by_hierarchy()
+
+        
     def get_blueprint(self):
         """
         Exposition des APIs 
@@ -176,6 +206,7 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         blueprint = Blueprint('dcatapfrench_custom_api', self.__module__)
         rules = [ 
             ('/api/territoires', 'get_territoires', self._get_territoires),
+            ('/api/territoires_hierarchy', 'get_territoires_hierarchy', self._get_territoires_hierarchy),
             ('/api/themes', 'get_themes', self._get_themes),
             ('/api/organizations', 'get_organizations', self._get_organizations),
             ]

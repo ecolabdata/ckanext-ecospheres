@@ -197,3 +197,16 @@ class TestReadTypeOrganization(object):
         list_organizations= VocabularyReader.get_organization_by_admin()
         assert list_organizations
         assert len(list_organizations) > 0
+
+class TestGetEcosphereTerritory(object):
+
+    def test_get_territory_by_code_region(self):
+        region_label=VocabularyReader.get_territory_by_code_region(code_region='D21')
+        assert region_label
+        assert not VocabularyReader.get_territory_by_code_region(code_region='D233')
+    def test_get_territory_spatial_by_code_region(self):
+        region_spatial=VocabularyReader.get_territory_spatial_by_code_region(code_region='D21')
+        assert region_spatial
+    def test_get_territory_spatial_by_code_region(self):
+        territoies_hierarchy=VocabularyReader._get_territories_by_hierarchy()
+        assert territoies_hierarchy
