@@ -721,7 +721,7 @@ dataset_fields:
 
 # CATEGORY []
 # > dcat:theme
-# - pour le premier niveau de thèmes de la nomenclature du guichet
+# - thèmes (et sous-thèmes) de la nomenclature du guichet
 # - déduit de "theme", "subject" et "free_tag" lors du moissonnage
 # - stockage sous forme d'une liste d'URI (appartenant au registre
 #   du guichet)
@@ -729,26 +729,6 @@ dataset_fields:
   label: 
     fr: Thèmes
     en: Topic
-  multiple_values: True
-  value_type: uri
-  known_values: require
-  vocabularies:
-    - ecospheres_theme
-  tab: *tab_details
-  # display_snippet: multiple_text
-  # TODO: ajouter un display_snippet qui interroge l'URI pour récupérer
-  # l'étiquette.
-
-# SUBCATEGORY []
-# > dcat:theme
-# - pour le second niveau de thèmes de la nomenclature du guichet
-# - déduit de "theme", "subject" et "free_tag" lors du moissonnage
-# - stockage sous forme d'une liste d'URI (appartenant au registre
-#   du guichet)
-- field_name: subcategory
-  label: 
-    fr: Sous-thèmes
-    en: Subtopic
   multiple_values: True
   value_type: uri
   known_values: require
@@ -779,7 +759,7 @@ dataset_fields:
     - inspire_topic_category
     - eu_theme
 
-# FREE_TAG [{*}]
+# FREE_TAGS [{*}]
 # {"en": ["big", "large"], "fr": ["grande"]}
 # > dcat:keyword
 # - pour les mots-clés libres
@@ -1000,23 +980,6 @@ dataset_fields:
     en: Territory
   display_snippet: null
   help_text: Divisions administratives (régions, départements...) présumées couvertes par les données.
-  multiple_values: True
-  value_type: uri
-  known_values: require
-  vocabularies:
-    - ecospheres_territory
-
-# TERRITORY_FULL []
-# - reprend la liste de "territory" en y ajoutant les
-#   territoires qui contiennent ces territoires (par ex la région
-#   d'un département)
-# - stockage sous la forme d'une liste d'URI
-- field_name: territory_full
-  label: 
-    fr: Territoires (inclusif)
-    en: Territory (inclusif)
-  display_snippet: null
-  help_text: Divisions administratives (régions, départements...) incluant les données.
   multiple_values: True
   value_type: uri
   known_values: require
