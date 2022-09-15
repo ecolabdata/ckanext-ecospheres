@@ -52,9 +52,24 @@ class TestGetURI(object):
 
     def test_get_uri_from_regexp(self):
         """Vérifie qu'il est possible de trouver un item à partir d'une expression régulière."""
-        assert VocabularyReader.get_uri_from_regexp(
+        assert VocabularyReader.get_uris_from_regexp(
             'ecospheres_theme',
             ('VERCORS', 'Parc Naturel Régional du Vercors')
-        ) == 'http://registre.data.developpement-durable.gouv.fr/ecospheres/themes-ecospheres/zonages-d-amenagement'
+        ) == ['http://registre.data.developpement-durable.gouv.fr/ecospheres/themes-ecospheres/zonages-d-amenagement']
 
+    def test_get_parent(self):
+        """Vérifie qu'il est possible récupérer le parent d'un item."""
+        assert VocabularyReader.get_parents(
+            'ecospheres_theme',
+            'http://registre.data.developpement-durable.gouv.fr/ecospheres/themes-ecospheres/infrastructure-portuaire'
+        ) == [
+            'http://registre.data.developpement-durable.gouv.fr/ecospheres/themes-ecospheres/infrastructures-de-transport'
+        ]
+
+    def test_get_unregistered_parent(self):
+        """Vérifie que tenter de récupérer le parent d'un item sans parent renvoie une liste vide."""
+        assert VocabularyReader.get_parents(
+            'ecospheres_theme',
+            'http://registre.data.developpement-durable.gouv.fr/ecospheres/themes-ecospheres/infrastructures-de-transport'
+        ) == []
 
