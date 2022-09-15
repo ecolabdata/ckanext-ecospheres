@@ -17,7 +17,7 @@ SIMPLE_DATASET_SCHEMA = {
         },
         {
             # plusieurs valeurs littérales traduisibles
-            'field_name': 'free_tag',
+            'field_name': 'free_tags',
             'translatable_values': True,
             'multiple_values': True
         },
@@ -60,12 +60,12 @@ class TestEcospheresDatasetDict(object):
 
         dataset_dict = EcospheresDatasetDict(SIMPLE_DATASET_SCHEMA)
 
-        for field in ('title', 'free_tag', 'version', 'category', 'creator',
+        for field in ('title', 'free_tags', 'version', 'category', 'creator',
             'resources', 'extras', 'owner_org'):
             assert field in dataset_dict
         
         assert type(dataset_dict['title']) == EcospheresSimpleTranslationDict
-        assert type(dataset_dict['free_tag']) == EcospheresMultiTranslationsDict
+        assert type(dataset_dict['free_tags']) == EcospheresMultiTranslationsDict
         assert type(dataset_dict['category']) == EcospheresMultiValuesList
         assert type(dataset_dict['creator']) == EcospheresSubfieldsList
         assert dataset_dict['version'] is None
@@ -153,12 +153,12 @@ class TestEcospheresDatasetDict(object):
 
         dataset_dict = EcospheresDatasetDict(SIMPLE_DATASET_SCHEMA, main_language='en')
 
-        dataset_dict.set_value('free_tag', 'keyword 1', 'en')
-        dataset_dict.set_value('free_tag', 'keyword 2')
-        dataset_dict.set_value('free_tag', ['mot-clé 3', 'mot-clé 4'], 'fr')
-        dataset_dict.set_value('free_tag', [], 'it')
+        dataset_dict.set_value('free_tags', 'keyword 1', 'en')
+        dataset_dict.set_value('free_tags', 'keyword 2')
+        dataset_dict.set_value('free_tags', ['mot-clé 3', 'mot-clé 4'], 'fr')
+        dataset_dict.set_value('free_tags', [], 'it')
 
-        assert {k: [v for v in l] for k, l in dataset_dict['free_tag'].items()} == {
+        assert {k: [v for v in l] for k, l in dataset_dict['free_tags'].items()} == {
             'en': ['keyword 1', 'keyword 2'],
             'fr': ['mot-clé 3', 'mot-clé 4']
         }
@@ -195,9 +195,9 @@ class TestEcospheresDatasetDict(object):
         assert {k: v for k, v in dataset_dict['title'].items()} == {'fr': 'Nom'}
 
         # champ admettant plusieurs valeurs traduisibles
-        dataset_dict.set_value('free_tag', 'keyword 1', 'en')
-        dataset_dict.set_value('free_tag', None, 'en')
-        assert {k: [v for v in l] for k, l in dataset_dict['free_tag'].items()} == {'en': ['keyword 1']}
+        dataset_dict.set_value('free_tags', 'keyword 1', 'en')
+        dataset_dict.set_value('free_tags', None, 'en')
+        assert {k: [v for v in l] for k, l in dataset_dict['free_tags'].items()} == {'en': ['keyword 1']}
 
     def test_remove_values_from_dict_field(self):
         """Vérifie que la suppression des valeurs des champs fonctionne correctement."""
@@ -234,23 +234,23 @@ class TestEcospheresDatasetDict(object):
         assert len(dataset_dict['title']) == 0
 
         # champ admettant plusieurs valeurs traduisibles
-        dataset_dict.set_value('free_tag', ['keyword 1', 'keyword 2'], 'en')
-        dataset_dict.set_value('free_tag', ['mot-clé 3'], 'fr')
-        assert len(dataset_dict['free_tag']) == 2
+        dataset_dict.set_value('free_tags', ['keyword 1', 'keyword 2'], 'en')
+        dataset_dict.set_value('free_tags', ['mot-clé 3'], 'fr')
+        assert len(dataset_dict['free_tags']) == 2
 
         # ... en spécifiant une langue non référencée
-        dataset_dict.delete_values('free_tag', language='es')
-        assert len(dataset_dict['free_tag']) == 2
+        dataset_dict.delete_values('free_tags', language='es')
+        assert len(dataset_dict['free_tags']) == 2
 
         # ... en spécifiant une langue référencée
-        dataset_dict.delete_values('free_tag', language='fr')
-        assert {k: [v for v in l] for k, l in dataset_dict['free_tag'].items()} == {
+        dataset_dict.delete_values('free_tags', language='fr')
+        assert {k: [v for v in l] for k, l in dataset_dict['free_tags'].items()} == {
             'en': ['keyword 1', 'keyword 2']
         }
 
         # ... sans spécifier de langue
-        dataset_dict.delete_values('free_tag')
-        assert len(dataset_dict['free_tag']) == 0        
+        dataset_dict.delete_values('free_tags')
+        assert len(dataset_dict['free_tags']) == 0        
 
     def test_remove_all_resources_from_dataset_dict(self):
         """Contrôle le bon déroulement de la suppression des ressources."""
@@ -306,3 +306,60 @@ class TestEcospheresDatasetDict(object):
             }
         ]
 
+    def test_get_single_value(self):
+        """Teste la récupération des valeurs d'un champ admettant une valeur simple."""
+
+        dataset_dict = EcospheresDatasetDict(SIMPLE_DATASET_SCHEMA)
+
+        assert dataset_dict.get_values('version') == []
+
+        dataset_dict.set_value('version', 'v1')
+        assert dataset_dict.get_values('version') == ['v1']
+    
+    def test_get_multiple_non_translatable_values(self):
+        """Teste la récupération des valeurs d'un champ admettant plusieurs valeurs non traduisibles."""
+
+        dataset_dict = EcospheresDatasetDict(SIMPLE_DATASET_SCHEMA)
+
+        assert dataset_dict.get_values('category') == []
+
+        values = [
+            'themes-ecospheres/infrastructure-portuaire',
+            'themes-ecospheres/infrastructures-de-transport'
+        ]
+        dataset_dict.set_value('category', values)
+        assert dataset_dict.get_values('category') == values
+
+    def test_get_single_translatable_values(self):
+        """Teste la récupération des valeurs d'un champ admettant une unique valeur traduisible."""
+
+        dataset_dict = EcospheresDatasetDict(SIMPLE_DATASET_SCHEMA)
+
+        assert dataset_dict.get_values('title') == []
+
+        dataset_dict.set_value('title', 'Titre', language='fr')
+        dataset_dict.set_value('title', 'Title', language='en')
+        dataset_dict.set_value('title', 'Titre', language='xx')
+
+        assert dataset_dict.get_values('title') == ['Titre', 'Title']
+        assert dataset_dict.get_values('title', language='fr') == ['Titre']
+
+    def test_get_multiple_translatable_values(self):
+        """Teste la récupération des valeurs d'un champ admettant plusieurs valeurs traduisibles."""
+
+        dataset_dict = EcospheresDatasetDict(SIMPLE_DATASET_SCHEMA)
+
+        assert dataset_dict.get_values('free_tags') == []
+
+        dataset_dict.set_value('free_tags', ['mot', 'clé'], language='fr')
+        dataset_dict.set_value('free_tags', ['keyword'], language='en')
+        dataset_dict.set_value(
+            'free_tags', ['keyword', 'mot-clé'], language='xx'
+        )
+
+        assert dataset_dict.get_values('free_tags') == [
+            'mot', 'clé', 'keyword', 'mot-clé'
+        ]
+        assert dataset_dict.get_values('free_tags', language='fr') == [
+            'mot', 'clé'
+        ]
