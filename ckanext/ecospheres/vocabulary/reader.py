@@ -94,7 +94,7 @@ class VocabularyReader:
         vocabulary : str
             Name of the vocabulary, ie its ``name``
             property in ``vocabularies.yaml``.
-        uri : rdflib.term.URIRef or str
+        uri : str
             Some URI to test.
         
         Returns
@@ -162,8 +162,8 @@ class VocabularyReader:
                 return row['uri']
 
     @classmethod
-    def get_uri_from_regexp(cls, vocabulary, terms):
-        """Get one URI whose regular expression matches any of the given terms.
+    def get_uris_from_regexp(cls, vocabulary, terms):
+        """Get all URIs whose regular expression matches any of the given terms.
 
         Parameters
         ----------
@@ -176,21 +176,61 @@ class VocabularyReader:
         
         Returns
         -------
-        str or None
-            The first matching URI. ``None`` if the vocabulary
-            doesn't exist, is not available, doesn't have a ``regexp``
-            table or there was no match for any term.
+        list(str) or None
+            List of matching URIs. Result will be an empty list if the
+            vocabulary doesn't exist, is not available, doesn't have
+            a ``regexp`` table or there was no match for any term.
         
         """
+        res = []
+
         if not vocabulary or not terms:
-            return
+            return res
         
         table = cls.table(vocabulary, 'regexp')
         if not table:
-            return
+            return res
 
         for row in table:
             pattern = re.compile(row['regexp'], flags=re.I)
             if any(re.search(pattern, term) for term in terms):
-                return row['uri']
+                res.append(row['uri'])
+        return res
+
+    @classmethod
+    def get_parents(cls, vocabulary, uri):
+        """Get the URIs of the parent items.
+
+        Parameters
+        ----------
+        vocabulary : str
+            Name of the vocabulary, ie its ``name``
+            property in ``vocabularies.yaml``.
+        uri : str
+            URI of a vocabulary item.
+        
+        Returns
+        -------
+        list(str)
+            list of the URIs of the parent items. Result will be an
+            empty list if the vocabulary doesn't exist, is not available,
+            doesn't have a ``hierarchy`` table, if the URI didn't exist
+            in the vocabulary or if the item didn't have any parent.
+
+        """
+        res = []
+
+        if not vocabulary or not uri:
+            return res
+        
+        table = cls.table(vocabulary, 'hierarchy')
+        if not table:
+            return res
+        
+        for row in table:
+            if row.get('child') == uri:
+                res.append(row.get('parent'))
+        
+        return res
+
         
