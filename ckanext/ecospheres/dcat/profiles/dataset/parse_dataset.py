@@ -60,56 +60,19 @@ except Exception as e:
 
 
 
-PATH_THEMES="/srv/app/src_extensions"
-FILENAME_THEME="ref_themes.json"
-__location__ = os.path.realpath(os.path.join(
-    os.getcwd(),
-    os.path.dirname(__file__))
-)
+# __location__ = os.path.realpath(os.path.join(
+#     os.getcwd(),
+#     os.path.dirname(__file__))
+# )
 
 
-import yaml
 import os
-def _get_mapping_file():
-    mapping_path = os.path.join(__location__, 'mapping.yaml')
-    with open(mapping_path, 'r') as format_mapping_file:
-        return yaml.safe_load(format_mapping_file)
-
-
-def map_to_valid_format(resource_format, format_mapping):
-    resource_format_lower = resource_format.lower()
-    for key in format_mapping:
-        if resource_format_lower in format_mapping[key]:
-            return key
-    else:
-        return None
-
-def _get_theme_registry_as_json():
-    try:
-        p = Path(PATH_THEMES)
-        path = p / FILENAME_THEME
-        file_exists = exists(path)
-        if not file_exists:
-            return None
-        with open(path, 'r') as f:
-            return json.loads(f.read())
-    except Exception as e:
-        print(e)
-        raise Exception("Erreur lors de la lecture du fichier json des themes")
-
-
 log = logging.getLogger(__name__)
-
-def afficher(data):
-        print(json.dumps(data, indent=4, sort_keys=True))
-
 
 
 
 
 def parse_dataset(self, dataset_dict, dataset_ref):
-
-    mapping_format=_get_mapping_file()
 
     """------------------------------------------<Littéraux>------------------------------------------"""
 
@@ -275,26 +238,24 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     list_keywords=list(self._object_value_list(dataset_ref,DCAT.keyword))
     title = self._object_value(dataset_ref, DCT.title)
     categories=dict()
-    subcategories=dict()
     
     
     for theme in themes:
         sous_theme,uri_sous_theme=_check_sous_theme(themes[theme]["child"],list_keywords,title)
         if sous_theme:
-            if sous_theme:
-                theme_label=themes[theme].get("label")
-                if not categories.get(theme_label,None):
-                    categories[theme_label]={
-                                            "theme":theme_label,
-                                            "uri": themes[theme].get("uri")
+            theme_label=themes[theme].get("label")
+            if not categories.get(theme_label,None):
+                categories[theme_label]={
+                                        "theme":theme_label,
+                                        "uri": themes[theme].get("uri")
+                                    }
+
+
+            if not categories.get(sous_theme,None):
+                categories[sous_theme]={
+                                        "theme":sous_theme,
+                                        "uri": uri_sous_theme
                                         }
-
-
-            if not subcategories.get(sous_theme,None):
-                subcategories[sous_theme]={
-                                            "subtheme":sous_theme,
-                                            "uri": uri_sous_theme
-                                          }
 
     """-------------------------------------------<category>-------------------------------------------"""        
 
@@ -310,19 +271,6 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     if categories:
         dataset_dict["category"]=list(categories.values())
 
-
-    """-------------------------------------------<subcategory>-------------------------------------------"""        
-    # SUBCATEGORY []
-    # > dcat:theme
-    # - pour le second niveau de thèmes de la nomenclature du guichet
-    # - déduit de "theme", "subject" et "free_tag" lors du moissonnage
-    # - stockage sous forme d'une liste d'URI (appartenant au registre
-    #   du guichet)
-    # - les étiquettes des URI seraient à mapper sur la propriété
-    #   "tags" lors du moissonnage
-    
-    if subcategories:
-        dataset_dict["subcategory"]=list(subcategories.values())
 
 
     """-------------------------------------------<theme>-------------------------------------------"""        
@@ -576,4 +524,16 @@ def parse_dataset(self, dataset_dict, dataset_ref):
 
 
         dataset_dict['resources'].append(resource_dict)
+    
+    if not dataset_dict.get('modified',None):
+        if creation_data:=dataset_dict.get('created',None):
+            dataset_dict['modified']=creation_data
+        elif issued_date:=dataset_dict.get('issued',None):
+            dataset_dict['modified']=issued_date
+        else:
+            import datetime
+            dataset_dict['modified'] = datetime.datetime.today().isoformat("T")
+
+
+    print(dataset_dict.get('modified',None))
     return dataset_dict

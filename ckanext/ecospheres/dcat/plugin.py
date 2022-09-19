@@ -9,8 +9,7 @@ from flask import Blueprint
 from ckan.model import Session, meta
 from sqlalchemy import Column, Date, Integer, Text, create_engine, inspect
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
-
-import ast
+import re
 
 
 
@@ -62,7 +61,6 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         facets_dict = collections.OrderedDict()
         facets_dict['organization'] = plugins.toolkit._('Organisations')
         facets_dict['category'] = plugins.toolkit._('Thématiques')
-        facets_dict['subcategory'] = plugins.toolkit._('Sous-Thématiques')
         facets_dict['territory'] = plugins.toolkit._('Territoires')
         facets_dict['res_format'] = plugins.toolkit._('Formats')
         
@@ -126,6 +124,7 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
         
         """
+        import re
         # /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z&ext_enddate=2023-07-20T11:48:38.540Z
         # /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z
         # /dataset/?q=&ext_enddate=2022-07-20T11:48:38.540Z
@@ -133,7 +132,9 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         #/?q=&ext_restricted_access=true
         #/?q=&ext_restricted_access=false
         #/dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z&ext_restricted_access=false
-        extras=search_params.get("extras",None)
+
+
+        extras= search_params.get("extras",None)
         if not extras:
             return search_params
         
@@ -146,23 +147,64 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         if not start_date and not end_date and not restricted_access  and not include_subdivision:
             return search_params
 
-        if not start_date :
-            start_date="*"
-        
-        if not end_date:
-            end_date="NOW"
-
         fq = search_params['fq']
-        fq = '{fq} +modified:[{start_date} TO {end_date}]'.format(
-                                 fq=fq, start_date=start_date, end_date=end_date)
+        
+        """ Dates """
+
+
+        if start_date or end_date:
+            
+            if not start_date :
+                start_date="*"
+            
+            if not end_date:
+                end_date="NOW"
+                
+            fq = '{fq} +modified:[{start_date} TO {end_date}]'.format(
+                                    fq=fq, start_date=start_date, end_date=end_date)
+        
+        
         if restricted_access is not None:
             fq = '{fq} +extras_restricted_access:{restricted_access}'.format(
                                     fq=fq, restricted_access=restricted_access)
 
 
-        if include_subdivision == True:
-            raise Exception(include_subdivision)
+        if include_subdivision == "true":
+            #Si inclusion des subdivisions
+            import re
+            territoires=[]
+            regex = r"territory\s*:\s*[\"]((\w*\s*[-]*)*)[\"]"
 
+            matches = re.finditer(regex, search_params['fq'], re.MULTILINE)
+
+            for matchNum, match in enumerate(matches, start=1):
+                territoires.append(match.group(1))
+
+            territoires_hierarchy=VocabularyReader._get_territories_by_hierarchy()
+            list_subdivisions=[]
+            regions_in_query=[]
+            for code_region in territoires_hierarchy['régions-métrople']:
+                if territoires_hierarchy['régions-métrople'][code_region]["name"] in territoires:
+                    regions_in_query.append(territoires_hierarchy['régions-métrople'][code_region]["name"])
+                    list_subdivisions=[dept["name"] for dept in territoires_hierarchy["depts_by_region"][code_region]]
+            
+            if list_subdivisions:
+                query=''
+                for subdivision in list_subdivisions:
+                    query=f'{query} territory:"{subdivision}"'.format(query=query,subdivision=subdivision)
+                fq=f'{fq}{query.strip()}'
+
+            if regions_in_query:
+                #on supprime le filtre region de la requête 
+                for region in regions_in_query:
+                    regex = f"(territory\s*:\s*[\"]\s*{region}\s*[\"])"
+                    # You can manually specify the number of replacements by changing the 4th argument
+                    fq = re.sub(regex, '', fq, 0, re.MULTILINE)
+
+        # raise Exception(search_params)
+         # remove colon followed by a space from q to avoid false negatives
+        q = search_params.get('q', '')
+        search_params['q'] = re.sub(":\s", " ", q)
 
         search_params['fq'] = fq
         return search_params

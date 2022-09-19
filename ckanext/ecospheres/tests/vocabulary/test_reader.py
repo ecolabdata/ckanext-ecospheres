@@ -210,3 +210,4 @@ class TestGetEcosphereTerritory(object):
     def test_get_territory_spatial_by_code_region(self):
         territoies_hierarchy=VocabularyReader._get_territories_by_hierarchy()
         assert territoies_hierarchy
+    
