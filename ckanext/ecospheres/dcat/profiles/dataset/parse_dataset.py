@@ -287,10 +287,14 @@ def parse_dataset(self, dataset_dict, dataset_ref):
 
     themes_dataset=list(self._object_value_list(dataset_ref,DCAT.theme))
     if themes_dataset:
-        themes=themes_dataset
+        for t in themes_dataset:
+            themes.append({"uri":t})
     subject=self._object_value(dataset_ref,DCT.subject)
     if subject:
-        themes.append(subject)
+        themes.append(
+            {
+            "uri": subject
+            })
     
     dataset_dict["theme"]=themes
     
@@ -445,6 +449,7 @@ def parse_dataset(self, dataset_dict, dataset_ref):
 
         """-------------------------------------------<other_format>-------------------------------------------"""        
         #TODO: corriger 
+        other_format_list=[]
         for format_node in self.g.objects(distribution, DCT['format']):
             other_format_dict={}
             for key, predicate in (
@@ -454,8 +459,9 @@ def parse_dataset(self, dataset_dict, dataset_ref):
                         if value:
                             other_format_dict[key]=value
             other_format_dict["uri"]=str(format_node)
+            other_format_list.append(other_format_dict)
             if other_format_dict:
-                resource_dict["other_format"]=other_format_dict
+                resource_dict["other_format"]=other_format_list
         
         """-------------------------------------------<format>-------------------------------------------"""        
         if media_type:=resource_dict.get("media_type_ressource",None):
@@ -534,6 +540,4 @@ def parse_dataset(self, dataset_dict, dataset_ref):
             import datetime
             dataset_dict['modified'] = datetime.datetime.today().isoformat("T")
 
-
-    print(dataset_dict.get('modified',None))
     return dataset_dict

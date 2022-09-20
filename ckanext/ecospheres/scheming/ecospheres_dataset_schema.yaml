@@ -495,35 +495,35 @@ dataset_fields:
     # plus généralement de récupérer le label, quelle que soit la propriété
     # utilisée
   
-#   # AGENT [{}]
-#   # > prov:agent -> prov:Agent
-#   - field_name: agent
-#     label: 
-#       fr: Organisation
-#       en: Organization
-#     value_type: node
-#     repeating_subfields:
-#     # NAME {*}
-#     # > foaf:givenName
-#   - field_name: name
-#     label: 
-#       fr: Nom
-#       en: Name
-#     translatable_values: True
-#     value_type: literal
-#   # > foaf:mbox 
-#   - field_name: email
-#     label:
-#       fr: Courriel
-#       en: Mail
-#     value_type: uri
+  # AGENT [{}]
+  # > prov:agent -> prov:Agent
+  - field_name: agent
+    label: 
+      fr: Organisation
+      en: Organization
+    value_type: node
+    repeating_subfields:
+      # NAME {*}
+      # > foaf:givenName
+      - field_name: name
+        label: 
+          fr: Nom
+          en: Name
+        translatable_values: True
+        value_type: literal
+      # > foaf:mbox 
+      - field_name: email
+        label:
+          fr: Courriel
+          en: Mail
+        value_type: uri
 
-#   # > foaf:homePage
-#   - field_name: url
-#     label: 
-#       fr: Site internet
-#       en: Website
-#     value_type: uri
+      # > foaf:homePage
+      - field_name: url
+        label: 
+          fr: Site internet
+          en: Website
+        value_type: uri
 
 # ------- Relations -------
 # IN_SERIES []
@@ -644,6 +644,7 @@ dataset_fields:
   value_type: node or uri
   tab: *tab_docs
   repeating_subfields:
+
   # URI
   - field_name: uri
     label: 
@@ -741,6 +742,8 @@ dataset_fields:
 # - déduit de "theme", "subject" et "free_tag" lors du moissonnage
 # - stockage sous forme d'une liste d'URI (appartenant au registre
 #   du guichet)
+
+
 # - field_name: category
 #   label: 
 #     fr: Thèmes
@@ -751,6 +754,8 @@ dataset_fields:
 #   vocabularies:
 #     - ecospheres_theme
 #   tab: *tab_details
+
+
 - field_name: category
   label: 
     fr: Thèmes
@@ -777,39 +782,39 @@ dataset_fields:
       # TODO: ajouter un display_snippet qui interroge l'URI pour récupérer
       # l'étiquette.
       
-      # SUBCATEGORY []
-# > dcat:theme
-# - pour le second niveau de thèmes de la nomenclature du guichet
-# - déduit de "theme", "subject" et "free_tag" lors du moissonnage
-# - stockage sous forme d'une liste d'URI (appartenant au registre
-#   du guichet)
-- field_name: subcategory
-  label: 
-      fr: Sous-thèmes
-      en: Subtopic
-  multiple_values: True
-  value_type: uri
-  known_values: require
-  vocabularies:
-      - ecospheres_theme
-  tab: *tab_details
-  repeating_subfields:
-    # START_DATE
-    # > dcat:startDate
-    - field_name: uri
-      label: 
-        fr: URI
-        en: URI
-      value_type: literal
+#       # SUBCATEGORY []
+# # > dcat:theme
+# # - pour le second niveau de thèmes de la nomenclature du guichet
+# # - déduit de "theme", "subject" et "free_tag" lors du moissonnage
+# # - stockage sous forme d'une liste d'URI (appartenant au registre
+# #   du guichet)
+# - field_name: subcategory
+#   label: 
+#       fr: Sous-thèmes
+#       en: Subtopic
+#   multiple_values: True
+#   value_type: uri
+#   known_values: require
+#   vocabularies:
+#       - ecospheres_theme
+#   tab: *tab_details
+#   repeating_subfields:
+#     # START_DATE
+#     # > dcat:startDate
+#     - field_name: uri
+#       label: 
+#         fr: URI
+#         en: URI
+#       value_type: literal
 
-    - field_name: subtheme
-      label: 
-        fr: Thème
-        en: Thème
-      value_type: literal
-  # display_snippet: multiple_text
-  # TODO: ajouter un display_snippet qui interroge l'URI pour récupérer
-  # l'étiquette.
+#     - field_name: subtheme
+#       label: 
+#         fr: Thème
+#         en: Thème
+#       value_type: literal
+#   # display_snippet: multiple_text
+#   # TODO: ajouter un display_snippet qui interroge l'URI pour récupérer
+#   # l'étiquette.
 
   # THEME []
 # > dcat:theme
@@ -830,6 +835,15 @@ dataset_fields:
     - inspire_theme
     - inspire_topic_category
     - eu_theme
+  repeating_subfields:
+    - field_name: uri
+      label: 
+        fr: URI
+        en: URI
+      value_type: literal
+  
+
+
 
 # FREE_TAG [{*}]
 # {"en": ["big", "large"], "fr": ["grande"]}

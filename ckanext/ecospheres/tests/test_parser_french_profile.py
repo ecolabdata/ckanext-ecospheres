@@ -276,14 +276,12 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         ############################################   Thèmes et mots clés    ############################################
         """-------------------------------------------<category>-------------------------------------------"""        
 
-        assert len(dataset['category']) ==2
+        assert len(dataset['category']) ==4
 
-        """-------------------------------------------<subcategory>-------------------------------------------"""        
-        assert len(dataset['subcategory']) == 2
 
         """-------------------------------------------<theme>-------------------------------------------"""        
         assert len(dataset["theme"]) ==3
-        assert set(dataset["theme"]) == set(['http://publications.europa.eu/resource/authority/data-theme/ENER', 'https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/themes/energie','subject_uri'])
+        assert set([item["uri"] for item in dataset["theme"]]) == set(['http://publications.europa.eu/resource/authority/data-theme/ENER', 'https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/themes/energie','subject_uri'])
 
         """-------------------------------------------<subject>-------------------------------------------"""        
         #TODO
@@ -476,9 +474,11 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         assert dataset["resources"][0]["format"] == "https://www.iana.org/assignments/media-types/application/geo+json"
         
         """-------------------------------------------<other_format>-------------------------------------------"""        
-        eq_(dataset["resources"][0]["other_format"]['label']['fr'],'label_fr')
-        eq_(dataset["resources"][0]["other_format"]['label']['en'],'label_en')
-        eq_(dataset["resources"][0]["other_format"]['uri'],'https://MediaTypeOrExtent_uri')
+        eq_(dataset["resources"][0]["other_format"][0]['label']['fr'],'label_fr')
+        eq_(dataset["resources"][0]["other_format"][0]['label']['en'],'label_en')
+        eq_(dataset["resources"][0]["other_format"][0]['uri'],'https://MediaTypeOrExtent_uri')
+
+
         """-------------------------------------------<service_conforms_to>-------------------------------------------"""        
         eq_(dataset["resources"][0]["service_conforms_to"]['fr'],'fr_title')
         eq_(dataset["resources"][0]["service_conforms_to"]['en'],'en_title')

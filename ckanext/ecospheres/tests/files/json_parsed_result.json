@@ -14,6 +14,10 @@
    ],
    "attributes_page":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/attachments/442e60a9-d626-44d2-99ee-57e2f41f90be",
    "bbox":"Ile-de-France",
+   "crs":[
+      "conformsTo_Standard-uri1",
+      "conformsTo_Standard-uri2"
+   ],
    "conforms_to":[
       {
          "title":{
@@ -41,7 +45,10 @@
    "created":"2021-07-29T06:02:34.134000+00:00",
    "creator":[
       {
-         "affiliation":"Organisation-Name",
+         "affiliation":{
+            "en":"Organisation-Name-en",
+            "fr":"Organisation-Name-fr"
+         },
          "comment":{
             "en":"Bureau de l'\u00e9tat des milieux",
             "fr":"Bureau de l'\u00e9tat des milieux"
@@ -61,6 +68,19 @@
       "en":"EN Donn\u00e9es locales de consommation d'\u00e9lectricit\u00e9, de gaz naturel et de chaleur et de froid - consommations annuelles et points de livraison d'\u00e9lectricit\u00e9, de gaz naturel, et de chaleur et de froid, r\u00e9partis en cinq secteurs (agriculture, industrie, tertiaire, r\u00e9sidentiel et non affect\u00e9) ou selon le code NAF \u00e0 2 niveaux selon les cas, \u00e0 la maille IRIS",
       "fr":"FR Donn\u00e9es locales de consommation d'\u00e9lectricit\u00e9, de gaz naturel et de chaleur et de froid - consommations annuelles et points de livraison d'\u00e9lectricit\u00e9, de gaz naturel, et de chaleur et de froid, r\u00e9partis en cinq secteurs (agriculture, industrie, tertiaire, r\u00e9sidentiel et non affect\u00e9) ou selon le code NAF \u00e0 2 niveaux selon les cas, \u00e0 la maille IRIS"
    },
+
+   "category":[
+      {
+         "uri":"http://registre.data.developpement-durable.gouv.fr/ecospheres/themes-ecospheres/amenagement-et-urbanisme",
+         "theme":"Aménagement et urbanisme"
+      },
+      {
+         "uri":"http://registre.data.developpement-durable.gouv.fr/ecospheres/themes-ecospheres/etudes",
+         "theme":"Études"
+      }
+   ],
+   "theme": [
+      {"uri": "https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/themes/energie"}, {"uri": "http://publications.europa.eu/resource/authority/data-theme/ENER"}, {"uri": "subject_uri"}],
    "extras":[
       
    ],
@@ -117,7 +137,14 @@
             "francais",
             "allemand"
          ],
-         "modified":"2021-10-17T17:19:00.965000+00:00"
+         "modified":"2021-10-17T17:19:00.965000+00:00"   ,
+         "in_catalog":{
+            "title":{
+               "fr":"title_fr",
+               "en":"title_en"         
+            },
+            "homepage":"homepage_in_category"
+         }
       }
    ],
    "issued":"2021-07-29T06:03:53.921000+00:00",
@@ -151,12 +178,15 @@
       }
    ],
    "provenance":{
-      "en":"en_label",
-      "fr":"fr_label"
+      "en":"en_provenance",
+      "fr":"fr_provenance"
    },
    "publisher":[
       {
-         "affiliation":"Organisation-Name",
+         "affiliation":{
+            "en":"Organisation-Name-en",
+            "fr":"Organisation-Name-fr"
+         },
          "comment":{
             "en":"Bureau de l'\u00e9tat des milieux",
             "fr":"Bureau de l'\u00e9tat des milieux"
@@ -172,7 +202,10 @@
          "url":"https://statistiques.developpement-durable.gouv.fr/contact"
       },
       {
-         "affiliation":"Organisation-Name",
+         "affiliation":{
+            "en":"Organisation-Name-en",
+            "fr":"Organisation-Name-fr"
+         },
          "comment":{
             "en":"Bureau de l'\u00e9tat des milieux",
             "fr":"Bureau de l'\u00e9tat des milieux"
@@ -193,11 +226,17 @@
          "agent":[
             {
                "mail":"ckan@mtes.fr",
-               "name":"mtes",
+               "name":{
+                  "fr":"mtes_fr",
+                  "en":"mtes_en"
+               },
                "url":"mtes.website.com"
             }
          ],
-         "had_role":"owner"
+         "had_role": [
+            "owner1",
+            "owner2"
+         ]
       }
    ],
    "resources":[
@@ -213,7 +252,10 @@
                   "en":"label_en",
                   "fr":"label_fr"
                },
-               "type":"type_licence",
+               "type":[
+                  "type_uri_0",
+                  "type_uri_1"
+               ],
                "uri":"https://www.etalab.gouv.fr/licence-ouverte-open-licence"
             }
          ],
@@ -230,13 +272,13 @@
             "en":"en_Donn\u00e9es de consommation et de points de livraison d'\u00e9nergie \u00e0 la maille IRIS - \u00e9lectricit\u00e9 - ann\u00e9e 2020 - mill\u00e9sime 2021-10 - format geojson - Champ IRIS",
             "fr":"fr_Donn\u00e9es de consommation et de points de livraison d'\u00e9nergie \u00e0 la maille IRIS - \u00e9lectricit\u00e9 - ann\u00e9e 2020 - mill\u00e9sime 2021-10 - format geojson - Champ IRIS"
          },
-         "other_format":{
+         "other_format":[{
             "label":{
                "en":"label_en",
                "fr":"label_fr"
             },
             "uri":"https://MediaTypeOrExtent_urig"
-         },
+         }],
          "resource_issued":"2022-03-09T09:12:55.902000+00:00",
          "rights":{
             "label":{
@@ -244,18 +286,26 @@
                "fr":"label_fr"
             }
          },
-         "service_conforms_to":{
-            "en":"en_title",
-            "fr":"fr_title"
-         },
-         "uri":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/distributions/f88a1c55-0f24-4dac-9ac5-e151caf745e8/spatial/geojson?millesime=2021-10&geoField=IRIS",
+         "service_conforms_to":[{
+                  "title": {
+                     "en":"en_title_service_conforms_to",
+                     "fr":"fr_title_service_conforms_to"
+                     },
+                  "uri": "service_conforms_to_uri"
+
+                  }]
+         ,
+         "uri":"uri_resource",
          "url":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/v1/datafiles/f88a1c55-0f24-4dac-9ac5-e151caf745e8/spatial/geojson?millesime=2021-10&geoField=IRIS",
-         "url_download":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/v1/datafiles/f88a1c55-0f24-4dac-9ac5-e151caf745e8/spatial/geojson?millesime=2021-10&geoField=IRIS"
+         "download_url":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/v1/datafiles/f88a1c55-0f24-4dac-9ac5-e151caf745e8/spatial/geojson?millesime=2021-10&geoField=IRIS"
       }
    ],
    "rights_holder":[
       {
-         "affiliation":"Organisation-Name",
+         "affiliation":{
+            "en":"Organisation-Name-en",
+            "fr":"Organisation-Name-fr"
+         },
          "comment":{
             "en":"Bureau de l'\u00e9tat des milieux",
             "fr":"Bureau de l'\u00e9tat des milieux"
@@ -278,7 +328,8 @@
             "en":"en-label",
             "fr":"fr-label"
          },
-         "uri":"https://location_ressorce"
+         "uri":"https://location_ressorce",
+         "in_scheme": "https://location_ressorce_in_scheme"
       },
       {
          "uri":"https://location_ressorce_bbox"

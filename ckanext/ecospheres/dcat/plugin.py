@@ -131,6 +131,10 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         # ?q=&ext_startdate=2022-06-21T00:00:00Z&ext_enddate=NOW
         #/?q=&ext_restricted_access=true
         #/?q=&ext_restricted_access=false
+        
+        #/?q=&ext_include_subdivision=true
+        #/?q=&ext_include_subdivision=false
+        
         #/dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z&ext_restricted_access=false
 
 
