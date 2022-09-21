@@ -12,7 +12,8 @@ from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 import re
 import logging
 from ckanext.ecospheres.commands import ecospheres_commands as ecospherefr_cli
-    
+from ckanext.ecospheres.scheming.tab import get_fields_by_tab
+
     
 
 
@@ -44,11 +45,9 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
                 'get_territories_label':helpers.get_territories_label,
                 'get_type_adminstration_label_by_acronym':helpers.get_type_adminstration_label_by_acronym,
                 'get_vocabulary_label_by_uri':helpers.get_vocabulary_label_by_uri,
+                'get_fields_by_tab':get_fields_by_tab,
                 }
 
-    
-
-   
     # ------------- IValidators ---------------#
     def get_validators(self):
         return {
@@ -129,22 +128,21 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         dans ce cas ci, on extrait les dates de début et de fin pour les ajouter au champ fq qui sera interpreté par le moteur de recherche
         solr
         A noter, pour ajouter des paramtres extra à une requetes dans CKAN et les recuperer avec la clé "extras", il faut préfixer le nom du paramtres par "ext_"
-
-        
         """
-        import re
+        
+        #-----------------------------------------filtrer par date -------------------------------
         # /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z&ext_enddate=2023-07-20T11:48:38.540Z
         # /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z
         # /dataset/?q=&ext_enddate=2022-07-20T11:48:38.540Z
         # ?q=&ext_startdate=2022-06-21T00:00:00Z&ext_enddate=NOW
+        
+        #-----------------------------------------filtrer par données à accès resteint -------------------------------
         #/?q=&ext_restricted_access=true
         #/?q=&ext_restricted_access=false
-        
-        #/?q=&ext_include_subdivision=true
-        #/?q=&ext_include_subdivision=false
-        
-        #/dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z&ext_restricted_access=false
 
+        #-----------------------------------------filtrer par inclusion des subdivision et comme paramètre territory: un région -------------------------------
+        #/dataset/?q=&ext_include_subdivision=true&territory=Nouvelle-Aquitaine
+        
 
         extras= search_params.get("extras",None)
         if not extras:
@@ -162,8 +160,6 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         fq = search_params['fq']
         
         """ Dates """
-
-
         if start_date or end_date:
             
             if not start_date :
@@ -175,12 +171,14 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
             fq = '{fq} +modified:[{start_date} TO {end_date}]'.format(
                                     fq=fq, start_date=start_date, end_date=end_date)
         
-        
+        """ restricted_access """
         if restricted_access is not None:
             fq = '{fq} +extras_restricted_access:{restricted_access}'.format(
                                     fq=fq, restricted_access=restricted_access)
 
 
+
+        """ include_subdivision """
         if include_subdivision == "true":
             #Si inclusion des subdivisions
             import re
@@ -202,8 +200,11 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
             
             if list_subdivisions:
                 query=''
+                op=''
                 for subdivision in list_subdivisions:
-                    query=f'{query} territory:"{subdivision}"'.format(query=query,subdivision=subdivision)
+                    if query:
+                        op='OR'
+                    query=f'{query} {op} territory:"{subdivision}"'.format(query=query,subdivision=subdivision)
                 fq=f'{fq}{query.strip()}'
 
             if regions_in_query:
@@ -213,8 +214,6 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
                     # You can manually specify the number of replacements by changing the 4th argument
                     fq = re.sub(regex, '', fq, 0, re.MULTILINE)
 
-        # raise Exception(search_params)
-         # remove colon followed by a space from q to avoid false negatives
         q = search_params.get('q', '')
         search_params['q'] = re.sub(":\s", " ", q)
 
@@ -241,6 +240,7 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         return {
                 "territoires": VocabularyReader.labels(vocabulary="ecospheres_territory")
                }
+               
     def _get_themes(self):
         return VocabularyReader.themes()
     
