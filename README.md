@@ -159,3 +159,112 @@ If ckanext-ecospheres should be available on PyPI you can follow these steps to 
 ## License
 
 [AGPL](https://www.gnu.org/licenses/agpl-3.0.en.html)
+
+
+
+## ________________________________________________________________________________________________________________________________
+
+# Ckanext-écospheres
+
+
+
+## Requirements
+
+- [CKAN 2.9+](https://github.com/ckan/ckan)
+- [ckanext-scheming](https://github.com/ckan/ckanext-scheming)
+- [ckanext-spatial](https://github.com/ckan/ckanext-spatial)
+- [ckanext-harvest](https://github.com/ckan/ckanext-harvest)
+- [ckanext-dcat](https://github.com/ckan/ckanext-dcat)
+- [ckanext-hierarchy](https://github.com/ckan/ckanext-hierarchy)
+- [ckanext-fluent](https://github.com/ckan/ckanext-fluent)
+- [ckanext-scheming](https://github.com/ckan/ckanext-scheming)
+
+
+## Installation
+
+To install ckanext-ecospheres:
+
+1. Activate your CKAN virtual environment, for example:
+
+     . /usr/lib/ckan/default/bin/activate
+
+2. Install the ckanext-ecospheres Python package into your virtual environment:
+
+     pip install ckanext-ecospheres
+
+3. Add  ``ecospheres``, ``dcat_ecospheres_harvester``, ``dcat_ecospheres_plugin``, ``spatial_ecospheres_harvester``, ``spatial_ecospheres_template`` to the ``ckan.plugins`` setting in your CKAN
+   config file (by default the config file is located at
+   ``/etc/ckan/default/ckan.ini``).
+
+4. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
+
+     sudo service apache2 reload
+
+
+
+<br>
+<br>
+
+
+
+
+## Config Settings
+
+This extension uses the following config options (<b>ckan.ini</b> file)
+    
+    #scheming configuration
+    scheming.dataset_schemas = ckanext.ecospheres.scheming:ecospheres_dataset_schema.yaml   
+    scheming.presets =  ckanext.ecospheres.scheming:presets.yml     
+                    ckanext.scheming:presets.json
+                    ckanext.fluent:presets.json
+
+    #DCAT configuration
+    ckanext.dcat.catalog_endpoint = /dcat/catalog/{_format} 
+    #DCAT profil
+    ckanext.dcat.rdf.profiles = euro_dcat_ap fr_dcat_ap   
+
+    
+    #publisher
+    ckanext.dcatfrench_config.publisher_name = MTE
+    ckanext.dcatfrench_config.publisher_mail = mte@gouv.fr
+    ckanext.dcatfrench_config.publisher_phone = 015858585858
+    ckanext.dcatfrench_config.publisher_url =  mte.gouv.fr
+
+    #General config
+    ckan.site_title = Guichet d accès à la donnée du ministère de la transition écologique et de la cohésion des territoires
+    ckan.site_description = Guichet d accès à la donnée du ministère de la transition écologique et de la cohésion des territoires
+    
+    #language
+    ckan.locale_default = fr  
+    ckan.locale_order =  fr en 
+    
+### Solr config
+Add indexed fields to solr <b>schema.xml</b>
+
+    <fields>
+        .........
+        <field name="page" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="contact_point" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="publisher" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="creator" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="rights_holder" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="qualified_attribution" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="free_tags" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="licenses" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="series_member" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="in_series" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="category" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="territory" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="modified" type="date" indexed="true" stored="true" multiValued="false"/>
+        <field name="created" type="date" indexed="true" stored="true" multiValued="false"/>
+        <field name="issued" type="date" indexed="true" stored="true" multiValued="false"/>
+        <field name="theme" type="string" indexed="true" stored="true" multiValued="true"/>
+        ........
+    </fields>
+
+
+
+<br>
+
+### Loading vocabularies
+    ckan -c ckan.ini ecospherefr load-vocab                                                                                                                                                     

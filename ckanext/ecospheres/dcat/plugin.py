@@ -10,7 +10,10 @@ from ckan.model import Session, meta
 from sqlalchemy import Column, Date, Integer, Text, create_engine, inspect
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 import re
-
+import logging
+from ckanext.ecospheres.commands import ecospheres_commands as ecospherefr_cli
+    
+    
 
 
 class DcatFrenchPlugin(plugins.SingletonPlugin):
@@ -19,11 +22,16 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IFacets)
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.IBlueprint)
+    plugins.implements(plugins.IClick)
 
-
-
-    # ------------- IConfigurer ---------------#
     
+    
+    # ------------- IClick ---------------#
+    def get_commands(self):
+        return ecospherefr_cli.get_commands()
+    
+    
+    # ------------- IConfigurer ---------------#
     def get_helpers(self):
         '''Register the functions above as a template
         helper functions.

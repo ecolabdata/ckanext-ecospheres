@@ -60,10 +60,6 @@ except Exception as e:
 
 
 
-# __location__ = os.path.realpath(os.path.join(
-#     os.getcwd(),
-#     os.path.dirname(__file__))
-# )
 
 
 import os
@@ -448,7 +444,6 @@ def parse_dataset(self, dataset_dict, dataset_ref):
         
 
         """-------------------------------------------<other_format>-------------------------------------------"""        
-        #TODO: corriger 
         other_format_list=[]
         for format_node in self.g.objects(distribution, DCT['format']):
             other_format_dict={}

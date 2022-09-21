@@ -317,7 +317,6 @@ def graph_from_dataset(self, dataset_dict, dataset_ref):
     # > owl:versionInfo
     # voir littéraux
     
-    
     """------------------------------------------  temporal_resolution ------------------------------------------"""
     # TEMPORAL_RESOLUTION
     # > dcat:temporalResolution

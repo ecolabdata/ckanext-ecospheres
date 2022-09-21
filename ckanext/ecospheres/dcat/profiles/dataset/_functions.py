@@ -105,8 +105,8 @@ def _object_value_multilang(self, subject, predicate, multilang=False):
         # when translation does not exist, create an empty one
         for lang in get_langs():
             if lang not in lang_dict:
-                # TODO: à adapter ( Développé sur DIDO pas de traduction disponible, données originales prises par défaut pour les autres langues)
-                lang_dict[lang] = ''
+                if value_in_french:=lang_dict.get(default_lang, None):
+                    lang_dict[lang] = value_in_french
 
     __values=sum([bool(lang_dict[key]) for key in lang_dict]) == 0
     return None if __values else lang_dict
@@ -129,7 +129,6 @@ def _provenance(self, subject, predicate,dataset_dict):
 def _language(self, subject, predicate,dataset_dict):
     _language_list=[]
     for attr in self.g.objects(subject, predicate):
-        #TODO: raffiner si possible
 
         _language_list.append(str(attr))
     if _language_list:
@@ -199,7 +198,6 @@ def _spatial_coverage(self, subject, predicate,dataset_dict):
                 value=_object_value_multilang(self, attr, _predicate, multilang=True)
 
             elif key == "prefLabel":
-                #TODO: à clarifier
                 for _attr in self.g.objects(attr, _predicate):
                     value=self._object_value(_attr, SKOS.prefLabel)
                     if value:
@@ -303,7 +301,6 @@ def _parse_agent(self, subject, predicate,dataset_dict,keybase=None):
                 continue
             
             # non-multilangue
-            #TODO: type à clarifier    
             for key,_predicate in (
                 ("title",FOAF.title), #dido -> présent
                 ("type",DCT.type), 

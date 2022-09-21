@@ -106,13 +106,13 @@ def __create_generique_label_schema_table(table_name,table_schema,data):
 
 
 def load_vocab():
+
     for name in VocabularyIndex.names():       
         try:
             vocab_data=VocabularyIndex.load_and_dump(name).data
             if not vocab_data:
                 raise Exception(f"Erreur lors du chargement du vocabulaire {name}")
                 continue
-
             for table_name in vocab_data.keys():
                 
                 if re.match(REGEX_PATTERN_ECOSPHERE_SPATIAL,table_name):
@@ -128,7 +128,6 @@ def load_vocab():
     
         except Exception as e:
             print("Erreur pendant le chargement des vocabulaires",str(e))
-
 
 
 

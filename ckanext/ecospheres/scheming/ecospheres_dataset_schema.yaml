@@ -8,27 +8,26 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
 # ---------------------------------- Onglets ---------------------------------------------
 # ----------------------------------------------------------------------------------------
 
-tabs:
 
-  tab_data: &tab_data
-    fr: Accès aux données
-    en: Data access
-  
-  tab_details: &tab_details
-    fr: Détails
-    en: Details
+.tab_data: &tab_data
+  fr: Accès aux données
+  en: Data access
 
-  tab_docs: &tab_docs
-    fr: Documentation
-    en: Documentation
+.tab_details: &tab_details
+  fr: Détails
+  en: Details
 
-  tab_contacts: &tab_contacts
-    fr: Contacts et acteurs
-    en: Relevant parties
+.tab_docs: &tab_docs
+  fr: Documentation
+  en: Documentation
 
-  tab_export: &tab_export
-    fr: Export
-    en: Metadata export
+.tab_contacts: &tab_contacts
+  fr: Contacts et acteurs
+  en: Relevant parties
+
+.tab_export: &tab_export
+  fr: Export
+  en: Metadata export
 
 # ----------------------------------------------------------------------------------------
 # ---------------------------------- Variables communes ----------------------------------
