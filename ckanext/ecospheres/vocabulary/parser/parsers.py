@@ -152,7 +152,7 @@ def basic_rdf(
     name, url, format='xml', schemes=None, 
     languages=None, rdf_types=None, recursive=False,
     hierarchy=False, uri_property=None, regexp_property=None,
-    **kwargs
+    translation_scheme=None, _result=None, **kwargs
 ):
     """Build a vocabulary cluster from RDF data using simple SKOS vocabulary.
 
@@ -198,6 +198,10 @@ def basic_rdf(
     regexp_property : str, default None
         URI of a property providing regular expressions to
         use for mapping free text to the vocabulary concepts.
+    translation_scheme : str, default None
+        URI of a scheme from Ecospheres' register that might
+        provide additionnal translations for the vocabulary
+        labels.
     
     Returns
     -------
@@ -205,7 +209,7 @@ def basic_rdf(
 
     """
 
-    result = VocabularyParsingResult(name)
+    result = _result if _result is not None else VocabularyParsingResult(name)
     
     pile = [url]
     uris = []
@@ -240,7 +244,8 @@ def basic_rdf(
                 res_uri = graph.value(URIRef(new_uri), URIRef(uri_property))
                 if res_uri and (
                     isinstance(res_uri, URIRef) or
-                    isinstance(res_uri, Literal) and res_uri.datatype == URIRef('http://purl.org/dc/terms/URI')
+                    isinstance(res_uri, Literal) 
+                    and res_uri.datatype == URIRef('http://purl.org/dc/terms/URI')
                 ):
                     map_uris[new_uri] = str(res_uri)
 
@@ -349,10 +354,19 @@ def basic_rdf(
     if not result.data:
         result.exit(exceptions.NoVocabularyDataError())
 
+    if result and translation_scheme:
+        if not translation_scheme.endswith('.json'):
+            translation_scheme = f'{translation_scheme}.json'
+        result = basic_rdf(
+            name=name, url=translation_scheme, format='json-ld',
+            languages=languages, recursive=True,
+            uri_property='http://www.w3.org/2004/02/skos/core#exactMatch',
+            _result=result, **kwargs
+        )
+
     return result
 
-
-def spdx_license(name, url, **kwargs):
+def spdx_license(name, url, translation_scheme, **kwargs):
     """Build a vocabulary cluster from the SPDX license register's data.
 
     Parameters
@@ -363,6 +377,10 @@ def spdx_license(name, url, **kwargs):
         Base URL of the SPDX register. Should return
         a JSON document listing all licenses, with keys
         ``reference``, ``licenseId`` and ``name``.
+    translation_scheme : str, default None
+        URI of a scheme from Ecospheres' register that might
+        provide additionnal translations for the vocabulary
+        labels.
 
     Returns
     -------
@@ -441,6 +459,15 @@ def spdx_license(name, url, **kwargs):
 
     if not result.data:
         result.exit(exceptions.NoVocabularyDataError())
+
+    if result and translation_scheme:
+        if not translation_scheme.endswith('.json'):
+            translation_scheme = f'{translation_scheme}.json'
+        result = basic_rdf(
+            name=name, url=translation_scheme, format='json-ld',
+            recursive=True, uri_property='http://www.w3.org/2004/02/skos/core#exactMatch',
+            _result=result, **kwargs
+        )
 
     return result
 
