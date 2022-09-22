@@ -111,6 +111,7 @@
   available: True
 
 - name: insee_official_geographic_code
+  url: http://rdf.insee.fr/geo/cog-20210310.zip
   about: http://rdf.insee.fr/geo/index.html
   comment: Downloadable ZIP file with file creation date in name.
   available: False
@@ -130,7 +131,10 @@
 - name: insee_gazetteer
   url: https://raw.githubusercontent.com/InseeFr/Ontologies/master/insee-geo.ttl
   about: https://github.com/InseeFr/Ontologies/blob/master/insee-geo.ttl
-  available: False
+  format: turtle
+  rdf_types:
+    - http://www.w3.org/2002/07/owl#Class
+  available: True
 
 - name: inspire_limitation_on_public_access
   url: http://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess/LimitationsOnPublicAccess.fr.rdf
@@ -174,6 +178,7 @@
   url: https://spdx.org/licenses/licenses.json
   about: https://github.com/spdx/license-list-data
   parser: spdx_license
+  translation_scheme: https://registre.data.developpement-durable.gouv.fr/plume/CrpaAuthorizedLicense
   available: True
 
 - name: ogc_epsg
