@@ -738,6 +738,10 @@ def ecospheres_territory(name, url, **kwargs):
                 )
                 continue
 
+            depcode = re.match('^D([0-9]{2}|2[AB])$', id)
+            if depcode:
+                label = f'{depcode[1]} {label}'
+
             if not 'spatial' in territory:
                 result.log_error(
                     exceptions.UnexpectedDataError(
