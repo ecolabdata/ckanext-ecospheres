@@ -133,9 +133,9 @@ object:
 
 """
 
-import re, json
+import re, json, zipfile
 from lxml import etree
-from rdflib import URIRef, Literal
+from rdflib import URIRef, Literal, Dataset
 from io import BytesIO
 
 from ckanext.ecospheres.vocabulary.parser import utils, exceptions
@@ -310,22 +310,8 @@ def basic_rdf(
         )
 
     if hierarchy:
-        table_name = result.data.table('hierarchy', ('parent', 'child'))
-        table = result.data[table_name]
-        table.set_not_null_constraint('parent')
-        table.set_not_null_constraint('child')
-        result.data.set_reference_constraint(
-            referenced_table=table_name,
-            referenced_fields=('parent',),
-            referencing_table='label',
-            referencing_fields=('uri',)
-        )
-        result.data.set_reference_constraint(
-            referenced_table=table_name,
-            referenced_fields=('child',),
-            referencing_table='label',
-            referencing_fields=('uri',)
-        )
+        result.data.hierarchy_table()
+        table = result.data.hierarchy
         for relationship in relationships:
             table.add(*relationship)
         if not regexp_property:
@@ -729,22 +715,7 @@ def ecospheres_territory(name, url, **kwargs):
         referencing_table='label'
     )
 
-    hierarchy_table = result.data.table('hierarchy', ('parent', 'child'))
-    table = result.data[hierarchy_table]
-    table.set_not_null_constraint('parent')
-    table.set_not_null_constraint('child')
-    result.data.set_reference_constraint(
-        referenced_table=hierarchy_table,
-        referenced_fields=('parent',),
-        referencing_table='label',
-        referencing_fields=('uri',)
-    )
-    result.data.set_reference_constraint(
-        referenced_table=hierarchy_table,
-        referenced_fields=('child',),
-        referencing_table='label',
-        referencing_fields=('uri',)
-    )
+    result.data.hierarchy_table()
 
     for territory_type in territory_types:
         if not territory_type in json_data:
@@ -797,7 +768,7 @@ def ecospheres_territory(name, url, **kwargs):
             )
     
             if 'codeRégion' in territory:
-                result.data[hierarchy_table].add(
+                result.data.hierarchy.add(
                     territory['codeRégion'], id
                 )
 
@@ -805,4 +776,93 @@ def ecospheres_territory(name, url, **kwargs):
         result.exit(exceptions.NoVocabularyDataError())
 
     return result
+
+
+def insee_official_geographic_code(name, url, **kwargs):
+    """Build a vocabulary cluster with Insee's official geographic code data.
+
+    This vocabulary is HUGE, loading it takes a lot
+    of time.
+
+    Parameters
+    ----------
+    name : str
+        Name of the vocabulary.
+    url : str
+        Download URL of the ZIP file containing the data.
+        That archive should contain one file holding
+        trig-encoded RDF data. The parser will look for
+        a graph whose identifier is
+        ``'http://rdf.insee.fr/graphes/geo/cog'``.
+
+    Returns
+    -------
+    VocabularyParsingResult
+
+    Notes
+    -----
+    Terrorial entities will be registered more than once 
+    if they have multiple URIs (usually one with an UUID
+    and one with a geographic code). Labels for all available
+    languages are provided for both, alternative labels
+    are carried by the UUID-based URI.
+
+    """
+    result = VocabularyParsingResult(name)
+
+    try:
+        content = utils.fetch_data(url, format='bytes', **kwargs)
+        zip_data = zipfile.ZipFile(BytesIO(content))
+        dataset = Dataset()
+        with zip_data.open(zip_data.namelist()[0]) as src:
+            # assuming there is only one file in the archive
+            dataset.parse(file=src, format='trig')
+        graph = dataset.graph('http://rdf.insee.fr/graphes/geo/cog')
+    except Exception as error:
+        result.exit(error)
+        return result
+
+    result.data.hierarchy_table()
+
+    relationships = []
+
+    for uuid, label in graph.subject_objects(URIRef('http://rdf.insee.fr/def/geo#nom')):
+        result.add_label(uuid, language='fr', label=label)
+
+    for uri, language, label in result.data.label:
+        for altlabel in graph.objects(
+            uri, URIRef('http://rdf.insee.fr/def/geo#nomSansArticle')
+        ):
+            if altlabel != label:
+                result.add_label(uuid, language='fr', label=altlabel)
+        
+        for insee_code in graph.objects(
+            uri, URIRef('http://rdf.insee.fr/def/geo#codeINSEE')
+        ):
+            result.add_label(uuid, language='fr', label=insee_code)
+
+        for parent in graph.objects(
+            uri, URIRef('http://rdf.insee.fr/def/geo#subdivisionDirecteDe')
+        ):
+            if not (parent, uri) in relationships:
+                relationships.append((parent, uri))
+
+        for code_uri in graph.objects(
+            uri, URIRef('http://www.w3.org/2002/07/owl#sameAs')
+        ):
+            result.add_label(code_uri, language='fr', label=label)
+
+    for relationship in relationships:
+        result.data.hierarchy.add(relationship)
+
+    response = result.data.validate()
+    if not response:
+        for anomaly in response:
+            result.log_error(exceptions.InvalidDataError(anomaly))
+
+    if not result.data:
+        result.exit(exceptions.NoVocabularyDataError())
+
+    return result
+
 
