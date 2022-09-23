@@ -679,6 +679,11 @@ class VocabularyDataCluster(dict):
         method.
         Alternative labels are used to find matching vocabulary
         items during harvest. Users will never see them.
+    hierarchy : VocabularyDataTable or None
+        The table holding the relationships between 
+        vocabulary items, if any. This table has to be created
+        first with :py:meth:`VocabularyDataCluster.hierarchy_table`
+        or this attribute's value will be ``None``.
     constraints : list(ClusterConstraint)
         List of cluster constraints, ie constraints
         that may involve more than one table. As for now,
@@ -722,6 +727,7 @@ class VocabularyDataCluster(dict):
             referencing_table='label',
             none_as_value=False
         )
+        self.hierarchy = None
 
     def __bool__(self):
         return any(table for table in self.values())
@@ -763,6 +769,39 @@ class VocabularyDataCluster(dict):
         self[table.name] = table
         setattr(self, table.name, table)
         return table.name
+
+    def hierarchy_table(self):
+        """Return the name of the cluster table holding relationships, creating it if needed.
+
+        A hierarchy table has two fields: one for
+        the parent's URI, one for the child's. Both
+        URIs should exist in the labels table.
+
+        Returns
+        -------
+        str
+            The name of the hierarchy table.
+
+        """
+        if self.hierarchy:
+            return self.hierarchy.name
+        hierarchy_table = self.table('hierarchy', ('parent', 'child'))
+        self.hierarchy = self[hierarchy_table]
+        self.hierarchy.set_not_null_constraint('parent')
+        self.hierarchy.set_not_null_constraint('child')
+        self.set_reference_constraint(
+            referenced_table=hierarchy_table,
+            referenced_fields=('parent',),
+            referencing_table='label',
+            referencing_fields=('uri',)
+        )
+        self.set_reference_constraint(
+            referenced_table=hierarchy_table,
+            referenced_fields=('child',),
+            referencing_table='label',
+            referencing_fields=('uri',)
+        )
+        return hierarchy_table
 
     def validate(self, delete=True):
         """Validate the cluster data.
