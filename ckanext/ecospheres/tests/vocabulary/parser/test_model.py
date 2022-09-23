@@ -570,6 +570,14 @@ class TestDataValidation(object):
         cluster.voc_t2.add('v1a')
         assert cluster.validate()
 
+    def test_hierarchy_table_can_be_accessed(self):
+        """Vérifie que tout est en ordre avec la création de la table des relations."""
+        cluster = VocabularyDataCluster('voc')
+        assert cluster.hierarchy is None
+        hierarchy_table = cluster.hierarchy_table()
+        assert hierarchy_table == 'voc_hierarchy'
+        assert isinstance(cluster.hierarchy, VocabularyDataTable)
+        assert cluster.hierarchy == cluster['voc_hierarchy']
 
 
 
