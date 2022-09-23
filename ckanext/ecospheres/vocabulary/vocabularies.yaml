@@ -113,6 +113,7 @@
 - name: insee_official_geographic_code
   url: http://rdf.insee.fr/geo/cog-20210310.zip
   about: http://rdf.insee.fr/geo/index.html
+  parser: insee_official_geographic_code
   comment: Downloadable ZIP file with file creation date in name.
   available: False
 
