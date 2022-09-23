@@ -66,7 +66,7 @@ class VocabularyReader:
                 return [cls._resultset_to_dict(resultset) for resultset in s.execute(statement).fetchall()]
             except Exception as e:
                 logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
-                return list()
+                return {}
     @classmethod 
     def _select_labels_from_database_regex(cls,_table):
         with Session(database=DB) as s:
@@ -76,7 +76,7 @@ class VocabularyReader:
                 return  s.execute(statement).fetchall()
             except Exception as e:
                 logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
-                return list()
+                return {}
 
     @classmethod
     def labels(cls, vocabulary):
@@ -111,7 +111,7 @@ class VocabularyReader:
                 return uri_themes_with_hierarchy
             except Exception as e:
                 logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
-                return list()
+                return {}
         
     @classmethod
     def __get_themes_from_db(cls,_table,uri:str):
@@ -125,7 +125,7 @@ class VocabularyReader:
                 return None
             except Exception as e:
                 logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
-                return list()
+                return {}
 
     @classmethod
     def __get_theme_labels_by_uri(cls,uri:str):
@@ -144,46 +144,50 @@ class VocabularyReader:
 
     @classmethod
     def themes(cls):
-        all_themes={}   
-        #Récuperation des labels
-        labels=cls._select_labels_from_database(_get_generic_schema("ecospheres_theme_label"))
-        #Récuperation des altlabels
-        labels_dict=dict()
-        for label in labels:
-            labels_dict[label["uri"]] =label
+        try:
+            all_themes={}   
+            #Récuperation des labels
+            labels=cls._select_labels_from_database(_get_generic_schema("ecospheres_theme_label"))
+            #Récuperation des altlabels
+            labels_dict=dict()
+            for label in labels:
+                labels_dict[label["uri"]] =label
 
-        alt_label_map={}
-        altlabels=cls._select_labels_from_database(_get_generic_schema("ecospheres_theme_altlabel"))
-        for alt_label in altlabels:
-            alt_label_map.setdefault(alt_label["uri"], [])
-            alt_label_map[alt_label['uri']].append(alt_label["label"])
+            alt_label_map={}
+            altlabels=cls._select_labels_from_database(_get_generic_schema("ecospheres_theme_altlabel"))
+            for alt_label in altlabels:
+                alt_label_map.setdefault(alt_label["uri"], [])
+                alt_label_map[alt_label['uri']].append(alt_label["label"])
 
-        _table_regex=cls._select_labels_from_database_regex(_get_regex_schema_table("ecospheres_theme_regexp"))
-        regexp_map={}
-        for regexp in _table_regex:
-            regexp_map.setdefault(regexp[0],[])
-            regexp_map[regexp[0]].append(regexp[1])
-            
-        #Récuperation des infos sur la hierarchie des themes
-        hierarchy_table=cls.__get_themes_hierarchy_as_dict()
-        for parent_theme in hierarchy_table:
-            
-            #themes parents
-            temp_theme=labels_dict[parent_theme].copy()
-            temp_theme["child"]=list()
-            temp_theme["count"]=-1
-            temp_theme["altlabel"]=alt_label_map.get(parent_theme,[])
-            all_themes[parent_theme]=temp_theme
+            _table_regex=cls._select_labels_from_database_regex(_get_regex_schema_table("ecospheres_theme_regexp"))
+            regexp_map={}
+            for regexp in _table_regex:
+                regexp_map.setdefault(regexp[0],[])
+                regexp_map[regexp[0]].append(regexp[1])
+                
+            #Récuperation des infos sur la hierarchie des themes
+            hierarchy_table=cls.__get_themes_hierarchy_as_dict()
+            for parent_theme in hierarchy_table:
+                
+                #themes parents
+                temp_theme=labels_dict[parent_theme].copy()
+                temp_theme["child"]=list()
+                temp_theme["count"]=-1
+                temp_theme["altlabel"]=alt_label_map.get(parent_theme,[])
+                all_themes[parent_theme]=temp_theme
 
-            #sous-themes
-            for sous_theme in hierarchy_table[parent_theme]:
-                temp_sous_theme=labels_dict[sous_theme].copy()
-                temp_sous_theme["count"]=-1
-                temp_sous_theme["regexp"]=regexp_map.get(sous_theme,None)
-                temp_sous_theme["altlabel"]=alt_label_map.get(sous_theme,[])
-                all_themes[parent_theme]["child"].append(temp_sous_theme)
+                #sous-themes
+                for sous_theme in hierarchy_table[parent_theme]:
+                    temp_sous_theme=labels_dict[sous_theme].copy()
+                    temp_sous_theme["count"]=-1
+                    temp_sous_theme["regexp"]=regexp_map.get(sous_theme,None)
+                    temp_sous_theme["altlabel"]=alt_label_map.get(sous_theme,[])
+                    all_themes[parent_theme]["child"].append(temp_sous_theme)
 
-        return all_themes
+            return all_themes
+        except Exception as e:
+            logging.error(f"Erreur lors du chargement des données {str(e)}")
+            return {}
 
     @classmethod
     def altlabels(cls, vocabulary:str):
@@ -314,39 +318,43 @@ class VocabularyReader:
 
     @classmethod
     def get_organization_by_admin(cls):
-        list_of_organizations_as_dict=dict()
-        organizations_as_dict=dict()
-       
+        try:
+            list_of_organizations_as_dict=dict()
+            organizations_as_dict=dict()
+        
 
-        groups=Session_CKAN.query(Group).filter_by(state='active').all()
-        if not groups:
-            return {"message":"Liste des organisations vide"} 
-        for group in groups:
-            organizations_as_dict.setdefault(group.id,{})
-            organizations_as_dict[group.id]["name"] = group.name
-            organizations_as_dict[group.id]["title"]=group.title
-            organizations_as_dict[group.id]["description"]=group.description
-            organizations_as_dict[group.id]["created"]=group.created
-            organizations_as_dict[group.id]["image_url"]=group.image_url
-            organizations_as_dict[group.id]["count"]=-1
+            groups=Session_CKAN.query(Group).filter_by(state='active').all()
+            if not groups:
+                return {"message":"Liste des organisations vide"} 
+            for group in groups:
+                organizations_as_dict.setdefault(group.id,{})
+                organizations_as_dict[group.id]["name"] = group.name
+                organizations_as_dict[group.id]["title"]=group.title
+                organizations_as_dict[group.id]["description"]=group.description
+                organizations_as_dict[group.id]["created"]=group.created
+                organizations_as_dict[group.id]["image_url"]=group.image_url
+                organizations_as_dict[group.id]["count"]=-1
 
-        groups_details=Session_CKAN.query(GroupExtra).all()
-        for group_details in groups_details:
-            #verfier si l'organisation est bien présente dans les organisations actives
-            # Quand on supprime une orgonisation, elle sera juste marquée comme inactive, elle reste toujours en base de données
-            if group_details.group_id not in organizations_as_dict:
-                continue
-            organizations_as_dict[group_details.group_id][group_details.key] = group_details.value
-
-
-        for org in organizations_as_dict:
-            list_of_organizations_as_dict.setdefault(cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']],{})
-            list_of_organizations_as_dict[cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]].setdefault("orgs",[])
-            list_of_organizations_as_dict[cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]]["orgs"].append(organizations_as_dict[org])
-            list_of_organizations_as_dict[cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]]["count"]=-1
+            groups_details=Session_CKAN.query(GroupExtra).all()
+            for group_details in groups_details:
+                #verfier si l'organisation est bien présente dans les organisations actives
+                # Quand on supprime une orgonisation, elle sera juste marquée comme inactive, elle reste toujours en base de données
+                if group_details.group_id not in organizations_as_dict:
+                    continue
+                organizations_as_dict[group_details.group_id][group_details.key] = group_details.value
 
 
-        return list_of_organizations_as_dict
+            for org in organizations_as_dict:
+                list_of_organizations_as_dict.setdefault(cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']],{})
+                list_of_organizations_as_dict[cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]].setdefault("orgs",[])
+                list_of_organizations_as_dict[cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]]["orgs"].append(organizations_as_dict[org])
+                list_of_organizations_as_dict[cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]]["count"]=-1
+
+
+            return list_of_organizations_as_dict
+        except Exception as e:
+            logging.error(f"Erreur lors du chargement de la liste des territoires {str(e)}")
+            return {}
 
 
 
@@ -365,7 +373,7 @@ class VocabularyReader:
                 return None
             except Exception as e:
                 logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
-                return list()
+                return {}
 
 
     @classmethod
@@ -389,7 +397,7 @@ class VocabularyReader:
                 return None
             except Exception as e:
                 logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
-                return list()
+                return {}
 
     @classmethod
     def _get_territories_by_hierarchy(cls):

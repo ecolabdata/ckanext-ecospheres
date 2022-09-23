@@ -135,9 +135,6 @@ def _language(self, subject, predicate,dataset_dict):
         dataset_dict["language"]= _language_list
 
 
-
-
-
 def _conforms_to(self, subject, predicate,dataset_dict):
     _conforms_to_list=[]
     for attr in self.g.objects(subject, predicate):

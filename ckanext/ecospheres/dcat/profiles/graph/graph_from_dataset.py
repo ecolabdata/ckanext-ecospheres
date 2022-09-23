@@ -220,6 +220,7 @@ def graph_from_dataset(self, dataset_dict, dataset_ref):
     ############################################   Thèmes et mots clés   ############################################
     for obj in g.objects(dataset_ref, DCAT.theme):
         g.remove((dataset_ref, DCAT.theme, obj))
+    
     """------------------------------------------ category ------------------------------------------"""
     # CATEGORY []
     # > dcat:theme

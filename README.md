@@ -1,170 +1,34 @@
-[![Tests](https://github.com/ecolab/ckanext-ecospheres/workflows/Tests/badge.svg?branch=main)](https://github.com/ecolab/ckanext-ecospheres/actions)
-
-
-
-
-
-
-# Installation 
-
-### Création des tables thèmes, sous-thèmes et territoires
-```sh 
-
-docker-compose -f docker-compose.dev.yml exec  ckan-dev ckan -c ckan.ini ecospherefr initdb
-```
-
-### Chargement des fichiers <i>vocabularies/territoires.json</i> et <i>vocabularies/themes_jsonld.json</i> en base de données.
-```sh
-docker-compose -f docker-compose.dev.yml exec  ckan-dev ckan -c ckan.ini ecospherefr load-file -t themes
-docker-compose -f docker-compose.dev.yml exec  ckan-dev ckan -c ckan.ini ecospherefr load-file -t territory
-
-```
-
-### APIs pour récuperer les themes et territoires:
-
-```
-http://ckan-dev:5000/themes
-http://ckan-dev:5000/territoires
-
-```
-
-
-
-
-
-
-
-
-
-
 
 # ckanext-ecospheres
-
-**TODO:** Put a description of your extension here:  What does it do? What features does it have? Consider including some screenshots or embedding a video!
-
-
-## Requirements
-
-**TODO:** For example, you might want to mention here which versions of CKAN this
-extension works with.
-
-If your extension works across different versions you can add the following table:
-
-Compatibility with core CKAN versions:
-
-| CKAN version    | Compatible?   |
-| --------------- | ------------- |
-| 2.6 and earlier | not tested    |
-| 2.7             | not tested    |
-| 2.8             | not tested    |
-| 2.9             | not tested    |
-
-Suggested values:
-
-* "yes"
-* "not tested" - I can't think of a reason why it wouldn't work
-* "not yet" - there is an intention to get it working
-* "no"
+CKAN extension for the french minister of ecology  Open Data Portals.
 
 
-## Installation
+## Contents
 
-**TODO:** Add any additional install steps to the list below.
-   For example installing any non-Python dependencies or adding any required
-   config settings.
+- [Overview](#overview)
+- [License](#license)
+- [Demo Instance](#demo-instance)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Development Installation](#development-installation)
+- [Running the Tests](#running-the-tests)
+- [APIs](#apis)
+- [Contributing](#contributing)
+- [Support, Communication and Credits](#support-communication-and-credits)
 
-To install ckanext-ecospheres:
-
-1. Activate your CKAN virtual environment, for example:
-
-     . /usr/lib/ckan/default/bin/activate
-
-2. Clone the source and install it on the virtualenv
-
-    git clone https://github.com/ecolab/ckanext-ecospheres.git
-    cd ckanext-ecospheres
-    pip install -e .
-	pip install -r requirements.txt
-
-3. Add `ecospheres` to the `ckan.plugins` setting in your CKAN
-   config file (by default the config file is located at
-   `/etc/ckan/default/ckan.ini`).
-
-4. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
-
-     sudo service apache2 reload
-
-
-## Config settings
-
-None at present
-
-**TODO:** Document any optional config settings here. For example:
-
-	# The minimum number of hours to wait before re-checking a resource
-	# (optional, default: 24).
-	ckanext.ecospheres.some_setting = some_default_value
-
-
-## Developer installation
-
-To install ckanext-ecospheres for development, activate your CKAN virtualenv and
-do:
-
-    git clone https://github.com/ecolab/ckanext-ecospheres.git
-    cd ckanext-ecospheres
-    python setup.py develop
-    pip install -r dev-requirements.txt
-
-
-## Tests
-
-To run the tests, do:
-
-    pytest --ckan-ini=test.ini
-
-
-## Releasing a new version of ckanext-ecospheres
-
-If ckanext-ecospheres should be available on PyPI you can follow these steps to publish a new version:
-
-1. Update the version number in the `setup.py` file. See [PEP 440](http://legacy.python.org/dev/peps/pep-0440/#public-version-identifiers) for how to choose version numbers.
-
-2. Make sure you have the latest version of necessary packages:
-
-    pip install --upgrade setuptools wheel twine
-
-3. Create a source and binary distributions of the new version:
-
-       python setup.py sdist bdist_wheel && twine check dist/*
-
-   Fix any errors you get.
-
-4. Upload the source distribution to PyPI:
-
-       twine upload dist/*
-
-5. Commit any outstanding changes:
-
-       git commit -a
-       git push
-
-6. Tag the new release of the project on GitHub with the version number from
-   the `setup.py` file. For example if the version number in `setup.py` is
-   0.0.1 then do:
-
-       git tag 0.0.1
-       git push --tags
 
 ## License
 
-[AGPL](https://www.gnu.org/licenses/agpl-3.0.en.html)
+**ckanext-ecospheres** is Free and Open Source software and is licensed under the [GNU Affero General Public License (AGPL) v3.0](http://www.fsf.org/licensing/licenses/agpl-3.0.html).
 
 
+## Demo Instance
 
-## ________________________________________________________________________________________________________________________________
+A demo instance can be found [lien vers le guichet de donnnées](http://lien-vers-le-guichet.data.gouv.fr).
 
-# Ckanext-écospheres
+## Overview 
+
+Ajouter une desription
 
 
 
@@ -182,66 +46,107 @@ If ckanext-ecospheres should be available on PyPI you can follow these steps to 
 
 ## Installation
 
+
+
 To install ckanext-ecospheres:
 
-1. Activate your CKAN virtual environment, for example:
 
-     . /usr/lib/ckan/default/bin/activate
+1. Install the requirements as described [above](#requirements)
 
-2. Install the ckanext-ecospheres Python package into your virtual environment:
 
-     pip install ckanext-ecospheres
+2. Activate your CKAN virtual environment, for example:
 
-3. Add  ``ecospheres``, ``dcat_ecospheres_harvester``, ``dcat_ecospheres_plugin``, ``spatial_ecospheres_harvester``, ``spatial_ecospheres_template`` to the ``ckan.plugins`` setting in your CKAN
-   config file (by default the config file is located at
-   ``/etc/ckan/default/ckan.ini``).
-
-4. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
-
-     sudo service apache2 reload
-
+        . /usr/lib/ckan/default/bin/activate
 
 
 <br>
+
+3. Go into your CKAN path for extension (like /usr/lib/ckan/default/src):
+
+        cd ckanext-ecospheres    
+    
+        git clone https://github.com/ecolab/ckanext-ecospheres.git
+    
+        pip install -e .
+    
+        pip install -r requirements.txt
+    
+
+
+
+
+    
+    
+
+<br>
+
+4. Add the required plugins to the ckan.plugins setting in your CKAN config file 
+  (by default the config file is located at /etc/ckan/default/production.ini).
+
+    * ecospheres
+    * dcat_ecospheres_harvester
+    * dcat_ecospheres_plugin
+    * spatial_ecospheres_harvester
+    * spatial_ecospheres_template
+
+<br>
+
+5. Set the following configuration properties in the production.ini file:
+
+    - Enable de dcatfrench profile: 
+
+            ckanext.dcat.rdf.profiles = euro_dcat_ap fr_dcat_ap
+    - Set de DCAT catalog endpoint: 
+        
+            ckanext.dcat.catalog_endpoint = /dcat/catalog/{_format}
+
+    - Set information about the publisher:
+
+                ckanext.dcatfrench_config.publisher_name = MTE
+                ckanext.dcatfrench_config.publisher_mail = mte@gouv.fr
+                ckanext.dcatfrench_config.publisher_phone = 015858585858
+                ckanext.dcatfrench_config.publisher_url =  mte.gouv.fr
+    
+    
+    - Set the general config
+        
+            ckan.site_title = Guichet d accès à la donnée du ministère .......
+            ckan.site_description = Guichet d accès à la donnée du ministère
+            ckan.locale_default = fr
+            ckan.locale_order =  fr en
+    
+    - Set Scheming configuration:
+    
+            scheming.dataset_schemas = ckanext.ecospheres.scheming:ecospheres_dataset_schema.yaml
+            scheming.presets =  ckanext.ecospheres.scheming:presets.yml
+                                ckanext.scheming:presets.json
+                                ckanext.fluent:presets.json
+
+<br>
+
+5. Enable the dcatfrench profile adding the following configuration property in the production.ini file:
+
+        ckanext.dcat.rdf.profiles = euro_dcat_ap fr_dcat_ap
+
+
+<br>
+
+6. Configure the CKAN base URI as reported in the [dcat documentation](https://github.com/ckan/ckanext-dcat/blob/master/README.md#uris):
+
+        ckanext.dcat.base_uri = YOUR_BASE_URI
+
 <br>
 
 
+7. Initialize the vocabularies needed to run the ckanext-ecosphere extension
 
+        ckan --config=/etc/ckan/default/production.ini ecospherefr load-vocab
 
-## Config Settings
+<br>
 
-This extension uses the following config options (<b>ckan.ini</b> file)
-    
-    #scheming configuration
-    scheming.dataset_schemas = ckanext.ecospheres.scheming:ecospheres_dataset_schema.yaml   
-    scheming.presets =  ckanext.ecospheres.scheming:presets.yml     
-                    ckanext.scheming:presets.json
-                    ckanext.fluent:presets.json
-
-    #DCAT configuration
-    ckanext.dcat.catalog_endpoint = /dcat/catalog/{_format} 
-    #DCAT profil
-    ckanext.dcat.rdf.profiles = euro_dcat_ap fr_dcat_ap   
-
-    
-    #publisher
-    ckanext.dcatfrench_config.publisher_name = MTE
-    ckanext.dcatfrench_config.publisher_mail = mte@gouv.fr
-    ckanext.dcatfrench_config.publisher_phone = 015858585858
-    ckanext.dcatfrench_config.publisher_url =  mte.gouv.fr
-
-    #General config
-    ckan.site_title = Guichet d accès à la donnée du ministère de la transition écologique et de la cohésion des territoires
-    ckan.site_description = Guichet d accès à la donnée du ministère de la transition écologique et de la cohésion des territoires
-    
-    #language
-    ckan.locale_default = fr  
-    ckan.locale_order =  fr en 
-    
-### Solr config
-Add indexed fields to solr <b>schema.xml</b>
-
-    <fields>
+8. Update the Solr schema.xml file used by CKAN introducing the following element:
+        
+        <fields>
         .........
         <field name="page" type="string" indexed="true" stored="true" multiValued="true"/>
         <field name="contact_point" type="string" indexed="true" stored="true" multiValued="true"/>
@@ -260,11 +165,57 @@ Add indexed fields to solr <b>schema.xml</b>
         <field name="issued" type="date" indexed="true" stored="true" multiValued="false"/>
         <field name="theme" type="string" indexed="true" stored="true" multiValued="true"/>
         ........
-    </fields>
+        </fields>
 
 
+9. Restart Solr.
 
 <br>
 
-### Loading vocabularies
-    ckan -c ckan.ini ecospherefr load-vocab                                                                                                                                                     
+10. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
+
+    sudo service apache2 reload
+
+<br>
+<br>
+
+
+## Development Installation
+To install ckanext-ecospheres for development, activate your CKAN virtualenv and
+do:
+
+    git clone https://github.com/ecolab/ckanext-ecospheres.git
+    cd ckanext-ecospheres
+    python setup.py develop
+    pip install -r dev-requirements.txt
+ 
+   
+    
+### Running the Tests                                                                    
+
+
+       cd /usr/lib/ckan/default/src/ckanext-ecospheres
+        . /usr/lib/ckan/default/bin/activate
+
+        pytest --ckan-ini=test.ini --disable-warnings ckanext/ecospheres/tests
+
+## APIs
+
+
+1. Thèmes
+        
+        GET /api/themes
+
+1. Territoires
+
+        GET /api/territoires
+        GET /api/territoires_hierarchy
+
+1. Organisations
+        
+        GET /api/organizations
+
+
+## Contributing
+
+## Support, Communication and Credits

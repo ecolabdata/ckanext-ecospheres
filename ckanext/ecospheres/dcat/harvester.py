@@ -4,14 +4,9 @@ import ckan.plugins as p
 from ckanext.dcat.interfaces import IDCATRDFHarvester
 from ckanext.dcat.harvesters.rdf import DCATRDFHarvester
 from ckanext.harvest.harvesters.base import HarvesterBase
-from sqlalchemy import  inspect
 import ckan.model as model
-from ckanext.ecospheres.models.territories import Territories
 import re
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
-
-def afficher(data):
-    print(json.dumps(data, indent=4, sort_keys=True))
 
 
 ###############Constantes & Variables ######################
@@ -56,7 +51,6 @@ class DCATfrRDFHarvester(DCATRDFHarvester):
     
     def after_create(self, harvest_object, dataset_dict, temp_dict):
 
-        # afficher(dataset_dict)
         return None
     
     def __get_organization_infos(self,harvest_object):
@@ -161,7 +155,6 @@ class DCATfrRDFHarvester(DCATRDFHarvester):
                 id=res.group(1)
         else:
             id=title
-
         name = HarvesterBase._gen_new_name(id)
         if not name:
                 raise Exception('Could not generate a unique name '

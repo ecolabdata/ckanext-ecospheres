@@ -213,7 +213,7 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
                     regex = f"(territory\s*:\s*[\"]\s*{region}\s*[\"])"
                     # You can manually specify the number of replacements by changing the 4th argument
                     fq = re.sub(regex, '', fq, 0, re.MULTILINE)
-
+        import re
         q = search_params.get('q', '')
         search_params['q'] = re.sub(":\s", " ", q)
 
@@ -236,6 +236,7 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
 
     # ------------- IBlueprint ---------------#
+    
     def _get_territoires(self):
         return {
                 "territoires": VocabularyReader.labels(vocabulary="ecospheres_territory")

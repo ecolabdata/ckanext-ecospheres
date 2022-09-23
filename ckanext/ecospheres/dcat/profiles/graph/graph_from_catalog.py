@@ -60,7 +60,6 @@ def graph_from_catalog(self, catalog_dict, catalog_ref):
 
 
 
-
     # publisher
     pub_agent_name = config.get('ckanext.dcatfrench_config.publisher_name', 'unknown')
     pub_agent_mail = config.get('ckanext.dcatfrench_config.publisher_mail', 'unknown')

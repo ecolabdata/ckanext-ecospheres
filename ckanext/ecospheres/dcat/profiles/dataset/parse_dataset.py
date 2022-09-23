@@ -136,6 +136,7 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     - title: titre
     - comment: Commentaire
     """
+
     """Points de contact"""
     
     _contact_points(self,
@@ -228,13 +229,10 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     # récuperation des listes des themes
     themes=VocabularyReader.themes()
 
-
-
     #liste des mots clés du dataset
     list_keywords=list(self._object_value_list(dataset_ref,DCAT.keyword))
     title = self._object_value(dataset_ref, DCT.title)
     categories=dict()
-    
     
     for theme in themes:
         sous_theme,uri_sous_theme=_check_sous_theme(themes[theme]["child"],list_keywords,title)
@@ -318,16 +316,12 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     
     
 
-
-
     """-------------------------------------------<TERRITORY>-------------------------------------------"""        
 
     ############################################   Etc. ############################################
 
     """-------------------------------------------<access_rights>-------------------------------------------"""        
     _access_rights(self,dataset_ref, DCT.accessRights,dataset_dict)
-
-
 
     """-------------------------------------------<restricted_access>-------------------------------------------"""   
     #TODO: 
@@ -341,8 +335,6 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     _conforms_to(self,dataset_ref, DCT.conformsTo,dataset_dict)
     
     
- 
-
     """-------------------------------------------<language>-------------------------------------------"""        
     _language(self,dataset_ref,DCT.language,dataset_dict)
     
