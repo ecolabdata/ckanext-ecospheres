@@ -827,30 +827,33 @@ def insee_official_geographic_code(name, url, **kwargs):
     relationships = []
 
     for uuid, label in graph.subject_objects(URIRef('http://rdf.insee.fr/def/geo#nom')):
-        result.add_label(uuid, language='fr', label=label)
+        result.add_label(str(uuid), language='fr', label=str(label))
 
-    for uri, language, label in result.data.label:
+    for item in result.data.label:
+        uri = item['uri']
+        label = item['label']
+
         for altlabel in graph.objects(
-            uri, URIRef('http://rdf.insee.fr/def/geo#nomSansArticle')
+            URIRef(uri), URIRef('http://rdf.insee.fr/def/geo#nomSansArticle')
         ):
-            if altlabel != label:
-                result.add_label(uuid, language='fr', label=altlabel)
+            if str(altlabel) != label:
+                result.add_label(uri, language='fr', label=str(altlabel))
         
         for insee_code in graph.objects(
-            uri, URIRef('http://rdf.insee.fr/def/geo#codeINSEE')
+            URIRef(uri), URIRef('http://rdf.insee.fr/def/geo#codeINSEE')
         ):
-            result.add_label(uuid, language='fr', label=insee_code)
+            result.add_label(uri, language='fr', label=str(insee_code))
 
         for parent in graph.objects(
-            uri, URIRef('http://rdf.insee.fr/def/geo#subdivisionDirecteDe')
+            URIRef(uri), URIRef('http://rdf.insee.fr/def/geo#subdivisionDirecteDe')
         ):
-            if not (parent, uri) in relationships:
-                relationships.append((parent, uri))
+            if not (str(parent), uri) in relationships:
+                relationships.append((str(parent), uri))
 
         for code_uri in graph.objects(
-            uri, URIRef('http://www.w3.org/2002/07/owl#sameAs')
+            URIRef(uri), URIRef('http://www.w3.org/2002/07/owl#sameAs')
         ):
-            result.add_label(code_uri, language='fr', label=label)
+            result.add_label(str(code_uri), language='fr', label=label)
 
     for relationship in relationships:
         result.data.hierarchy.add(relationship)
