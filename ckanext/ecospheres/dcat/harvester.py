@@ -80,50 +80,56 @@ class DCATfrRDFHarvester(DCATRDFHarvester):
     
 
     def before_create(self, harvest_object, dataset_dict, temp_dict):
-        
-        spatial=dataset_dict.get("spatial",None)
-        if not spatial:
-            org=self.__get_organization_infos(harvest_object)
-            territories_codes=self._get_territory(org)
-            res=re.match(r'{(.*)}',territories_codes)
-            resultats=res.group(1)
-            #liste des territoires de competence de l'organisation
-            departements=resultats.split(',')
-            # print(departements)
-            territories=[]
-            if departements:
-                for code_dep in departements:
-                    uri,label_territory,_= VocabularyReader.get_territory_by_code_region(code_region=code_dep)
-                    if uri:
+        '''
+        Cette fonction est appellée avant la création d'un jeu de données en base de données.
+        On peut ajouter/supprimer/modifier des métadonnées du jeux de données.
 
-                        territories.append({
-                                            "label":label_territory.strip(), 
-                                            "uri": uri})
-                        #TODO: ajouter algo calculate GeoJSON
-                        # spatial=VocabularyReader.get_territory_spatial_by_code_region(code_region=code_dep)
-            dataset_dict["territory"]=territories
+        '''
+        try:
+            spatial=dataset_dict.get("spatial",None)
+            if not spatial:
+                org=self.__get_organization_infos(harvest_object)
+                territories_codes=self._get_territory(org)
+                res=re.match(r'{(.*)}',territories_codes)
+                resultats=res.group(1)
+                #liste des territoires de competence de l'organisation
+                departements=resultats.split(',')
+                territories=[]
+                if departements:
+                    for code_dep in departements:
+                        uri,label_territory,_= VocabularyReader.get_territory_by_code_region(code_region=code_dep)
+                        if uri:
+
+                            territories.append({
+                                                "label":label_territory.strip(), 
+                                                "uri": uri})
+                            #TODO: ajouter algo calculate GeoJSON
+                            # spatial=VocabularyReader.get_territory_spatial_by_code_region(code_region=code_dep)
+                dataset_dict["territory"]=territories
+        except Exception as e:
+            logger.error("Erreur lors du traitement du champ territory: {}".format(str(e)))
 
         self.__before_create(harvest_object,dataset_dict)
         
     
     def __aggregate(self,dataset_dict,key):
-        urls_aggregated_list=list()
+        urls_aggregated_list=[]
      
         if dataset_dict.get(key):
-            
-            data=dataset_dict[aggregation_mapping[key]]
-            for object in data:
-                id=self.__generate_name(object[IDENTIFIER],object[TITLE])
+            try:
+                data=dataset_dict[aggregation_mapping[key]]
+                for _object in data:
+                    urls_aggregated_list.append(
+                        {
+                            TITLE:_object[TITLE],
+                            URL: self.__generate_name(_object[IDENTIFIER],_object[TITLE]),
+                            IDENTIFIER:_object[IDENTIFIER],
+                        }
+                    )
                 
-                urls_aggregated_list.append(
-                    {
-                        TITLE:object[TITLE],
-                        URL: id,
-                        IDENTIFIER:object[IDENTIFIER],
-                    }
-                )
-                
-            dataset_dict[aggregation_mapping[key]]=urls_aggregated_list
+                dataset_dict[aggregation_mapping[key]]=urls_aggregated_list
+            except Exception as e:
+                logger.error("Erreur lors de la génération de l'url du dataset {}".format(str(e)))
     
     def __before_create(self,harvest_object, dataset_dict):
         
@@ -147,22 +153,26 @@ class DCATfrRDFHarvester(DCATRDFHarvester):
         #if dataset_dict[name] déja généré
         if identifier in identifier_name_map:
             return identifier_name_map[identifier]
-        #génération du dataset_dict[name] 
-        import re
-        if re.match(r'^(https://).*$',identifier):
-            res=re.match(r'^.*\/(.*)$',identifier)
-            if res:
-                id=res.group(1)
-        else:
-            id=title
-        name = HarvesterBase._gen_new_name(id)
-        if not name:
-                raise Exception('Could not generate a unique name '
-                            'from the title or the GUID. Please '
-                            'choose a more unique title.')
-        identifier_name_map[identifier]=name
-        return name
+        try:
+            #génération du dataset_dict[name] 
+            import re
+            if re.match(r'^(https://).*$',identifier):
+                res=re.match(r'^.*\/(.*)$',identifier)
+                if res:
+                    id=res.group(1)
+            else:
+                id=title
+            name = HarvesterBase._gen_new_name(id)
+            if not name:
+                    raise Exception('Could not generate a unique name '
+                                'from the title or the GUID. Please '
+                                'choose a more unique title.')
 
+            identifier_name_map[identifier]=name
+            return name
+
+        except Exception as e:
+            pass
 
 
 

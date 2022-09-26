@@ -77,7 +77,6 @@ def _set_spatial_coverage(self, graph, _dataset_dict, _dataset_ref):
         g.add((sc_node, RDF.type, DCT.Location))
         g.add((_dataset_ref, DCT.spatial, sc_node))
 
-
         if in_scheme:=s_c.get("in_scheme",None):
             g.add((sc_node, SKOS.inScheme, Literal(in_scheme)))
             
@@ -93,7 +92,6 @@ def _set_spatial_coverage(self, graph, _dataset_dict, _dataset_ref):
             for lang in labels:
                 g.add((sc_node, SKOS.prefLabel, Literal(labels[lang],lang=lang)))
             
-        
 
 # PROVENANCE [{*}]
 # > dct:provenance [-> dct:ProvenanceStatement] / rdfs:label
@@ -119,13 +117,11 @@ def _set_category(self, graph, _dataset_dict, _dataset_ref):
     category_dict = self._get_dataset_value(_dataset_dict, 'category')
     if not category_dict:
         return
-
     g=graph
     for theme in category_dict:
         if uri:=theme.get("uri",None):
             qa=URIRef(uri)
             g.add((_dataset_ref, DCAT.theme, qa))
-
 
 def _set_theme(self, graph, _dataset_dict, _dataset_ref):
     theme_dict = self._get_dataset_value(_dataset_dict, 'theme')
@@ -153,11 +149,8 @@ def _set_qualifiedAttribution(self, graph, _dataset_dict, _dataset_ref):
         else:
             qa=BNode()
             
-            
         g.add((qa, RDF.type, PROV.Attribution))
         g.add((_dataset_ref, PROV.qualifiedAttribution, qa))
-
-
 
         for qualifiedAtt in qualified_attribution_dict:
             # HAD_ROLE [{}]
@@ -288,8 +281,8 @@ def _set_crs(self, graph, _dataset_dict, _dataset_ref):
         return
     for _crs in crs_list:
         _crs_node=URIRef(_crs.rstrip('/'))
-        
         g.add((_dataset_ref, DCT.conformsTo, _crs_node))
+
 
 # ACCESS_RIGHTS [{}]
 # > dct:accessRights -> dct:RightsStatement
@@ -329,7 +322,6 @@ def _set_documentation_page(self, graph, _dataset_dict, _dataset_ref):
             else:
                 page_details=BNode()
 
-
             g.add((_dataset_ref, FOAF.page, page_details))
             g.add((page_details, RDF.type, FOAF.Document))
             
@@ -355,8 +347,6 @@ def _set_documentation_page(self, graph, _dataset_dict, _dataset_ref):
             if issued:=page.get(_ISSUED,None):
                 g.add((page_details, DCT.issued, Literal(issued,
                                                   datatype=XSD.dateTime)))
-                
-                
                 
     
     
@@ -399,14 +389,12 @@ def _set_contact_point(self, graph, _dataset_dict, _dataset_ref):
         try:
             for lang in affiliation_dict:
                 g.add((contact_point_details, VCARD.organization, Literal(affiliation_dict[lang], lang=lang)))
-
         except:
             pass
         
     if name_list:=_contact_point_dict.get(_NAME,None):  
         for lang in name_list:
             g.add((contact_point_details,  VCARD.fn, Literal(name_list[lang], lang=lang)))
-
         
     if _contact_point_dict.get(_EMAIL,None):
         g.add((contact_point_details, VCARD.hasEmail, Literal(_contact_point_dict[_EMAIL])))
@@ -417,17 +405,9 @@ def _set_contact_point(self, graph, _dataset_dict, _dataset_ref):
     if _contact_point_dict.get(_URL,None):
         g.add((contact_point_details, VCARD.hasURL, Literal(_contact_point_dict[_URL])))
     
-
-
-
-
-    
-    
 def _clean_lagacy_nodes(g,dataset_ref,predicate):
     for obj in g.objects(dataset_ref, predicate):
         g.remove((dataset_ref, predicate, obj,))
-    
-    
     
 def _set_publisher(self, graph, dataset_dict, dataset_ref):
     """
@@ -509,11 +489,8 @@ def _add_agent(self,g,_dataset_dict,_dataset_ref,predicate,node_type,key):
     _agent_dict = self._get_dataset_value(_dataset_dict, key)
     if not _agent_dict:
         return
-
     for publisher_dict in _agent_dict:
         publisher_details=BNode()
-        
-        
         g.add((publisher_details, RDF.type, node_type))
         g.add((_dataset_ref, predicate, publisher_details))
         
@@ -528,7 +505,6 @@ def _add_agent(self,g,_dataset_dict,_dataset_ref,predicate,node_type,key):
         if name:=publisher_dict.get(_NAME,None): 
             for lang in name:
                 g.add((publisher_details,  FOAF.name, Literal(name[lang], lang=lang)))
-
 
         if publisher_dict.get(_EMAIL,None):
             g.add((publisher_details, FOAF.mbox, Literal(publisher_dict[_EMAIL]))) 
@@ -553,9 +529,8 @@ def _set_temporal_coverage(self, graph, dataset_dict, dataset_ref):
       </dc:PeriodOfTime>
     </dc:temporal>
     """
+    
     g = graph
-    d = dataset_dict
-    #suppression des neouds crées, pour éviter la duplication    
     _clean_lagacy_nodes(g,dataset_ref,DCT.temporal)
 
     temporals = self._get_dataset_value(dataset_dict, 'temporal')

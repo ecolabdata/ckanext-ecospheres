@@ -67,7 +67,18 @@ def _add_multilang_value(self, subject, predicate, dataset_key=None, dataset_dic
 
 
 def graph_from_dataset(self, dataset_dict, dataset_ref):
-    
+        
+        
+    '''
+
+    Étant donné un jeu de données CKAN `dataset_dict`, crée un graphe RDF `dataset_ref`.      
+
+    `dataset_dict` est un dict avec les métadonnées du jeu de données comme celui
+    retournées par `package_show`. `dataset_ref` est un objet rdflib URIRef
+    qui doit être utilisé pour référencer le jeu de données.
+    '''
+
+
     logging.info("Create graph from dataset '%s'" % dataset_dict['name'])
 
     g=self.g
@@ -98,10 +109,7 @@ def graph_from_dataset(self, dataset_dict, dataset_ref):
         # spatial_resolution
         ('spatial_resolution', DCAT.spatialResolutionInMeters, None, Literal),
         
-        # subject
-        ('subject', DCT.subject, None, Literal),
-        
-        # subject
+        # attributes_page
         ('attributes_page', FOAF.page, None, Literal),
         
     ]
@@ -126,11 +134,10 @@ def graph_from_dataset(self, dataset_dict, dataset_ref):
     
     
     ############################################   Littéraux multilangue  ############################################
-    # # description {*}
-    # g.add((_dataset_ref, ADMS.versionNotes, Literal(notes, lang=lang)))
     for obj in g.objects(dataset_ref, DCT.description):
         g.remove((dataset_ref, DCT.description, obj,))
     
+    # description {*}
     if notes_dict:=dataset_dict.get("notes",None):
         for lang in notes_dict:
             g.add((dataset_ref, DCT.description, Literal(notes_dict[lang], lang=lang)))
@@ -139,6 +146,7 @@ def graph_from_dataset(self, dataset_dict, dataset_ref):
     for obj in g.objects(dataset_ref, DCT.title):
         g.remove((dataset_ref, DCT.title, obj,))
     
+    # title {*}
     if title_dict:=dataset_dict.get("title",None):
 
         if isinstance(title_dict,str):
@@ -206,7 +214,6 @@ def graph_from_dataset(self, dataset_dict, dataset_ref):
     """------------------------------------------<attributes_page>------------------------------------------"""
     # ATTRIBUTE_PAGE
     # > foaf:page
-    # [+ DCAT-AP]
     
     
     """------------------------------------------<page>------------------------------------------"""
@@ -233,17 +240,12 @@ def graph_from_dataset(self, dataset_dict, dataset_ref):
     
     _set_theme(self, g , dataset_dict, dataset_ref)
     
-    """------------------------------------------ subject ------------------------------------------"""
-    # > dct:subject
 
 
     """------------------------------------------ free_tags ------------------------------------------"""
     # FREE_TAG [{*}]
     # > dcat:keyword
     
-    #pas tres clair pour l'instant Cf. ecospheres_dataset_schema.yaml
-    
-
 
     
     ############################################   Métadonnées sur les métadonnées   ############################################

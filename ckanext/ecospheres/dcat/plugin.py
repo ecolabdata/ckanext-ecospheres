@@ -28,15 +28,22 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
     
     
     # ------------- IClick ---------------#
+
     def get_commands(self):
         return ecospherefr_cli.get_commands()
     
     
     # ------------- IConfigurer ---------------#
     def get_helpers(self):
-        '''Register the functions above as a template
-        helper functions.
+
         '''
+        Enregistrement des fonctions comme helpers functions utilisé dasn la partie front.
+        l'appel à ses fonction se fait de la manière suivante: 
+
+        {{ h.function_name( param1=value1,param1=value2) }}
+
+        '''
+
         return {
                 'fr_dcat_json_string_to_object_aggregated_ressources':helpers.json_string_to_object_aggregated_ressources,
                 'fr_dcat_aggregated_package_name_to_title':helpers.aggregated_package_name_to_title,
@@ -49,53 +56,41 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
                 }
 
     # ------------- IValidators ---------------#
+
     def get_validators(self):
         return {
             'timestamp_to_datetime': v.timestamp_to_datetime,
             'multilingual_text_output': v.multilingual_text_output,
         }
 
+
     # ------------- IFacets ---------------#
 
     def dataset_facets(self, facets_dict, package_type):
-        """_summary_
+        """
         Cette fonction permet de specifier les filtres à appliquer aux jeux de données.
         Example:  facets_dict['category'] = plugins.toolkit._('Thématiques') -> permet d'ajouter un filtre sur le champ
         indexé "category"
-        NB: On ne peut ajouter que des champ indexé par solr. Pour ajouter un filtre 
+        NB: On ne peut ajouter que des champ indexé par solr.
 
         """
         facets_dict = collections.OrderedDict()
-        facets_dict['organization'] = plugins.toolkit._('Organisations')
-        facets_dict['category'] = plugins.toolkit._('Thématiques')
-        facets_dict['territory'] = plugins.toolkit._('Territoires')
+        facets_dict['organization'] = plugins.toolkit._('Organizations')
+        facets_dict['category'] = plugins.toolkit._('Category')
+        facets_dict['territory'] = plugins.toolkit._('Territory')
         facets_dict['res_format'] = plugins.toolkit._('Formats')
         
         return facets_dict
 
 
-    def group_facets(self, facets_dict, group_type, package_type):
-        # clear the dict instead and change the passed in argument
-        facets_dict['organization'] = plugins.toolkit._('Organizations')
-        facets_dict['political_level'] = plugins.toolkit._('Political levels')
-        facets_dict['res_rights'] = plugins.toolkit._('Terms of use')
-        facets_dict['res_format'] = plugins.toolkit._('Formats')
-        return facets_dict
-
-    def organization_facets(self, facets_dict, organization_type,
-                            package_type):
-        facets_dict['groups'] = plugins.toolkit._('Categories')
-        facets_dict['keywords_' + lang_code] = plugins.toolkit._('Keywords')
-        facets_dict['res_rights'] = plugins.toolkit._('Terms of use')
-        facets_dict['res_format'] = plugins.toolkit._('Formats')
-        return facets_dict
-
-
     def before_index(self, search_data):
-        """_summary_
-        Cette fonction est appelé avant qu"un jeux de données ne soit indexé.
-        On peut choisir quels champs indexer en les ajoutant à search_data
+
         """
+        Cette fonction est appelée avant qu'un jeux de données ne soit indexé.
+        Elle permet de modifier les données indexées par le moteur de recherche Solr.
+        Pour ce faire, il faut ajouter la données à indexer dans le dictionnaire search_data
+        """
+
         validated_dict = json.loads(search_data['validated_data_dict'])
         if categories:=validated_dict.get("category",None):
             search_data["category"]=[categorie["theme"] for categorie in categories]
@@ -123,106 +118,173 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
     
     def before_search(self, search_params):
-        """_summary_
-        Cette fonction permet d'intercepter la requete avant de faire une recherche pour enrichir les paramtres de recherche,
-        dans ce cas ci, on extrait les dates de début et de fin pour les ajouter au champ fq qui sera interpreté par le moteur de recherche
-        solr
+        
+        
+        """
+        Cette fonction permet d'intercepter la reqûete avant de faire une recherche pour ajouter/modifier/enrichir des paramètres de recherche,
         A noter, pour ajouter des paramtres extra à une requetes dans CKAN et les recuperer avec la clé "extras", il faut préfixer le nom du paramtres par "ext_"
         """
+
+        """ Filtre par organistion 
+
+
+        Par défaut, lorsqu'on veut filter les jeux de données par plus d'une organisation, CKAN utilise l'opération AND.
+        Par consequent, comme dans notre cas Ecosphere, un jeu de données n'appartient qu'à une seule organisation, le moteur d'indexation ne remontera aucun résultat
+        Donc pour récuperer les jeux de données appartenant aux organisations présentes dans le reqûete, il faut modifier cette reqûete qui envoyée au moteur Solr pour qu'il applique l'opérateur OR. 
+
+        q=organization:"organisation_1"+organization:"organisation_2" deviendra: q=organization:"organisation_1" OR organization:"organisation_2" 
+
+        """
         
-        #-----------------------------------------filtrer par date -------------------------------
-        # /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z&ext_enddate=2023-07-20T11:48:38.540Z
-        # /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z
-        # /dataset/?q=&ext_enddate=2022-07-20T11:48:38.540Z
-        # ?q=&ext_startdate=2022-06-21T00:00:00Z&ext_enddate=NOW
-        
-        #-----------------------------------------filtrer par données à accès resteint -------------------------------
-        #/?q=&ext_restricted_access=true
-        #/?q=&ext_restricted_access=false
-
-        #-----------------------------------------filtrer par inclusion des subdivision et comme paramètre territory: un région -------------------------------
-        #/dataset/?q=&ext_include_subdivision=true&territory=Nouvelle-Aquitaine
-        
-
-        extras= search_params.get("extras",None)
-        if not extras:
-            return search_params
-        
-        restricted_access=extras.get("ext_restricted_access",None)
-        include_subdivision=extras.get("ext_include_subdivision",None)
-        start_date=extras.get("ext_startdate",None)
-        end_date=extras.get("ext_enddate",None)
-
-
-        if not start_date and not end_date and not restricted_access  and not include_subdivision:
-            return search_params
-
         fq = search_params['fq']
-        
-        """ Dates """
-        if start_date or end_date:
-            
-            if not start_date :
-                start_date="*"
-            
-            if not end_date:
-                end_date="NOW"
-                
-            fq = '{fq} +modified:[{start_date} TO {end_date}]'.format(
-                                    fq=fq, start_date=start_date, end_date=end_date)
-        
-        """ restricted_access """
-        if restricted_access is not None:
-            fq = '{fq} +extras_restricted_access:{restricted_access}'.format(
-                                    fq=fq, restricted_access=restricted_access)
 
 
-
-        """ include_subdivision """
-        if include_subdivision == "true":
-            #Si inclusion des subdivisions
-            import re
-            territoires=[]
-            regex = r"territory\s*:\s*[\"]((\w*\s*[-]*)*)[\"]"
-
-            matches = re.finditer(regex, search_params['fq'], re.MULTILINE)
-
-            for matchNum, match in enumerate(matches, start=1):
-                territoires.append(match.group(1))
-
-            territoires_hierarchy=VocabularyReader._get_territories_by_hierarchy()
-            list_subdivisions=[]
-            regions_in_query=[]
-            for code_region in territoires_hierarchy['régions-métrople']:
-                if territoires_hierarchy['régions-métrople'][code_region]["name"] in territoires:
-                    regions_in_query.append(territoires_hierarchy['régions-métrople'][code_region]["name"])
-                    list_subdivisions=[dept["name"] for dept in territoires_hierarchy["depts_by_region"][code_region]]
-            
-            if list_subdivisions:
-                query=''
-                op=''
-                for subdivision in list_subdivisions:
-                    if query:
-                        op='OR'
-                    query=f'{query} {op} territory:"{subdivision}"'.format(query=query,subdivision=subdivision)
-                fq=f'{fq}{query.strip()}'
-
-            if regions_in_query:
-                #on supprime le filtre region de la requête 
-                for region in regions_in_query:
-                    regex = f"(territory\s*:\s*[\"]\s*{region}\s*[\"])"
-                    # You can manually specify the number of replacements by changing the 4th argument
-                    fq = re.sub(regex, '', fq, 0, re.MULTILINE)
         import re
-        q = search_params.get('q', '')
-        search_params['q'] = re.sub(":\s", " ", q)
+        regex_orgs = r"([+]*organization\s*:\s*\"([^\"]*)\")"
+        matches = re.finditer(regex_orgs, fq, re.MULTILINE)
+        list_organizations=[]
+        for _, match in enumerate(matches, start=1):
+            list_organizations.append(match.group(2))
+        if list_organizations:
+            fq = re.sub(regex_orgs, "", fq, 0, re.MULTILINE)
+            query=''
+            op=''
+            for org in list_organizations:
+                if query:
+                    op='OR'
+                query=f'{query} {op} organization:"{org}"'
+            if len(fq.strip()) > 0:
+                query=f'{query} OR'
+            fq=f'{fq.strip()} {query.strip()}'
+
+
+
+
+        """ Filtre par territoires """ 
+
+        territoires=[]
+        import re
+        regex_territory=  r"([+]*territory\s*:\s*\"([^\"]*)\")"
+        matches = re.finditer(regex_territory, fq, re.MULTILINE)
+        for _, match in enumerate(matches, start=1):
+            territoires.append(match.group(2))
+
+        fq = re.sub(regex_territory, "", fq, 0, re.MULTILINE)
+        if territoires:
+            territoires_hierarchy=VocabularyReader._get_territories_by_hierarchy()
+            regions={value['name'] : key_region  for key_region,value in territoires_hierarchy['régions-métrople'].items()}
+            regions_names_set=set(regions.keys())
+            regions_sub_to_add=regions_names_set.intersection(set(territoires))
+            if regions_sub_to_add:
+                include_subdivision=None
+
+                """ include_subdivision 
+
+                Si la valeur du paramètre 'ext_include_subdivision' est à 'true', on va alors inclure les subdivisions des territoires inclus dans la reqûete, plui concretement si
+                le filtre territoire inclue une region et ext_include_subdivision=true alors on va rechercher tous les jeux de données appartenant aux départements de la région.
+
+                /dataset/?q=&ext_include_subdivision=true&territory=Nouvelle-Aquitaine
+
+                """
+                try: 
+                    extras=search_params.get("extras",None)
+                    include_subdivision=extras.get("ext_include_subdivision",None)
+                except:
+                    pass
+
+                if include_subdivision == "true":
+                    list_subdivisions=[]
+                    regions_keys=[regions[region_name] for region_name in regions_sub_to_add]
+                    for code_region in regions_keys:
+                        list_subdivisions+=[dept["name"] for dept in territoires_hierarchy["depts_by_region"][code_region]]
+                    
+                    if list_subdivisions:
+                        territoires+=list_subdivisions
+
+            query=''
+            op=''
+            for territoire in territoires:
+                if query:
+                    op='OR'
+                query=f'{query} {op} territory:"{territoire}"'
+            fq=f'{fq} {query.strip()}'
+
+
+
+        if extras:=search_params.get("extras",None):
+            """
+            Le schèma de search_params est :
+                {
+                    'extras': {}, 
+                    'facet.field': ['organization', 'category', 'territory', 'res_format'],
+                    'fq': '', 
+                    'q': '', 
+                    'rows': 20,
+                    'start': 0,
+                    'include_private': True, 
+                    'df': 'text'
+                }
+
+            Pour récuperer des paramètres supplémentaires, il faut utiliser le champ "extras". 
+            pour récuperer un paramètre dans 'extras', il faut préfixer le nom du paramètre par 'ext_': 
+                exemple:   reqûete http: dataset/q=&ext_param=param_value
+                           before_search: ext_param = search_params["extras"][ext_param"]
+            
+            """
+        
+            restricted_access=extras.get("ext_restricted_access",None)
+            start_date=extras.get("ext_startdate",None)
+            end_date=extras.get("ext_enddate",None)
+
+
+
+            """ filter par dates de mise à jour 
+            
+            /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z&ext_enddate=2023-07-20T11:48:38.540Z
+            /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z
+            /dataset/?q=&ext_enddate=2022-07-20T11:48:38.540Z
+
+            """
+
+            if start_date or end_date:
+                
+                if not start_date :
+                    start_date="*"
+                
+                if not end_date:
+                    end_date="NOW"
+                    
+                fq = '{fq} +modified:[{start_date} TO {end_date}]'.format(
+                                        fq=fq, start_date=start_date, end_date=end_date)
+            
+            """ filtrer par données à accès resteint
+            
+            /?q=&ext_restricted_access=true
+            /?q=&ext_restricted_access=false
+
+            """
+            if restricted_access is not None:
+                fq = '{fq} extras_restricted_access:{restricted_access} '.format(
+                                        fq=fq, restricted_access=restricted_access)
+            import re
+            q = search_params.get('q', '')
+            search_params['q'] = re.sub(":\s", " ", q)
+
+
 
         search_params['fq'] = fq
         return search_params
     
 
+    
+
 
     def after_search(self,search_results, search_params):
+        '''
+        Cette fonction est appellé après qu'un resultat soit renvoyé de l'indexateur Solr.
+        On peut ajouter/modifier/supprimer des données avant qu'elles ne soient transmises vers le front
+        
+        '''
         search_dicts = search_results.get('results', [])
         for _dict in search_dicts:
             _dict_resources = _dict.get('resources', None)

@@ -69,7 +69,14 @@ log = logging.getLogger(__name__)
 
 
 def parse_dataset(self, dataset_dict, dataset_ref):
-
+    '''
+    Crée un jeu de données CKAN dict à partir du graphe RDF `dataset_ref`.
+    
+    Retourne un dict `dataset_dict` de données qui peut être passé à `package_create`.
+        ou `package_update`.
+    '''
+    
+    
     """------------------------------------------<Littéraux>------------------------------------------"""
 
     for key, predicate in (
@@ -126,18 +133,6 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     ############################################   Organisations  ############################################
     
     """-------------------------------------------<contact_point>-------------------------------------------"""        
-    """ champs communs à [contact_point, publisher, creator, rights_holder] 
-    - name: Nom
-    - type: type
-    - email: Courriel
-    - phone: Téléphone
-    - url: Site internet
-    - acronym: Sigle
-    - title: titre
-    - comment: Commentaire
-    """
-
-    """Points de contact"""
     
     _contact_points(self,
         dataset_ref,
@@ -178,8 +173,7 @@ def parse_dataset(self, dataset_dict, dataset_ref):
 
     
     ############################################   Relations  ############################################
-    """-------------------------------------------<in_series>-------------------------------------------"""        
-    """-------------------------------------------<serie_datasets>-------------------------------------------"""        
+    """-------------------------------------------<serie_datasets,in_series>-------------------------------------------"""        
     """ 
         in_series: isPartOf (Inclus dans les séries de données)
         serie_datasets: hasPart (Jeux de données de la série)
@@ -197,13 +191,6 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     """
     landing_page: Accès à la fiche sur le catalogue source
     attributes_page: Lien de la page où sont décrits les champs du jeu de données.
-    page: Documentation
-        -> uri: URL
-        -> title:Titre
-        -> Description: Description
-        -> modified: Date de modification
-        -> created: Date de création
-        -> issued: Date de publication
     """
     
     for key, predicate in (
@@ -219,6 +206,16 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     
     
     """-------------------------------------------<page>-------------------------------------------"""        
+    '''
+    page: Documentation
+        -> uri: URL
+        -> title:Titre
+        -> Description: Description
+        -> modified: Date de modification
+        -> created: Date de création
+        -> issued: Date de publication
+
+    '''
     _get_documentation_dict(self,dataset_ref,dataset_dict,FOAF.page)
     
 
@@ -226,10 +223,8 @@ def parse_dataset(self, dataset_dict, dataset_ref):
 
 
     ############################################   Thèmes et mots clés  ############################################
-    # récuperation des listes des themes
     themes=VocabularyReader.themes()
 
-    #liste des mots clés du dataset
     list_keywords=list(self._object_value_list(dataset_ref,DCAT.keyword))
     title = self._object_value(dataset_ref, DCT.title)
     categories=dict()
@@ -254,14 +249,6 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     """-------------------------------------------<category>-------------------------------------------"""        
 
     # CATEGORY []
-    # > dcat:theme
-    # - pour le premier niveau de thèmes de la nomenclature du guichet
-    # - déduit de "theme", "subject" et "free_tag" lors du moissonnage
-    # - stockage sous forme d'une liste d'URI (appartenant au registre
-    #   du guichet)
-    # - les étiquettes des URI seraient à mapper sur la propriété
-    #   "tags" lors du moissonnage
-    
     if categories:
         dataset_dict["category"]=list(categories.values())
 
@@ -271,14 +258,6 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     themes=[]
     # THEME []
     # > dcat:theme
-    # - pour les nomemclatures externes, notamment celle de la commission
-    #   européenne et la nomenclature INSPIRE
-    # - mapper dct:subject vers cette propriété (utilisé dans GeoDCAT-AP v2
-    #   pour les catégories ISO)
-    # - stockage sous la forme d'une liste d'URI
-    # - les étiquettes des URI seraient à mapper sur la propriété
-    #   "tags" lors du moissonnage
-
     themes_dataset=list(self._object_value_list(dataset_ref,DCAT.theme))
     if themes_dataset:
         for t in themes_dataset:
@@ -313,7 +292,6 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     
     """-------------------------------------------<spatial_coverage>-------------------------------------------"""        
     _spatial_coverage(self,dataset_ref, DCT.spatial,dataset_dict)
-    
     
 
     """-------------------------------------------<TERRITORY>-------------------------------------------"""        

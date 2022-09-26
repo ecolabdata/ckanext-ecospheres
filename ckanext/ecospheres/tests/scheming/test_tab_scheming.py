@@ -13,5 +13,3 @@ def _get_schema(schema_name):
 
 def test_get_schema_tab():
     assert get_fields_by_tab()
-
-

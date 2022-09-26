@@ -37,6 +37,32 @@ aggregation_mapping={
     _IS_PART_OF: "in_series",
     _HAS_PART: "series_member",
 }
+def _object_value_multilang(self, subject, predicate, multilang=False):
+    '''
+    Given a subject and a predicate, returns the value of the object
+    Both subject and predicate must be rdflib URIRef or BNode objects
+    If found, the unicode representation is returned, else None
+    '''
+    default_lang = 'fr'
+    lang_dict = {}
+    for o in self.g.objects(subject, predicate):
+        if multilang and o.language:
+            lang_dict[o.language] = str(o)
+            lang_dict[o.language] = str(o)
+        elif multilang:
+            lang_dict[default_lang] =str(o)
+        else:
+            return str(o)
+    if multilang:
+        # when translation does not exist, create an empty one
+        for lang in get_langs():
+            if lang not in lang_dict:
+                if value_in_french:=lang_dict.get(default_lang, None):
+                    lang_dict[lang] = value_in_french
+
+    __values=sum([bool(lang_dict[key]) for key in lang_dict]) == 0
+    return None if __values else lang_dict
+    
 
 def _strip_uri( value, base_uri):
         return value.replace(base_uri, '')
@@ -85,32 +111,6 @@ def _tags_keywords(self, subject, predicate,dataset_dict):
         dataset_dict["keywords"] = keywords
         dataset_dict["free_tags"] = keywords
 
-def _object_value_multilang(self, subject, predicate, multilang=False):
-    '''
-    Given a subject and a predicate, returns the value of the object
-    Both subject and predicate must be rdflib URIRef or BNode objects
-    If found, the unicode representation is returned, else None
-    '''
-    default_lang = 'fr'
-    lang_dict = {}
-    for o in self.g.objects(subject, predicate):
-        if multilang and o.language:
-            lang_dict[o.language] = str(o)
-            lang_dict[o.language] = str(o)
-        elif multilang:
-            lang_dict[default_lang] =str(o)
-        else:
-            return str(o)
-    if multilang:
-        # when translation does not exist, create an empty one
-        for lang in get_langs():
-            if lang not in lang_dict:
-                if value_in_french:=lang_dict.get(default_lang, None):
-                    lang_dict[lang] = value_in_french
-
-    __values=sum([bool(lang_dict[key]) for key in lang_dict]) == 0
-    return None if __values else lang_dict
-    
 
 def _version_notes(self, subject, predicate,dataset_dict):
     value=_object_value_multilang(self, subject, predicate, multilang=True)
@@ -180,7 +180,6 @@ def _access_rights(self, subject, predicate,dataset_dict):
         dataset_dict['access_rights']= access_rights_list
 
 
-
 def _spatial_coverage(self, subject, predicate,dataset_dict):
     spatial_coverage_list=[]
     for attr in self.g.objects(subject, predicate):
@@ -189,7 +188,6 @@ def _spatial_coverage(self, subject, predicate,dataset_dict):
                 ("label",SKOS.prefLabel) ,
                 ("identifier",DCT.identifier) ,
                 ("in_scheme",SKOS.inScheme) ,
-                
             ):
             if key == "label":
                 value=_object_value_multilang(self, attr, _predicate, multilang=True)
@@ -204,8 +202,6 @@ def _spatial_coverage(self, subject, predicate,dataset_dict):
             
             if value:
                 spatial_coverage_dict[key]=value
-
-
 
         spatial_coverage_dict["uri"]=str(attr)
         if spatial_coverage_dict:
@@ -249,7 +245,6 @@ def _bbox_spatial(self, subject, predicate,dataset_dict):
             value=self._object_value(attr, _predicate)
             if value:
                 res=value
-
     if res:
         dataset_dict['bbox']=res
 
@@ -358,8 +353,6 @@ def _contact_points(self, subject, predicate,dataset_dict,return_value=False):
                 _value=_object_value_multilang(self, contact_node, _predicate, multilang=True)
                 if _value:
                     contact_points_dict[key] = _value
-                    
-            
                     
             contact_points_list.append(contact_points_dict)
         if return_value:
