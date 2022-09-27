@@ -14,7 +14,7 @@ from ckanext.harvest.harvesters.base import HarvesterBase
 from ckanext.ecospheres.spatial.utils import (
     build_dataset_dict_from_schema, bbox_geojson_from_coordinates,
     bbox_wkt_from_coordinates, build_attributes_page_url,
-    build_catalog_page_url
+    build_catalog_page_url, extract_scheme_and_identifier
 )
 from ckanext.ecospheres.spatial.maps import ISO_639_2
 
@@ -270,6 +270,48 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 dataset_dict.set_value('spatial', geojson)
 
         # spatial_coverage
+        iso_extents = (
+            iso_values.get('extent-free-text', [])
+            + iso_values.get('extent-controlled', [])
+        )
+        # extent-controlled is defined in ckanext-spatial's model, but
+        # doesn't have any associated search path for now. It's added
+        # here in case future updates put it to use.
+        
+        for iso_extent in iso_extents:
+            if VocabularyReader.is_known_uri(
+                'eu_administrative_territory_unit', iso_extent
+                ):
+                # actually the less likely vocabulary to be found
+                # in INSPIRE catalogs, but it's much smaller, so
+                # it makes sense to try it first.
+                spatial_coverage_uri = iso_extent
+            elif VocabularyReader.is_known_uri(
+                'insee_official_geographic_code', iso_extent
+                ):
+                spatial_coverage_uri = iso_extent
+            else:
+                extent_scheme, extent_id = extract_scheme_and_identifier(iso_extent)
+                spatial_coverage_uri = VocabularyReader.get_uri_from_label(
+                        'insee_official_geographic_code', extent_id
+                    )
+            if spatial_coverage_uri:
+                spatial_coverage_dict = dataset_dict.new_item('spatial_coverage')
+                spatial_coverage_dict.set_value('uri', spatial_coverage_uri)
+            elif extent_scheme:
+                if VocabularyReader.is_known_uri(
+                    'insee_gazetteer', extent_scheme
+                ):
+                    spatial_coverage_dict = dataset_dict.new_item('spatial_coverage')
+                    spatial_coverage_dict.set_value('in_scheme', extent_scheme)
+                    spatial_coverage_dict.set_value('identifier', extent_id)
+                # if the gazetteer can't be recognized either, the info is lost
+            else:
+                # whatever it is, it's not an URI, so should hopefully be readable
+                # by a human being.
+                spatial_coverage_dict = dataset_dict.new_item('spatial_coverage')
+                spatial_coverage_dict.set_value('label', extent_id)
+
         # territory
 
         # --- relations ---
