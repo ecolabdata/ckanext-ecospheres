@@ -203,5 +203,35 @@ def build_attributes_page_url(
         if is_valid_url(url):
             return url
 
-    
+def extract_scheme_and_identifier(uri_or_label):
+    """Extract the scheme and the significant part of a concept URI.
+
+    The identifier is assumed to be the last part of the
+    URI, separated from the scheme by one of ``'#'``, ``':'``
+    or ``'/'``.
+
+    Parameters
+    ----------
+    uri_or_label : str
+        Maybe a concept URI, anyway some kind of string.
+
+    Returns
+    -------
+    tuple
+        A two elements tuple. The first one is
+        the scheme, the second the identifier.
+        If the provided string wasn't an URL or any
+        basic kind of URI (separator ``'#'``, ``':'`` or
+        ``'/'``), it is return unchanged as an identifier,
+        while the scheme element will be ``None``.
+
+    """
+    for s in ('#', ':', '/'):
+        if s in uri_or_label:
+            l = uri_or_label.rsplit(s, maxsplit=1)
+            return tuple(l)
+    return (None, uri_or_label)
+
+
+
 
