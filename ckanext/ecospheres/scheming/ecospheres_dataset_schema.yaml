@@ -40,8 +40,8 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       label:
         fr:  URL
         en:  URL
-      display_snippet: link.html
-      display_property: skos:prefLabel
+      # display_snippet: link.html
+      # display_property: skos:prefLabel
       value_type: uri
       known_values: require
       vocabularies:
@@ -1399,6 +1399,7 @@ resource_fields:
   # TODO: Ajouter un display_snippet qui gère à la fois les
   # listes de valeurs et l'affichage des hyperliens
   preset: url
+  display_snippet: url_access.html
   multiple_values: True
   value_type: uri
 
@@ -1442,7 +1443,8 @@ resource_fields:
   label: 
     fr: Format (registre IANA)
     en: Media type
-  value_type: node or uri
+    value_type: node or uri
+    display_snippet: format_fr.html
   <<: *media_type_fields
 
 # OTHER_FORMAT [{}]
@@ -1452,6 +1454,7 @@ resource_fields:
     fr: Autres formats
     en: Format
   value_type: node or uri
+  display_snippet: format_fr.html
   <<: *media_type_fields
 
 # FORMAT []
@@ -1465,6 +1468,7 @@ resource_fields:
     en: Format
   multiple_values: True
   value_type: literal
+  display_snippet: format_fr.html
   # display_snippet: resource_format_autocomplete
   preset: url
 
@@ -1508,6 +1512,7 @@ resource_fields:
     en: Licence
   help_text: Conditions d'utilisation de la ressource.
   value_type: node or uri
+  display_snippet: licence_fr.html
   repeating_subfields:
   # URI
   - field_name: uri
@@ -1519,6 +1524,7 @@ resource_fields:
     vocabularies:
       - eu_licence
       - spdx_license
+    
     # display_snippet: link.html
     # display_property: skos:prefLabel
     # TODO: ajouter un display_snippet basé semblable à link mais capable

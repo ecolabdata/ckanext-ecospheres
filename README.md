@@ -122,6 +122,15 @@ To install ckanext-ecospheres:
                                 ckanext.scheming:presets.json
                                 ckanext.fluent:presets.json
 
+
+
+    - Set spatial 
+            ckanext.spatial.harvest.continue_on_validation_errors = True
+            ckanext.spatial.common_map.type = custom
+            ckanext.spatial.common_map.custom.url = https://wxs.ign.fr/decouverte/geoportail/wmts?service=WMTS&request=GetTile&version=1.0.0&tilematrixset=PM&tilematrix={z}&tilecol={x}&tilerow={y}&layer=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&format=image/png&style=normal
+            ckanext.spatial.common_map.attribution = "IGN-F/Géoportail"                                                                                                                                  
+            ckan.datasets_per_page = 5     
+
 <br>
 
 5. Enable the dcatfrench profile adding the following configuration property in the production.ini file:

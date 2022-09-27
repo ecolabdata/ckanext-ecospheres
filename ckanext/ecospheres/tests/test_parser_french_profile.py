@@ -22,11 +22,7 @@ assert_true = nose.tools.assert_true
 
 class BaseParseTest(object):
 
-    # def _extras(self, dataset):
-    #     extras = {}
-    #     for extra in dataset.get('extras'):
-    #         extras[extra['key']] = extra['value']
-    #     return extras
+
 
 
         

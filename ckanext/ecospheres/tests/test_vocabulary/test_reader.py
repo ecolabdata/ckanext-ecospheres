@@ -211,3 +211,6 @@ class TestGetEcosphereTerritory(object):
         territoies_hierarchy=VocabularyReader._get_territories_by_hierarchy()
         assert territoies_hierarchy
     
+    def test_get_territory_(self):
+        label_dict=VocabularyReader.is_known_uri(vocabulary="eu_licence",uri="https://www.etalab.gouv.fr/licence-ouverte-open-licence")
+        print(label_dict)

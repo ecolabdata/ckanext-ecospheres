@@ -1,45 +1,17 @@
 import datetime
 import logging
+from ckan.lib.helpers import lang
 import ckan.model as model
+import json 
 from ckan.lib.helpers import *
 from ckan.lib.formatters import localised_nice_date
 from dateutil.parser import parse, ParserError
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
+import sys
+import logging
+logger = logging.getLogger(__name__)
 
-dateformats = [
-    '%d-%m-%Y',
-    '%Y-%m-%d',
-    '%d-%m-%y',
-    '%Y-%m-%d %H:%M:%S',
-    '%d-%m-%Y %H:%M:%S',
-    '%Y-%m-%dT%H:%M:%S',
-    '%Y-%m-%dT%H:%M:%S.%f'
-]
-log = logging.getLogger(__name__)
-
-def format(value, _format='%d-%m-%4Y', _type=None):
-    # #################################################
-    # TODO: manage here other formats if needed
-    #      (ie. for type text, other date formats etc)
-    # #################################################
-    if _format and _type:
-        if _type == 'date':
-            date = None
-            for dateformat in dateformats:
-                date = validate_dateformat(value, dateformat)
-
-                if isinstance(date, datetime.date):
-                    try:
-                        date = date.strftime(_format)
-                        return date
-                    except ValueError as err:
-                        log.warning('cannot reformat %s value (from %s) to %s format: %s',
-                                    date, value, _format, err, exc_info=err)
-                    return value
-        if _type == 'text':
-            return value
-
-    return value
+LANGUAGES = {'fr', 'en'}
 
 def validate_dateformat(date_string, date_format):
     try:
@@ -48,7 +20,6 @@ def validate_dateformat(date_string, date_format):
     except ValueError:
         log.debug('Incorrect date format {0} for date string {1}'.format(date_format, date_string))
         return None
-import json 
 def json_string_to_object_aggregated_ressources(json_string): 
     try:
         data= json.loads(json_string)
@@ -57,7 +28,6 @@ def json_string_to_object_aggregated_ressources(json_string):
         print('Unrecognized JSON')
         return None
 
-import sys
 
 def aggregated_package_name_to_title(row_data):
     name=row_data["identifier"]
@@ -70,9 +40,6 @@ def aggregated_package_name_to_title(row_data):
 
 
 
-LANGUAGES = {'fr', 'en'}
-from ckan.lib.helpers import lang
-import json
 
 
 def get_localized_value_from_dict(value, lang_code, default=''):
@@ -87,7 +54,6 @@ def get_localized_value_from_dict(value, lang_code, default=''):
         return desired_lang_value
     return localize_by_language_order(value, default)
 
-
 def get_localized_value_for_display(value):
     lang_code = lang()
     if isinstance(value, dict):
@@ -98,8 +64,6 @@ def get_localized_value_for_display(value):
     except ValueError:
         return value
 
-
-
 def localize_by_language_order(multi_language_field, default=''):
     """localizes language dict if no language is specified"""
     if multi_language_field.get('fr'):
@@ -108,8 +72,6 @@ def localize_by_language_order(multi_language_field, default=''):
         return multi_language_field['en']
     else:
         return default
-    
-    
     
     
 

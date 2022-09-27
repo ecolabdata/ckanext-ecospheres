@@ -24,15 +24,28 @@ REGEX_PATTERN_ECOSPHERE_REGEX = r'.*ecospheres_theme_regexp.*'
 logger = logging.getLogger(__name__)
 
 
+try:
+    DB=os.environ.get("CKAN_SQLALCHEMY_URL")
+except:
+    raise ValueError("CKAN_SQLALCHEMY_URL is missing")
 
 
-engine = create_engine(os.environ.get("CKAN_SQLALCHEMY_URL"))
+# engine = create_engine(DB)
 metadata = MetaData()
-DB=os.environ.get("CKAN_SQLALCHEMY_URL")
 
 @contextmanager
 def Session(database):
 
+    """Return SQLAchemy Session Object
+        
+        Parameters
+        ----------
+        database : str
+            postgreSQL CKAN URI        
+        Returns
+        -------
+        Session
+    """
     try:
         Session = scoped_session(sessionmaker(
             bind=create_engine(database)))
@@ -48,6 +61,16 @@ def Session(database):
 
 
 def _get_generic_schema(table_name):
+    """Return Generic SQL Table for given table name
+        
+        Parameters
+        ----------
+        table_name : str
+
+        Returns
+        -------
+        Table: sqlalchemy.Table
+    """
     return Table(table_name, metadata,
                         Column('id', Integer, primary_key=True),
                         Column('uri', String, nullable=True),
@@ -56,13 +79,38 @@ def _get_generic_schema(table_name):
                         extend_existing=True,
                     )
 
+
+
+
 def _get_hierarchy_schema_table(table_name):
+    """Return hierarchy SQL Table for given table name
+        
+        Parameters
+        ----------
+        table_name : str
+
+        Returns
+        -------
+        Table: sqlalchemy.Table
+    """
     return Table(table_name, metadata,
                         Column('parent', String),
                         Column('child', String),
                         extend_existing=True,
                     )
+
+
 def _get_regex_schema_table(table_name):
+    """Return regex theme SQL Table for given table name
+        
+        Parameters
+        ----------
+        table_name : str
+
+        Returns
+        -------
+        Table: sqlalchemy.Table
+    """
     return Table(table_name, metadata,
                         Column('uri', String),
                         Column('regexp', String),
@@ -70,6 +118,16 @@ def _get_regex_schema_table(table_name):
                     )
 
 def _get_spatial_schema_table(table_name):
+    """Return territory spatial data theme SQL Table  for given table name
+        
+        Parameters
+        ----------
+        table_name : str
+
+        Returns
+        -------
+        Table: sqlalchemy.Table
+    """
     return Table(table_name, metadata,
                         Column('uri', String),
                         Column('westlimit', String),
@@ -79,7 +137,17 @@ def _get_spatial_schema_table(table_name):
                         extend_existing=True,
     )
 
-def __create_generique_label_schema_table(table_name,table_schema,data):
+def __create_table_and_load_data(table_name,table_schema,data):
+    """Return territory spatial data theme SQL Table 
+        
+        Parameters
+        ----------
+        table_name : str
+
+        Returns
+        -------
+        Table: sqlalchemy.Table
+    """
     try:
         with Session(database=DB) as s:
             try:
@@ -106,6 +174,8 @@ def __create_generique_label_schema_table(table_name,table_schema,data):
 
 
 def load_vocab():
+    """ Create table schema and load data for given vocabularies from vocabularies.yaml 
+    """
 
     for name in VocabularyIndex.names():       
         try:
@@ -113,8 +183,11 @@ def load_vocab():
             if not vocab_data:
                 raise Exception(f"Erreur lors du chargement du vocabulaire {name}")
                 continue
+
             for table_name in vocab_data.keys():
                 
+                #les tables echosphere spatial, echosphere_hierarchy et echosphere_regex ont des schemas de données differents.
+                #donc il faut les gérer individuellement. 
                 if re.match(REGEX_PATTERN_ECOSPHERE_SPATIAL,table_name):
                     _table=_get_spatial_schema_table(table_name)
                 elif re.match(REGEX_PATTERN_ECOSPHERE_HIERARCHY,table_name):
@@ -124,8 +197,10 @@ def load_vocab():
                 else:
                     _table = _get_generic_schema(table_name)
                 
-                __create_generique_label_schema_table(table_name,table_schema=_table,data=vocab_data)    
-    
+                __create_table_and_load_data(table_name=table_name,
+                                             table_schema=_table,
+                                             data=vocab_data)    
+                                
         except Exception as e:
             print("Erreur pendant le chargement des vocabulaires",str(e))
 

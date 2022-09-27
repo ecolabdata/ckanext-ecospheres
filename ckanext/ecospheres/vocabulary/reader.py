@@ -36,16 +36,8 @@ class VocabularyReader:
                             "SOM" : "Services d'OutreMer",
                             "Op" : "Opérateurs"
                         }
-    VOCABULARY_DATABASE = {}
 
-    def __new__(cls, vocabulary):
-        if not vocabulary in cls.VOCABULARY_DATABASE:
-            path = Path(ckanext_path[0]).parent / f'vocabularies/{vocabulary}.json'
-            if not path.exists() or not path.is_file():
-                raise FileNotFoundError(f"could not find vocabulary data for '{vocabulary}'")
-            with open(path, 'r', encoding='utf-8') as src:
-                data = json.load(src)
-            cls.VOCABULARY_DATABASE.update(data)
+
 
     @classmethod
     def _resultset_to_dict(cls, resultset):
@@ -59,6 +51,29 @@ class VocabularyReader:
 
     @classmethod 
     def _select_labels_from_database(cls,_table):
+        """Return labels' table for the given table
+        
+        Parameters
+        ----------
+        _table : Table
+            sqlalchemy.Table object
+        
+        Returns
+        -------
+        list
+                    [
+                        {
+                        "uri": "uri_", 
+                        "label":"label_",
+                        "language": "language_"
+                         },
+                    ...
+                    ...
+                    ]
+
+        """
+
+
         with Session(database=DB) as s:
             try:    
                 
@@ -67,15 +82,39 @@ class VocabularyReader:
             except Exception as e:
                 logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
                 return {}
+
+
+
     @classmethod 
-    def _select_labels_from_database_regex(cls,_table):
+    def _select_labels_from_database_theme_regex(cls,_table):
+
+        """Return regex' table for the given table
+        
+        Parameters
+        ----------
+        _table : Table
+            sqlalchemy.Table object
+        
+        Returns
+        -------
+        list
+            [
+                {
+                    "uri":"uri_",
+                    "regex":"regex_"
+                },
+                ...
+                ...
+            ]
+
+        """
+
         with Session(database=DB) as s:
             try:    
-                
                 statement=select([_table.c.uri, _table.c.regexp])
                 return  s.execute(statement).fetchall()
             except Exception as e:
-                logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
+                logging.error(f"Erreur lors de la récuperation des regex thèmes de la table {_table}\t {str(e)}")
                 return {}
 
     @classmethod
@@ -91,6 +130,15 @@ class VocabularyReader:
         Returns
         -------
         list
+                    [
+                        {
+                        "uri": "uri_", 
+                        "label":"label_",
+                        "language": "language_"
+                         },
+                    ...
+                    ...
+                    ]
 
         """
         if vocabulary == "ecospheres_theme": 
@@ -100,6 +148,23 @@ class VocabularyReader:
 
     @classmethod
     def __get_themes_hierarchy_as_dict(cls):
+        """Return themes hierarchy
+        
+        
+        Returns
+        -------
+        dict
+            {
+            "uri_parent" : [
+                            "uri_child_1",
+                            "uri_child_2",
+                            ],
+            ...
+            ...
+
+            },
+
+        """
         _table=_get_hierarchy_schema_table("ecospheres_theme_hierarchy")
         uri_themes_with_hierarchy={}
         with Session(database=DB) as s:
@@ -115,6 +180,23 @@ class VocabularyReader:
         
     @classmethod
     def __get_themes_from_db(cls,_table,uri:str):
+        """Return label from theme table for the given uri
+        
+            Parameters
+            ----------
+            _table : str
+            uri: str
+            
+            Returns
+            -------
+            dict
+                {
+                    "uri":"uri",
+                    "label":"label",
+                    "language":"language"
+                }
+
+        """
         with Session(database=DB) as s:
             try:
                 statement=select([_table.c.uri, _table.c.label,_table.c.language]).\
@@ -127,8 +209,26 @@ class VocabularyReader:
                 logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
                 return {}
 
+
     @classmethod
     def __get_theme_labels_by_uri(cls,uri:str):
+        """Return label theme  for the given uri
+        
+        Parameters
+        ----------
+        uri: str
+
+        Returns
+        -------
+        dict
+                {
+                    "uri":"uri",
+                    "label":"label",
+                    "language":"language"
+                }
+
+        """
+
         return cls.__get_themes_from_db(
                                     _get_generic_schema("ecospheres_theme_label"),
                                         uri)
@@ -136,6 +236,22 @@ class VocabularyReader:
 
     @classmethod
     def __get_theme_altlabels_by_uri(cls,uri:str):
+        """Return altlabel theme  for the given uri
+        
+        Parameters
+        ----------
+        uri: str
+
+        Returns
+        -------
+        dict
+                {
+                    "uri":"uri",
+                    "label":"label",
+                    "language":"language"
+                }
+
+        """
         return cls.__get_themes_from_db(
                                         _get_generic_schema("ecospheres_theme_altlabel"),
                                         uri)
@@ -144,6 +260,42 @@ class VocabularyReader:
 
     @classmethod
     def themes(cls):
+        """Return theme labels with hierarchy
+        
+
+        Returns
+        -------
+        dict
+                { 
+
+                "theme_uri": {
+
+                            "altlabel": [
+                                            "alt_label_1", 
+                                            "alt_label_2", 
+                                        ], 
+
+                            "child": [
+                                        "altlabel": [
+                                                    "alt_label_1", 
+                                                    "alt_label_2",
+                                                ], 
+                                        "count": -1, 
+                                        "label": "label", 
+                                        "language": "fr", 
+                                        "regexp": [
+                                                    "regex_1", 
+                                                    "regex_2", 
+                                                    ], 
+                                        "uri": "uri_subtheme"
+                                    ],
+
+                            "count": -1, 
+                            "label": "label", 
+                            "language": "fr", 
+                        }
+
+        """
         try:
             all_themes={}   
             #Récuperation des labels
@@ -159,7 +311,7 @@ class VocabularyReader:
                 alt_label_map.setdefault(alt_label["uri"], [])
                 alt_label_map[alt_label['uri']].append(alt_label["label"])
 
-            _table_regex=cls._select_labels_from_database_regex(_get_regex_schema_table("ecospheres_theme_regexp"))
+            _table_regex=cls._select_labels_from_database_theme_regex(_get_regex_schema_table("ecospheres_theme_regexp"))
             regexp_map={}
             for regexp in _table_regex:
                 regexp_map.setdefault(regexp[0],[])
@@ -202,7 +354,15 @@ class VocabularyReader:
         Returns
         -------
         list
-
+                    [
+                        {
+                        "uri": "uri_", 
+                        "label":"label_",
+                        "language": "language_"
+                         },
+                    ...
+                    ...
+                    ]
         """
         if vocabulary == "ecospheres_theme": 
             return cls.themes()
@@ -224,9 +384,14 @@ class VocabularyReader:
         
         Returns
         -------
-        bool
-            ``True`` if the vocabulary exists, is available and
-            contains the URI, else ``False``.
+        dict : if the vocabulary exists
+                    {
+                        "uri": "uri_", 
+                        "label":"label_",
+                        "language": "language_"
+                    }
+            
+        None:  if the vocabulary do not exists  
         
         """
         _table=_get_generic_schema(f"{vocabulary}_label")
@@ -245,7 +410,7 @@ class VocabularyReader:
                     return cls._resultset_to_dict(res)
                 return None
             except Exception as e:
-                logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
+                logging.error(f"Erreur lors du chargement de la table: {_table}\t {str(e)}")
                 return list()
 
 
@@ -318,6 +483,37 @@ class VocabularyReader:
 
     @classmethod
     def get_organization_by_admin(cls):
+        """Return organization by administration type
+
+        Returns
+        -------
+        dict :
+        {
+            "administration_type_label":{
+                                        "count": -1, 
+                                        "orgs":[
+                                                {
+                                                    "Courriel": "ddtm@gard.gouv.fr", 
+                                                    "Site internet": "homepage"
+                                                    "Territoire": "Territory", 
+                                                    "Type": "admin_type", 
+                                                    "Téléphone": "04 66 62 62 00", 
+                                                    "count": -1, 
+                                                    "created": "Thu, 22 Sep 2022 13:34:17 GMT", 
+                                                    "description": "description",
+                                                    "image_url": "image_url", 
+                                                    "name": "organisation_name", 
+                                                    "title": "organisation_title"
+                                                },
+                                                ...
+                                                ...                                           
+                                               ]
+                                        },
+                                        ......
+                                        ......
+        }
+        """
+
         try:
             list_of_organizations_as_dict=dict()
             organizations_as_dict=dict()
@@ -362,6 +558,17 @@ class VocabularyReader:
 
     @classmethod
     def get_territory_by_code_region(cls,code_region):
+        """Return territory label for given code_region.
+        
+        Parameters
+        ----------
+        code_region : str
+        
+        Returns
+        -------
+        tuple : (uri,label,language)
+                
+        """
         _table=_get_generic_schema("ecospheres_territory_label")
         with Session(database=DB) as s:
             try:
@@ -372,15 +579,31 @@ class VocabularyReader:
                     return res
                 return None
             except Exception as e:
-                logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
+                logging.error(f"Erreur lors du chargement de la table {_table}\t {str(e)}")
                 return {}
 
 
     @classmethod
     def get_territory_spatial_by_code_region(cls,code_region):
-        _table=_get_spatial_schema_table("ecospheres_territory_spatial")
+        """Return territory spatial data for  given code_region.
+        
+        Parameters
+        ----------
+        code_region : str
+        
+        Returns
+        -------
+        dict :  {
+                    "uri": "_uri_",
+                    "westlimit": "_westlimit_",
+                    "southlimit": "_southlimit_",
+                    "eastlimit": "_eastlimit_",
+                    "northlimit": "_northlimit_"
+                }
+                
+        """
 
-    
+        _table=_get_spatial_schema_table("ecospheres_territory_spatial")
         with Session(database=DB) as s:
             try:
                 statement=select([_table.c.uri, _table.c.westlimit,_table.c.southlimit,_table.c.eastlimit,_table.c.northlimit]).\
@@ -396,11 +619,42 @@ class VocabularyReader:
                     }
                 return None
             except Exception as e:
-                logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
+                logging.error(f"Erreur lors du chargement de la table: {_table}\t {str(e)}")
                 return {}
 
     @classmethod
     def _get_territories_by_hierarchy(cls):
+        
+        """Return theme labels with hierarchy
+        
+
+        Returns
+        -------
+        dict
+            {
+                "départements-métropole":[
+                    {
+                        ......
+                    },
+                    ...
+                ],
+                "depts_by_region":[
+                     {
+                        ......
+                    },
+                    ...
+                ],
+                "outre-mer":[
+                     {
+                        ......
+                    },
+                    ...
+                ],
+                "régions-métrople":[],
+                "zones-maritimes":[],
+            }
+        """
+        
         try:
             vocabulary="territoires"
             import re
@@ -436,6 +690,6 @@ class VocabularyReader:
             res_territoires_dict["depts_by_region"]=depts_by_region
             return res_territoires_dict
         except Exception as e:
-            logger.error("erreur lors de la récuperation des territoires par hierarchy")
+            logger.error("erreur lors de la récuperation des territoires par hierarchy ")
             logging.error(str(e))
             return {}

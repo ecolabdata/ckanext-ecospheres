@@ -1,0 +1,22 @@
+{%    set value =data[field.field_name] %}
+
+{%- if value -%}
+        {%- for item in value %}
+
+                {%- if item["key"] -%}
+                    <div style="display:flex">
+                        <div style="font-weight:bold">
+                            label
+                        </div>
+                        <div style="margin-left: 20px">
+                            {{ item["key"] }}
+                        </div>
+                    </div>
+                {%- else -%}
+                    <div>
+                        {{ item["uri"] }}
+                    </div>
+                 {%- endif -%}
+        {%- endfor -%}
+
+{%- endif -%}

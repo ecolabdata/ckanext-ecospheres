@@ -12,6 +12,18 @@
             <a href="/dataset/{{ field_data['url']   }}"> {{ field_data['title'] }} </a> 
             </br>
 
+        {%- elif field.field_name == "media_type_ressource" -%}
+
+              {%- for item in data[field.field_name] -%}
+                {%- if item.get("label",None) -%}
+                  {{ item.get("label",None) }}
+                {%- else -%}
+                  {{ h.get_vocabulary_label_by_uri("iana_media_type",item.get("uri",None)) }}
+                {%- endif -%}
+                  
+              {%- endfor -%}
+
+
 
         {% else %}
 
