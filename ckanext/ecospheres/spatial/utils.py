@@ -1,5 +1,5 @@
 
-import json, requests
+import re, json, requests
 
 import ckan.plugins.toolkit as toolkit
 
@@ -208,7 +208,9 @@ def extract_scheme_and_identifier(uri_or_label):
 
     The identifier is assumed to be the last part of the
     URI, separated from the scheme by one of ``'#'``, ``':'``
-    or ``'/'``.
+    or ``'/'``. It should be made of word characters, digits,
+    underscores and/or ``'-'`` or the function won't recognize
+    it.
 
     Parameters
     ----------
@@ -226,10 +228,11 @@ def extract_scheme_and_identifier(uri_or_label):
         while the scheme element will be ``None``.
 
     """
-    for s in ('#', ':', '/'):
-        if s in uri_or_label:
-            l = uri_or_label.rsplit(s, maxsplit=1)
-            return tuple(l)
+    r = re.search(
+        r'^(.*)[/#:]([\w-]+?)$', uri_or_label
+    )
+    if r:
+        return (r[1], r[2])
     return (None, uri_or_label)
 
 
