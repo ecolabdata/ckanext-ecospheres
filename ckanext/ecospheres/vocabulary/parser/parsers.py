@@ -135,7 +135,7 @@ object:
 
 import re, json, zipfile
 from lxml import etree
-from rdflib import URIRef, Literal, Dataset
+from rdflib import URIRef, Literal, Dataset, RDF
 from io import BytesIO
 
 from ckanext.ecospheres.vocabulary.parser import utils, exceptions
@@ -778,11 +778,11 @@ def ecospheres_territory(name, url, **kwargs):
     return result
 
 
-def insee_official_geographic_code(name, url, **kwargs):
+def insee_official_geographic_code(name, url, rdf_types=None, **kwargs):
     """Build a vocabulary cluster with Insee's official geographic code data.
 
     This vocabulary is HUGE, loading it takes a lot
-    of time.
+    of time (around 1h45).
 
     Parameters
     ----------
@@ -794,6 +794,9 @@ def insee_official_geographic_code(name, url, **kwargs):
         trig-encoded RDF data. The parser will look for
         a graph whose identifier is
         ``'http://rdf.insee.fr/graphes/geo/cog'``.
+    rdf_types : list(str), optional
+        Liste d'URI de classes d'objets à considérer. Si
+        non fourni, tout est conservé.
 
     Returns
     -------
@@ -825,9 +828,12 @@ def insee_official_geographic_code(name, url, **kwargs):
     result.data.hierarchy_table()
 
     relationships = []
+    uris = []
 
     for uuid, label in graph.subject_objects(URIRef('http://rdf.insee.fr/def/geo#nom')):
-        result.add_label(str(uuid), language='fr', label=str(label))
+        if not rdf_types or str(graph.value(uuid, RDF.type)) in rdf_types:
+            result.add_label(str(uuid), language='fr', label=str(label))
+            uris.append(uuid)
 
     for item in result.data.label:
         uri = item['uri']
@@ -835,6 +841,12 @@ def insee_official_geographic_code(name, url, **kwargs):
 
         for altlabel in graph.objects(
             URIRef(uri), URIRef('http://rdf.insee.fr/def/geo#nomSansArticle')
+        ):
+            if str(altlabel) != label:
+                result.add_label(uri, language='fr', label=str(altlabel))
+
+        for altlabel in graph.objects(
+            URIRef(uri), URIRef('http://rdf.insee.fr/def/geo#nomEntier')
         ):
             if str(altlabel) != label:
                 result.add_label(uri, language='fr', label=str(altlabel))
@@ -847,21 +859,24 @@ def insee_official_geographic_code(name, url, **kwargs):
         for parent in graph.objects(
             URIRef(uri), URIRef('http://rdf.insee.fr/def/geo#subdivisionDirecteDe')
         ):
-            if not (str(parent), uri) in relationships:
+            if parent in uris and not (str(parent), uri) in relationships:
                 relationships.append((str(parent), uri))
 
         for code_uri in graph.objects(
             URIRef(uri), URIRef('http://www.w3.org/2002/07/owl#sameAs')
         ):
-            result.add_label(str(code_uri), language='fr', label=label)
+            if not code_uri in uris:
+                result.add_label(str(code_uri), language='fr', label=label)
+                uris.append(code_uri)
 
     for relationship in relationships:
-        result.data.hierarchy.add(relationship)
+        result.data.hierarchy.add(*relationship)
 
-    response = result.data.validate()
-    if not response:
-        for anomaly in response:
-            result.log_error(exceptions.InvalidDataError(anomaly))
+    # skipping validation as it's already quite long
+    # response = result.data.validate()
+    # if not response:
+    #     for anomaly in response:
+    #         result.log_error(exceptions.InvalidDataError(anomaly))
 
     if not result.data:
         result.exit(exceptions.NoVocabularyDataError())
