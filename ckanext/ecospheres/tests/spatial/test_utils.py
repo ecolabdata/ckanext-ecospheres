@@ -5,7 +5,8 @@ from ckanext.ecospheres.spatial.utils import (
     bbox_geojson_from_coordinates,
     build_attributes_page_url,
     build_catalog_page_url,
-    is_valid_url
+    is_valid_url,
+    extract_scheme_and_identifier
 )
 
 class TestCoordinatesOperations(object):
@@ -43,4 +44,17 @@ class TestURLOperations(object):
             'fr-120066022-jdd-192de12f-ee82-4abc-a2c0-42e30e2242a0'
         ) == 'http://catalogue.geo-ide.developpement-durable.gouv.fr/catalogue/srv/fre/catalog.search#/metadata/fr-120066022-jdd-192de12f-ee82-4abc-a2c0-42e30e2242a0'
 
+    def test_extract_scheme_and_identifier(self):
+        assert extract_scheme_and_identifier('http://id.insee.fr/geo/pays/france') == (
+            'http://id.insee.fr/geo/pays', 'france'
+        )
+        assert extract_scheme_and_identifier('urn:uuid:4d2865ab-7b71-4d0b-afd7-e95758a73be1') == (
+            'urn:uuid', '4d2865ab-7b71-4d0b-afd7-e95758a73be1'
+        )
+        assert extract_scheme_and_identifier('autre chose') == (
+            None, 'autre chose'
+        )
+        assert extract_scheme_and_identifier('scheme/autre chose') == (
+            None, 'scheme/autre chose'
+        )
 
