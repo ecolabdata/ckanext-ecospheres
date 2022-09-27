@@ -115,7 +115,14 @@
   about: http://rdf.insee.fr/geo/index.html
   parser: insee_official_geographic_code
   comment: Downloadable ZIP file with file creation date in name.
-  available: False
+  rdf_types:
+    - http://rdf.insee.fr/def/geo#Pays
+    - http://rdf.insee.fr/def/geo#TerritoireFrancais
+    - http://rdf.insee.fr/def/geo#Region
+    - http://rdf.insee.fr/def/geo#Departement
+    - http://rdf.insee.fr/def/geo#Commune
+    - http://rdf.insee.fr/def/geo#ArrondissementMunicipal
+  available: True
 
 - name: insee_individual_territories
   url: https://raw.githubusercontent.com/InseeFr/Ontologies/master/insee-geo.ttl
@@ -123,7 +130,7 @@
   format: turtle
   comment: >
     Objects "france", "franceMetropolitaine", "territoireDeLaRepubliqueFrancaise".
-    French only.
+    French only. Included in "insee_official_geographic_code".
   rdf_types:
     - http://rdf.insee.fr/def/geo#TerritoireFrancais
     - http://rdf.insee.fr/def/geo#Pays
