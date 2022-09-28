@@ -232,5 +232,93 @@ class VocabularyReader:
                 res.append(row.get('parent'))
         
         return res
+    
+    @classmethod
+    def get_synonyms(cls, vocabulary, uri):
+        """Get the synonyms for the given URI.
+
+        Parameters
+        ----------
+        vocabulary : str
+            Name of the vocabulary, ie its ``name``
+            property in ``vocabularies.yaml``.
+        uri : str
+            URI of a vocabulary item.
+        
+        Returns
+        -------
+        list(str)
+            list of synonyms. Result will be an empty list if the vocabulary
+            doesn't exist, is not available, doesn't have a ``synonym`` table,
+            if the URI didn't exist in the vocabulary or if the item didn't have
+            any synonym.
+
+        """
+        res = []
+
+        if not vocabulary or not uri:
+            return res
+        
+        table = cls.table(vocabulary, 'synonym')
+        if not table:
+            return res
+        
+        for row in table:
+            if row.get('uri') == uri:
+                res.append(row.get('synonym'))
+        
+        return res
+
+    @classmethod
+    def get_ecospheres_territory(cls, vocabulary, uri):
+        """Return the territory from the ecospheres_territory vocabulary best suited to represent the given URI.
+
+        Parameters
+        ----------
+        vocabulary : str
+            Name of the vocabulary the URI is coming
+            from.
+        uri : str
+            URI of some kind of spatial area.
+        
+        Returns
+        -------
+        str
+            The identifier of a territory from the ecospheres_territory
+            vocabulary.
+
+        """
+        if not uri or not vocabulary in (
+            'eu_administrative_territory_unit', 'insee_official_geographic_code'
+        ):
+            return
+
+        synonym_table = cls.table('ecospheres_territory', 'synonym')
+        for row in synonym_table:
+            if row['synonym'] == uri:
+                return row['uri']
+        
+        if vocabulary == 'insee_official_geographic_code':
+
+            # using synonyms
+            synonyms = cls.get_synonyms(vocabulary, uri)
+            for synonym in synonyms:
+                for row in synonym_table:
+                    if row['synonym'] == synonym:
+                        return row['uri']
+
+            # using supra territories
+            ogc_hierarchy_table = cls.table(vocabulary, 'hierarchy')
+            parents = [
+                row['parent'] for row in ogc_hierarchy_table if row['child'] == uri
+            ]
+            for parent in parents:
+                parents += cls.get_synonyms(vocabulary, parent)
+
+            for row in synonym_table:
+                if row['synonym'] in parents:
+                    return row['uri']
+        
 
         
+
