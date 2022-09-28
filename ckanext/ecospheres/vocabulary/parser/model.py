@@ -684,6 +684,11 @@ class VocabularyDataCluster(dict):
         vocabulary items, if any. This table has to be created
         first with :py:meth:`VocabularyDataCluster.hierarchy_table`
         or this attribute's value will be ``None``.
+    synonym : VocabularyDataTable or None
+        The table holding the synonyms for the vocabulary URIs,
+        if any. This table has to be created first with
+        :py:meth:`VocabularyDataCluster.synonym_table`
+        or this attribute's value will be ``None``.
     constraints : list(ClusterConstraint)
         List of cluster constraints, ie constraints
         that may involve more than one table. As for now,
@@ -728,6 +733,7 @@ class VocabularyDataCluster(dict):
             none_as_value=False
         )
         self.hierarchy = None
+        self.synonym = None
 
     def __bool__(self):
         return any(table for table in self.values())
@@ -802,6 +808,35 @@ class VocabularyDataCluster(dict):
             referencing_fields=('uri',)
         )
         return hierarchy_table
+
+    def synonym_table(self):
+        """Return the name of the cluster table holding synonyms for URIs (alias), creating it if needed.
+
+        A synonym table has two fields: one for
+        the URI, one for the synonym. The URI should
+        exist in the labels table, synonym may exist
+        but it's not mandatory.
+
+        Returns
+        -------
+        str
+            The name of the synonym table.
+
+        """
+        if self.synonym:
+            return self.synonym.name
+        synonym_table = self.table(
+        'synonym', ('uri', 'synonym')
+        )
+        self.synonym = self[synonym_table]
+        self.synonym.set_not_null_constraint('uri')
+        self.synonym.set_not_null_constraint('synonym')
+        self.set_reference_constraint(
+            referenced_table=synonym_table,
+            referenced_fields=('uri',),
+            referencing_table='label'
+        )
+        return synonym_table
 
     def validate(self, delete=True):
         """Validate the cluster data.
