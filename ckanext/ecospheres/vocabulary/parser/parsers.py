@@ -663,8 +663,11 @@ def ecospheres_territory(name, url, **kwargs):
     The cluster build by this parser contains an additional
     ``[name]_spatial (uri, westlimit, southlimit, eastlimit,
     northlimit)`` table storing extend coordinates for
-    all territories and a ``[name]_hierarchy (parent, child)``
-    table where a child is a subdivision of the parent.
+    all territories, a ``[name]_hierarchy (parent, child)``
+    table where a child is a subdivision of the parent, and
+    a ``[name]_synonym (uri, synonym)`` table storing 
+    corresponding URIs from the ``eu_administrative_territory_unit``
+    and ``insee_official_geographic_code`` vocabularies.
 
     Parameters
     ----------
@@ -716,6 +719,7 @@ def ecospheres_territory(name, url, **kwargs):
     )
 
     result.data.hierarchy_table()
+    result.data.synonym_table()
 
     for territory_type in territory_types:
         if not territory_type in json_data:
@@ -771,6 +775,18 @@ def ecospheres_territory(name, url, **kwargs):
                 result.data.hierarchy.add(
                     territory['codeRégion'], id
                 )
+            
+            uri_ue = territory.get('uriUE')
+            if uri_ue:
+                result.data.synonym.add(
+                    id, uri_ue
+                )
+
+            uri_cog = territory.get('uriCOG')
+            if uri_cog:
+                result.data.synonym.add(
+                    id, uri_cog
+                )
 
     if not result.data:
         result.exit(exceptions.NoVocabularyDataError())
@@ -783,6 +799,16 @@ def insee_official_geographic_code(name, url, rdf_types=None, **kwargs):
 
     This vocabulary is HUGE, loading it takes a lot
     of time (around 1h45).
+
+    The cluster build by this parser contains an additional
+    ``[name]_hierarchy (parent, child)`` table where a child
+    is a subdivision of the parent, and a
+    ``[name]_synonym (uri, synonym)`` table storing the
+    information that two URIs identify the same object.
+    If the A-B couple appears in this table, B-A will be there
+    as well, and both A and B would have been registered in the
+    labels table. Only one of them will carry the alternative
+    labels and hierarchy information.
 
     Parameters
     ----------
@@ -826,6 +852,7 @@ def insee_official_geographic_code(name, url, rdf_types=None, **kwargs):
         return result
 
     result.data.hierarchy_table()
+    result.data.synonym_table()
 
     relationships = []
     uris = []
@@ -857,7 +884,7 @@ def insee_official_geographic_code(name, url, rdf_types=None, **kwargs):
             result.add_label(uri, language='fr', label=str(insee_code))
 
         for parent in graph.objects(
-            URIRef(uri), URIRef('http://rdf.insee.fr/def/geo#subdivisionDirecteDe')
+                URIRef(uri), URIRef('http://rdf.insee.fr/def/geo#subdivisionDirecteDe')
         ):
             if parent in uris and not (str(parent), uri) in relationships:
                 relationships.append((str(parent), uri))
@@ -868,6 +895,8 @@ def insee_official_geographic_code(name, url, rdf_types=None, **kwargs):
             if not code_uri in uris:
                 result.add_label(str(code_uri), language='fr', label=label)
                 uris.append(code_uri)
+                result.data.synonym.add(str(code_uri), uri)
+                result.data.synonym.add(uri, str(code_uri))
 
     for relationship in relationships:
         result.data.hierarchy.add(*relationship)
