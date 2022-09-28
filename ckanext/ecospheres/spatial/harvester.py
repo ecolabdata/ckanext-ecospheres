@@ -269,7 +269,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 geojson = bbox_geojson_from_coordinates(*coordinates)
                 dataset_dict.set_value('spatial', geojson)
 
-        # spatial_coverage
+        # spatial_coverage and territory
         iso_extents = (
             iso_values.get('extent-free-text', [])
             + iso_values.get('extent-controlled', [])
@@ -279,6 +279,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         # here in case future updates put it to use.
         
         for iso_extent in iso_extents:
+            spatial_coverage_uri = None
             if VocabularyReader.is_known_uri(
                 'eu_administrative_territory_unit', iso_extent
                 ):
@@ -286,18 +287,30 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 # in INSPIRE catalogs, but it's much smaller, so
                 # it makes sense to try it first.
                 spatial_coverage_uri = iso_extent
+                spatial_coverage_voc = 'eu_administrative_territory_unit'
             elif VocabularyReader.is_known_uri(
                 'insee_official_geographic_code', iso_extent
                 ):
                 spatial_coverage_uri = iso_extent
-            else:
+                spatial_coverage_voc = 'insee_official_geographic_code'
+            elif len(extent_id) > 2:
+                # excluding short strings for now, because of the possible
+                # mix up between codes of different types of territories
                 extent_scheme, extent_id = extract_scheme_and_identifier(iso_extent)
                 spatial_coverage_uri = VocabularyReader.get_uri_from_label(
                         'insee_official_geographic_code', extent_id
                     )
+                spatial_coverage_voc = 'insee_official_geographic_code'
+            
             if spatial_coverage_uri:
                 spatial_coverage_dict = dataset_dict.new_item('spatial_coverage')
                 spatial_coverage_dict.set_value('uri', spatial_coverage_uri)
+                dataset_dict.set_value(
+                    'territory',
+                    VocabularyReader.get_ecospheres_territory(
+                        spatial_coverage_voc, spatial_coverage_uri
+                    )
+                )
             elif extent_scheme:
                 if VocabularyReader.is_known_uri(
                     'insee_gazetteer', extent_scheme
@@ -312,7 +325,10 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 spatial_coverage_dict = dataset_dict.new_item('spatial_coverage')
                 spatial_coverage_dict.set_value('label', extent_id)
 
-        # territory
+            if not dataset_dict.get_values('territory'):
+                # get the territories from the organization
+                # TODO
+                pass
 
         # --- relations ---
 
