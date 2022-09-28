@@ -578,6 +578,13 @@ class TestDataValidation(object):
         assert hierarchy_table == 'voc_hierarchy'
         assert isinstance(cluster.hierarchy, VocabularyDataTable)
         assert cluster.hierarchy == cluster['voc_hierarchy']
-
-
+    
+    def test_synonym_table_can_be_accessed(self):
+        """Vérifie que tout est en ordre avec la création de la table des synonymes."""
+        cluster = VocabularyDataCluster('voc')
+        assert cluster.synonym is None
+        synonym_table = cluster.synonym_table()
+        assert synonym_table == 'voc_synonym'
+        assert isinstance(cluster.synonym, VocabularyDataTable)
+        assert cluster.synonym == cluster['voc_synonym']
 
