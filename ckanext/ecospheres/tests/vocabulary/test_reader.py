@@ -73,3 +73,47 @@ class TestGetURI(object):
             'http://registre.data.developpement-durable.gouv.fr/ecospheres/themes-ecospheres/infrastructures-de-transport'
         ) == []
 
+class TestGetTerritory(object):
+
+    def test_get_territory_from_eu_uri(self):
+        """Récupération du territoire d'Ecosphères correspondant à un URI du vocabulaire eu_administrative_territory_unit."""
+        assert VocabularyReader.get_ecospheres_territory(
+            'eu_administrative_territory_unit',
+            'http://publications.europa.eu/resource/authority/country/SPM'
+        ) == 'SPM'
+    
+    def test_unknown_territory_from_eu_uri(self):
+        """Vérifie que rien n'est renvoyé avec un URI non reconnu du vocabulaire eu_administrative_territory_unit."""
+        assert VocabularyReader.get_ecospheres_territory(
+            'eu_administrative_territory_unit',
+            'http://publications.europa.eu/resource/authority/atu/BGR_OBL_VTT'
+        ) is None
+    
+    def test_get_territory_from_ogc_uri(self):
+        """Récupération du territoire d'Ecosphères correspondant à un URI du vocabulaire insee_official_geographic_code."""
+        assert VocabularyReader.get_ecospheres_territory(
+            'insee_official_geographic_code',
+            'http://id.insee.fr/geo/region/02'
+        ) == 'MTQ'
+
+    def test_get_territory_from_uuid_ogc_uri(self):
+        """Récupération du territoire d'Ecosphères correspondant à un URI du vocabulaire insee_official_geographic_code basé sur un UUID."""
+        assert VocabularyReader.get_ecospheres_territory(
+            'insee_official_geographic_code',
+            'http://id.insee.fr/geo/departement/d423d69b-3557-41f6-9469-9ed0f3db412a'
+        ) == 'MTQ'
+
+    def test_get_supra_territory_from_ogc_uri(self):
+        """Récupération du territoire d'Ecosphères incluant le territoire identifié par un URI du vocabulaire insee_official_geographic_code."""
+        assert VocabularyReader.get_ecospheres_territory(
+            'insee_official_geographic_code',
+            'http://id.insee.fr/geo/commune/9ca7148d-1d9f-4cf0-8fd6-db5ed497d8ed'
+        ) == 'http://id.insee.fr/geo/departement/29'
+
+    def test_get_supra_territory_from_ogc_uri_synonym(self):
+        """Récupération du territoire d'Ecosphères incluant le territoire identifié par un URI synonyme du vocabulaire insee_official_geographic_code."""
+        assert VocabularyReader.get_ecospheres_territory(
+            'insee_official_geographic_code',
+            'http://id.insee.fr/geo/commune/29019'
+        ) == 'http://id.insee.fr/geo/departement/29'
+
