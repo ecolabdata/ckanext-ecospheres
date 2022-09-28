@@ -53,7 +53,7 @@
   available: False
 
 - name: ecospheres_territory
-  url: https://raw.githubusercontent.com/benoitdavidfr/territoiresecospheres/main/territoires.json
+  url: https://raw.githubusercontent.com/ecolabdata/guichetdonnees-public/main/territoires.json
   parser: ecospheres_territory
   available: True
 
