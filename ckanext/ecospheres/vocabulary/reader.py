@@ -306,13 +306,15 @@ class VocabularyReader:
                 for row in synonym_table:
                     if row['synonym'] == synonym:
                         return row['uri']
+            
+            synonyms.append(uri)
 
             # using supra territories
             ogc_hierarchy_table = cls.table(vocabulary, 'hierarchy')
             parents = [
-                row['parent'] for row in ogc_hierarchy_table if row['child'] == uri
+                row['parent'] for row in ogc_hierarchy_table if row['child'] in synonyms
             ]
-            for parent in parents:
+            for parent in parents.copy():
                 parents += cls.get_synonyms(vocabulary, parent)
 
             for row in synonym_table:
