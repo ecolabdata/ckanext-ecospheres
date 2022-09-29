@@ -212,7 +212,7 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         # > prov:qualifiedAttribution -> prov:Attribution
         
         # > dcat:hadRole
-        eq_(set(dataset['qualified_attribution'][0]['had_role']),set(['owner','owner_1']))
+        eq_(set([ item["uri"] for item in dataset['qualified_attribution'][0]['had_role']]),set(['owner','owner_1']))
         
         #foaf:givenName
         eq_(dataset['qualified_attribution'][0]['agent'][0]['name'],'mtes')
@@ -381,7 +381,7 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         """-------------------------------------------<crs>-------------------------------------------"""        
         
         for uri in set(["crs_uri_1","crs_uri_2"]):
-            assert uri in set(dataset['crs'])
+            assert uri in set([crs["uri"] for crs in dataset['crs']])
         """-------------------------------------------<conforms_to>-------------------------------------------"""        
         # > dct:conformsTo -> dct:Standard
         #   dct:Standard 
@@ -403,7 +403,7 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         """-------------------------------------------<language>-------------------------------------------"""        
         # LANGUAGE []
         # > dct:language
-        assert set(dataset['language'])==set(['http://publications.europa.eu/resource/authority/language/ENG', 'http://publications.europa.eu/resource/authority/language/FRA'])
+        assert set([lang["uri"] for lang in dataset['language']])==set(['http://publications.europa.eu/resource/authority/language/ENG', 'http://publications.europa.eu/resource/authority/language/FRA'])
         eq_(len(dataset['language']),2)
 
         """-------------------------------------------<provenance>-------------------------------------------"""        

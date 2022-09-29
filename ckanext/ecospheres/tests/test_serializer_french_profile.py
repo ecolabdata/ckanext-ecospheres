@@ -294,7 +294,7 @@ class TestEuroDCATAPProfileSerializeDataset(BaseSerializeTest):
             # HAD_ROLE [{}]
             # > dcat:hadRole
             for x in  self._triples(g, qualified_attribution, DCAT.hadRole, None):
-                assert str(x[-1]) in agent_qualified_attribution_dict[0]['had_role']
+                assert str(x[-1]) in set([item["uri"] for item in agent_qualified_attribution_dict[0]['had_role']])
         
             
             # AGENT [{}]
@@ -403,7 +403,7 @@ class TestEuroDCATAPProfileSerializeDataset(BaseSerializeTest):
             # > dct:language
             langages=[str(lang[-1]) for lang in self._triples(g, primary, DCT.language,None)]
             for lang in  langages:
-                assert lang in is_primary_topic_of_dict[0]["language"]                
+                assert lang in [item['uri'] for item in is_primary_topic_of_dict[0]["language"]]
 
 
             # IDENTIFIER 
@@ -488,17 +488,14 @@ class TestEuroDCATAPProfileSerializeDataset(BaseSerializeTest):
                     eq_( dataset["conforms_to"][0]["title"][x[-1].language],str(x[-1]))
             else:
                 """------------------------------------------ crs ------------------------------------------"""
-                assert  str(a) in _crs_list
-        
-        
+                assert str(a) in [item["uri"] for item in _crs_list]
 
         """------------------------------------------language ------------------------------------------"""
    
-        langages=[l for l in dataset["language"]] 
+        langages=[l["uri"] for l in dataset["language"]] 
         langage = self._triples(g,dataset_ref, DCT.language, None)
         for l in langage:
             assert str(l[-1]) in langages
-            
         """------------------------------------------ provenance ------------------------------------------"""
 
         provenance_nodes = self._triples(g,dataset_ref, DCT.provenance, None)

@@ -1,8 +1,65 @@
 {%    set value =data[field.field_name] %}
-
 {%- if value -%}
-        {%- for item in value %}
 
+{%- set label_show=none -%}
+{%- set uri_label=none -%}
+        {%- for item in value %}
+            {%- if item.get("uri",None) -%}
+                {%- set vocabularies= h.get_vocabulairies_for_given_repeating_subfields(field,"uri") -%}
+                {%- set uri=item.get("uri",None) -%}
+                
+                {%- for vocab in  vocabularies -%}
+                    {%- set label_temp=h.get_vocabulary_label_by_uri(vocab,uri) -%}
+                    {%- if label_temp is not none -%}
+                         {%- set label_show=label_temp -%}
+                    {%- endif -%}
+                {%- endfor -%}
+                
+                {%- if label_show is not none -%}
+                    {{ label_show }}
+
+                {%- else -%}
+
+                    {%- set uri_label=uri -%}
+                {%- endif -%}
+            
+            {%- endif -%}
+            
+            {%- if label_show is not none -%}
+            
+                {%- if item.get("type",None) -%}
+                    {%- set vocabularies= h.get_vocabulairies_for_given_repeating_subfields(field,"type") -%}
+                    {%- set type=item.get("type",None) -%}
+                    
+                    {%- for vocab in  vocabularies -%}
+                        {%- set label_temp=h.get_vocabulary_label_by_uri(vocab,type) -%}
+                        {%- if label_temp is not none -%}
+                            {%- set label_show=label_temp -%}
+                        {%- endif -%}
+                    {%- endfor -%}
+                    
+                    {%- if label_show is not none -%}
+                        {{ label_show }}
+                    {%- endif -%}
+        
+                {%- endif -%}
+            {% endif -%}
+
+
+            {%- if label_show is not none -%}
+            
+                {%- if item.get("label",None) -%}
+                    {%- set label=item.get("label",None) -%}
+                    
+                    {{ label  }}
+        
+                {%- endif -%}
+            {% else -%}
+            <a href="{{ uri_label }}">{{ uri_label }}</a>
+            {% endif -%}
+
+
+        {#
                 {%- if item["key"] -%}
                     <div style="display:flex">
                         <div style="font-weight:bold">
@@ -14,9 +71,12 @@
                     </div>
                 {%- else -%}
                     <div>
+                        {{ h.get_vocabulairies_for_given_repeating_subfields(field,"uri")}}
                         {{ item["uri"] }}
                     </div>
                  {%- endif -%}
+
+        #}
         {%- endfor -%}
 
 {%- endif -%}

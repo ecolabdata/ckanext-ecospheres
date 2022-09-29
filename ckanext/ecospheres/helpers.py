@@ -122,3 +122,20 @@ def get_vocabulary_label_by_uri(vocabulary,uri):
         logger.error(f"erreur lors de la recuperation du label du vocabulaire: {vocabulary} -> {str(e)}")
         return ""
 
+def get_vocabulairies_for_given_repeating_subfields(data,subfield):
+
+    if repeating_subfields_dict:=data.get("repeating_subfields",None):
+        
+
+        subfields_as_dict={
+            item["field_name"]: item for item in repeating_subfields_dict
+        }
+
+        if field_dict:=subfields_as_dict.get(subfield,None):
+            return field_dict.get("vocabularies",None)
+    return None
+
+def get_vocabulairies_for_given_fields(data):
+
+    if vocabularies:=data.get("vocabularies",None):
+        return vocabularies

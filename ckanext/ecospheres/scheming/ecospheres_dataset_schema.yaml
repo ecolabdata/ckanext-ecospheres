@@ -477,55 +477,61 @@ dataset_fields:
   tab: *tab_contacts
   repeating_subfields:
 
-  # HAD_ROLE []
-  # > dcat:hadRole
-  - field_name: had_role
-    label: 
-      fr: Rôle
-      en: Role
-    display_snippet: link.html
-    display_property: skos:prefLabel
-    multiple_values: True
-    value_type: uri
-    known_values: require
-    vocabularies:
-      - inspire_role
-    # TODO: ajouter un display_snippet basé semblable à link mais capable
-    # plus généralement de récupérer le label, quelle que soit la propriété
-    # utilisée
-  
-  # AGENT [{}]
-  # > prov:agent -> prov:Agent
-  - field_name: agent
-    label: 
-      fr: Organisation
-      en: Organization
-    value_type: node
-    repeating_subfields:
-      # NAME {*}
-      # > foaf:givenName
-      - field_name: name
-        label: 
-          fr: Nom
-          en: Name
-        translatable_values: True
-        value_type: literal
-      # > foaf:mbox 
-      - field_name: email
-        label:
-          fr: Courriel
-          en: Mail
-        value_type: uri
+    # HAD_ROLE {}
+    # > dcat:hadRole
+    - field_name: had_role
+      label: 
+        fr: Rôle
+        en: Role
+      display_snippet: link.html
+      display_property: skos:prefLabel
+      multiple_values: True
+      value_type: uri
+      known_values: require
+      repeating_subfields:
+        - field_name: uri
+          label: 
+            fr: URI
+            en: URI
+          vocabularies:
+            - inspire_role
 
-      # > foaf:homePage
-      - field_name: url
-        label: 
-          fr: Site internet
-          en: Website
-        value_type: uri
+          # TODO: ajouter un display_snippet basé semblable à link mais capable
+      # plus généralement de récupérer le label, quelle que soit la propriété
+      # utilisée
+    
+    # AGENT [{}]
+    # > prov:agent -> prov:Agent
+    - field_name: agent
+      label: 
+        fr: Organisation
+        en: Organization
+      value_type: node
+      repeating_subfields:
+        # NAME {*}
+        # > foaf:givenName
+        - field_name: name
+          label: 
+            fr: Nom
+            en: Name
+          translatable_values: True
+          value_type: literal
+        # > foaf:mbox 
+        - field_name: email
+          label:
+            fr: Courriel
+            en: Mail
+          value_type: uri
+
+        # > foaf:homePage
+        - field_name: url
+          label: 
+            fr: Site internet
+            en: Website
+          value_type: uri
 
 # ------- Relations -------
-# IN_SERIES []
+# IN_SERIES {}
 # > dcat:inSeries
 # [+ DCAT v3]
 # - dct:isPartOf est également mappé vers ce champ
@@ -562,7 +568,7 @@ dataset_fields:
       value_type: literal
       translatable_values: True
 
-# SERIES_MEMBER []
+# SERIES_MEMBER {}
 # > dcat:seriesMember
 # [+ DCAT v3]
 # - si présent, on type le dataset comme dcat:DatasetSeries en plus de
@@ -644,93 +650,93 @@ dataset_fields:
   tab: *tab_docs
   repeating_subfields:
 
-  # URI
-  - field_name: uri
-    label: 
-      fr: URL
-      en: URL
-    display_snippet: link.html
-    value_type: uri
+    # URI
+    - field_name: uri
+      label: 
+        fr: URL
+        en: URL
+      display_snippet: link.html
+      value_type: uri
 
 
-  # TITLE {*}
-  # > dct:title
-  # [+ GeoDCAT-AP]
-  - field_name: title
-    label: 
-      fr: Titre
-      en: Title
-    preset: fluent_text
-    value_type: literal
-    translatable_values: True
+    # TITLE {*}
+    # > dct:title
+    # [+ GeoDCAT-AP]
+    - field_name: title
+      label: 
+        fr: Titre
+        en: Title
+      preset: fluent_text
+      value_type: literal
+      translatable_values: True
 
 
-  # DESCRIPTION {*}
-  # > dct:description
-  # [+ GeoDCAT-AP]
-  - field_name: description
-    label: 
-      fr: Description
-      en: Description
-    preset: fluent_markdown
-    value_type: literal
-    translatable_values: True
+    # DESCRIPTION {*}
+    # > dct:description
+    # [+ GeoDCAT-AP]
+    - field_name: description
+      label: 
+        fr: Description
+        en: Description
+      preset: fluent_markdown
+      value_type: literal
+      translatable_values: True
 
 
-  # URL []
-  # > dcat:accessURL
-  # [X]
-  # hors standards DCAT
-  - field_name: url
-    label: 
-      fr: URL d'accès
-      en: Access URL
-    # display_snippet: multiple_text.html
-    help_text: URL d'accès à la ressource.
-    # TODO: Ajouter un display_snippet qui gère à la fois les
-    # listes de valeurs et l'affichage des hyperliens
-    preset: url
-    value_type: uri
-    multiple_values: True
+    # URL 
+    # > dcat:accessURL
+    # [X]
+    # hors standards DCAT
+    - field_name: url
+      label: 
+        fr: URL d'accès
+        en: Access URL
+      # display_snippet: multiple_text.html
+      help_text: URL d'accès à la ressource.
+      # TODO: Ajouter un display_snippet qui gère à la fois les
+      # listes de valeurs et l'affichage des hyperliens
+      preset: url
+      value_type: uri
+      multiple_values: True
 
 
-  # MODIFIED
-  # > dct:modified
-  # [X]
-  # disponible dans Dido, hors standards DCAT
-  - field_name: modified
-    label:
-      fr: Date de modification
-      en: Modified date
-    preset: fr_date
-    help_text: Date de dernière modification du document.
-    value_type: literal
+    # MODIFIED
+    # > dct:modified
+    # [X]
+    # disponible dans Dido, hors standards DCAT
+    - field_name: modified
+      label:
+        fr: Date de modification
+        en: Modified date
+      preset: fr_date
+      help_text: Date de dernière modification du document.
+      value_type: literal
 
 
-  # CREATED
-  # > dct:created
-  # [X]
-  # disponible dans Dido, hors standards DCAT
-  - field_name: created
-    label: 
-      fr: Date de création
-      en: Creation Date
-    preset: fr_date
-    help_text: Date de création du document.
-    value_type: literal
+    # CREATED
+    # > dct:created
+    # [X]
+    # disponible dans Dido, hors standards DCAT
+    - field_name: created
+      label: 
+        fr: Date de création
+        en: Creation Date
+      preset: fr_date
+      help_text: Date de création du document.
+      value_type: literal
 
-    
-  # ISSUED
-  # > dct:issued
-  # [X]
-  # disponible dans Dido, hors standards DCAT
-  - field_name: issued
-    label: 
-      fr: Date de publication
-      en: Issued date 
-    preset: fr_date
-    help_text: Date de publication du document.
-    value_type: literal
+      
+    # ISSUED
+    # > dct:issued
+    # [X]
+    # disponible dans Dido, hors standards DCAT
+    - field_name: issued
+      label: 
+        fr: Date de publication
+        en: Issued date 
+      preset: fr_date
+      help_text: Date de publication du document.
+      value_type: literal
 
     
 # # ------ Thèmes et mots clés ------
@@ -743,16 +749,6 @@ dataset_fields:
 #   du guichet)
 
 
-# - field_name: category
-#   label: 
-#     fr: Thèmes
-#     en: Topic
-#   multiple_values: True
-#   value_type: uri
-#   known_values: require
-#   vocabularies:
-#     - ecospheres_theme
-#   tab: *tab_details
 
 
 - field_name: category
@@ -762,16 +758,18 @@ dataset_fields:
   multiple_values: True
   value_type: uri
   known_values: require
-  vocabularies:
-    - ecospheres_theme
   tab: *tab_details
+  
   repeating_subfields:
     - field_name: uri
       label: 
         fr: URI
         en: URI
       value_type: literal
+      vocabularies:
+        - ecospheres_theme
 
+        
     - field_name: theme
       label: 
         fr: Thème
@@ -781,41 +779,9 @@ dataset_fields:
       # TODO: ajouter un display_snippet qui interroge l'URI pour récupérer
       # l'étiquette.
       
-#       # SUBCATEGORY []
-# # > dcat:theme
-# # - pour le second niveau de thèmes de la nomenclature du guichet
-# # - déduit de "theme", "subject" et "free_tag" lors du moissonnage
-# # - stockage sous forme d'une liste d'URI (appartenant au registre
-# #   du guichet)
-# - field_name: subcategory
-#   label: 
-#       fr: Sous-thèmes
-#       en: Subtopic
-#   multiple_values: True
-#   value_type: uri
-#   known_values: require
-#   vocabularies:
-#       - ecospheres_theme
-#   tab: *tab_details
-#   repeating_subfields:
-#     # START_DATE
-#     # > dcat:startDate
-#     - field_name: uri
-#       label: 
-#         fr: URI
-#         en: URI
-#       value_type: literal
 
-#     - field_name: subtheme
-#       label: 
-#         fr: Thème
-#         en: Thème
-#       value_type: literal
-#   # display_snippet: multiple_text
-#   # TODO: ajouter un display_snippet qui interroge l'URI pour récupérer
-#   # l'étiquette.
 
-  # THEME []
+  # THEME {}
 # > dcat:theme
 # - pour les nomemclatures externes, notamment celle de la commission
 #   européenne et la nomenclature INSPIRE
@@ -830,17 +796,17 @@ dataset_fields:
   multiple_values: True
   value_type: uri
   known_values: require
-  vocabularies:
-    - inspire_theme
-    - inspire_topic_category
-    - eu_theme
+
   repeating_subfields:
     - field_name: uri
       label: 
         fr: URI
         en: URI
       value_type: literal
-  
+      vocabularies:
+        - inspire_theme
+        - inspire_topic_category
+        - eu_theme
 
 
 
@@ -892,7 +858,7 @@ dataset_fields:
     help_text: Date du dernier moissonnage de la fiche de métadonnées.
     value_type: literal
 
-  # LANGUAGE []
+  # LANGUAGE {}
   # > dct:language
   # [+ DCAT-AP]
   # - stockage et exposition sous la forme d'une liste d'URI
@@ -907,8 +873,15 @@ dataset_fields:
     multiple_values: True
     value_type: uri
     known_values: require
-    vocabularies:
-      - eu_language
+    
+    repeating_subfields:
+      # URI
+      - field_name: uri
+        label: 
+          fr: URL
+          en: URL
+        vocabularies:
+          - eu_language
     # TODO: ajouter un display_snippet qui interroge les URI pour 
     # récupérer leurs étiquettes.
   
@@ -1058,7 +1031,7 @@ dataset_fields:
   display_snippet: null
   value_type: literal
 
-# TERRITORY []
+# TERRITORY {}
 # - non repris dans l'export DCAT (hormis pour les
 #   informations mappées depuis la propriété "spatial")
 # - utilisé uniquement pour le filtrage par territoire
@@ -1074,13 +1047,14 @@ dataset_fields:
   multiple_values: True
   value_type: uri
   known_values: require
-  vocabularies:
-    - ecospheres_territory
+  
   repeating_subfields:
     - field_name: uri
       label: 
         fr: URL
         en: URL
+      vocabularies:
+        - ecospheres_territory
     - field_name: label
       label: 
         fr: label
@@ -1088,7 +1062,7 @@ dataset_fields:
 
 
 
-# TERRITORY_FULL []
+# TERRITORY_FULL {}
 # - reprend la liste de "territory" en y ajoutant les
 #   territoires qui contiennent ces territoires (par ex la région
 #   d'un département)
@@ -1102,9 +1076,13 @@ dataset_fields:
   multiple_values: True
   value_type: uri
   known_values: require
-  vocabularies:
-    - ecospheres_territory
-
+  repeating_subfields:
+    - field_name: uri
+      label: 
+        fr: URL
+        en: URL
+      vocabularies:
+        - ecospheres_territory
 # # ------- Etc. ------
 
 # ACCESS_RIGHTS [{}]
@@ -1159,7 +1137,7 @@ dataset_fields:
     en: Restricted access
   value_type: literal
 
-# CRS []
+# CRS {}
 # > dct:conformsTo
 # - pour les référentiels de coordonnées
 # - stockage et exposition sous forme d'une liste d'URI
@@ -1174,9 +1152,17 @@ dataset_fields:
   multiple_values: True
   value_type: uri
   known_values: require
-  vocabularies:
-    - ogc_epsg
+  
   tab: *tab_details
+  repeating_subfields:
+    # URI
+    - field_name: uri
+      label: 
+        fr: URL
+        en: URL
+      vocabularies:
+        - ogc_epsg
+
 
 # CONFORMS_TO [{}]
 # > dct:conformsTo -> dct:Standard
@@ -1213,7 +1199,7 @@ dataset_fields:
   # plus généralement de récupérer le label, quelle que soit la propriété
   # utilisée (éventuellement autre que skos:prefLabel).
 
-# LANGUAGE []
+# LANGUAGE {}
 # > dct:language
 # - stockage et exposition sous forme d'une liste d'URI
 # - affichage des étiquettes récupérées par interrogation des URI
@@ -1225,9 +1211,16 @@ dataset_fields:
   multiple_values: True
   value_type: uri
   known_values: require
-  vocabularies:
-    - eu_language
   tab: *tab_details
+  repeating_subfields:
+    # URI
+    - field_name: uri
+      label: 
+        fr: URL
+        en: URL
+      vocabularies:
+        - eu_language
+
   # TODO: ajouter un display_snippet qui interroge les URI pour récupérer
   # leurs étiquettes.
 
@@ -1388,7 +1381,7 @@ resource_fields:
   display_snippet: null
   value_type: uri
 
-# URL []
+# URL 
 # > dcat:accessURL
 - field_name: url
   label: 
@@ -1403,7 +1396,7 @@ resource_fields:
   multiple_values: True
   value_type: uri
 
-# DOWNLOAD_URL []
+# DOWNLOAD_URL 
 # > dcat:downloadURL
 - field_name: download_url
   label:

@@ -15,8 +15,12 @@
    "attributes_page":"https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/attachments/442e60a9-d626-44d2-99ee-57e2f41f90be",
    "bbox":"Ile-de-France",
    "crs":[
-      "conformsTo_Standard-uri1",
-      "conformsTo_Standard-uri2"
+      {
+         "uri": "conformsTo_Standard-uri1"
+      },
+      {
+         "uri": "conformsTo_Standard-uri2"
+      }
    ],
    "conforms_to":[
       {
@@ -133,10 +137,18 @@
          ],
          "identifier":"https://data.ststiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datasets/610244c9e436671e84ec5da8",
          "language":[
-            "italiern",
-            "francais",
-            "allemand"
-         ],
+
+            {
+               "uri":"http://publications.europa.eu/resource/authority/language/FRA"
+            },
+      
+            {
+               "uri":"http://publications.europa.eu/resource/authority/language/ENG"
+            }
+            
+         ]
+         
+         ,
          "modified":"2021-10-17T17:19:00.965000+00:00"   ,
          "in_catalog":{
             "title":{
@@ -150,8 +162,15 @@
    "issued":"2021-07-29T06:03:53.921000+00:00",
    "landing_page":"http://publications.europa.eu/resource/authority/frequency/ANNUAL",
    "language":[
-      "http://publications.europa.eu/resource/authority/language/FRA",
-      "http://publications.europa.eu/resource/authority/language/ENG"
+
+      {
+         "uri":"http://publications.europa.eu/resource/authority/language/FRA"
+      },
+
+      {
+         "uri":"http://publications.europa.eu/resource/authority/language/ENG"
+      }
+      
    ],
    "license_id":"",
    "modified":"2022-03-09T09:12:56.785000+00:00",
@@ -234,8 +253,12 @@
             }
          ],
          "had_role": [
-            "owner1",
-            "owner2"
+            {
+            "uri":"owner1"
+            },  
+            {
+            "uri":"owner2"
+            }
          ]
       }
    ],

@@ -157,7 +157,8 @@ def _set_qualifiedAttribution(self, graph, _dataset_dict, _dataset_ref):
             # > dcat:hadRole
             if had_role:=qualifiedAtt.get("had_role",None):
                 for role in had_role:
-                    g.add((qa, DCAT.hadRole, Literal(role)))
+                    if uri:=role.get("uri",None):
+                        g.add((qa, DCAT.hadRole, Literal(uri)))
 
             for agent_dict in qualifiedAtt.get("agent",[]):
                 agent_node=BNode()
@@ -235,12 +236,14 @@ def _set_version_notes(self, graph, _dataset_dict, _dataset_ref):
 
 def _set_language(self, graph, _dataset_dict, _dataset_ref):
     g=graph
+    _clean_lagacy_nodes(g,_dataset_ref,DCT.language)    
     language_list = self._get_dataset_value(_dataset_dict, 'language')
     if not language_list:
         return
     for lang in language_list:
-        language=URIRef(lang.rstrip('/'))
-        g.add((_dataset_ref, DCT.language, language))
+        if uri:=lang.get("uri",None):
+            language=URIRef(uri.rstrip('/'))
+            g.add((_dataset_ref, DCT.language, language))
 
 
 
@@ -280,8 +283,9 @@ def _set_crs(self, graph, _dataset_dict, _dataset_ref):
     if not crs_list:
         return
     for _crs in crs_list:
-        _crs_node=URIRef(_crs.rstrip('/'))
-        g.add((_dataset_ref, DCT.conformsTo, _crs_node))
+        if uri:=_crs.get("uri",None):
+            _crs_node=URIRef(uri.rstrip('/'))
+            g.add((_dataset_ref, DCT.conformsTo, _crs_node))
 
 
 # ACCESS_RIGHTS [{}]

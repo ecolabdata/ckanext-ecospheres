@@ -53,6 +53,8 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
                 'get_type_adminstration_label_by_acronym':helpers.get_type_adminstration_label_by_acronym,
                 'get_vocabulary_label_by_uri':helpers.get_vocabulary_label_by_uri,
                 'get_fields_by_tab':get_fields_by_tab,
+                'get_vocabulairies_for_given_repeating_subfields':helpers.get_vocabulairies_for_given_repeating_subfields,
+                'get_vocabulairies_for_given_fields':helpers.get_vocabulairies_for_given_fields,
                 }
 
     # ------------- IValidators ---------------#
@@ -136,143 +138,143 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
         """
         
-        fq = search_params['fq']
+        if fq := search_params.get('fq',None):
 
 
-        import re
-        regex_orgs = r"([+]*organization\s*:\s*\"([^\"]*)\")"
-        matches = re.finditer(regex_orgs, fq, re.MULTILINE)
-        list_organizations=[]
-        for _, match in enumerate(matches, start=1):
-            list_organizations.append(match.group(2))
-        if list_organizations:
-            fq = re.sub(regex_orgs, "", fq, 0, re.MULTILINE)
-            query=''
-            op=''
-            for org in list_organizations:
-                if query:
-                    op='OR'
-                query=f'{query} {op} organization:"{org}"'
-            if len(fq.strip()) > 0:
-                query=f'{query} OR'
-            fq=f'{fq.strip()} {query.strip()}'
+            import re
+            regex_orgs = r"([+]*organization\s*:\s*\"([^\"]*)\")"
+            matches = re.finditer(regex_orgs, fq, re.MULTILINE)
+            list_organizations=[]
+            for _, match in enumerate(matches, start=1):
+                list_organizations.append(match.group(2))
+            if list_organizations:
+                fq = re.sub(regex_orgs, "", fq, 0, re.MULTILINE)
+                query=''
+                op=''
+                for org in list_organizations:
+                    if query:
+                        op='OR'
+                    query=f'{query} {op} organization:"{org}"'
+                if len(fq.strip()) > 0:
+                    query=f'{query} OR'
+                fq=f'{fq.strip()} {query.strip()}'
 
 
 
 
-        """ Filtre par territoires """ 
+            """ Filtre par territoires """ 
 
-        territoires=[]
-        import re
-        regex_territory=  r"([+]*territory\s*:\s*\"([^\"]*)\")"
-        matches = re.finditer(regex_territory, fq, re.MULTILINE)
-        for _, match in enumerate(matches, start=1):
-            territoires.append(match.group(2))
+            territoires=[]
+            import re
+            regex_territory=  r"([+]*territory\s*:\s*\"([^\"]*)\")"
+            matches = re.finditer(regex_territory, fq, re.MULTILINE)
+            for _, match in enumerate(matches, start=1):
+                territoires.append(match.group(2))
 
-        fq = re.sub(regex_territory, "", fq, 0, re.MULTILINE)
-        if territoires:
-            territoires_hierarchy=VocabularyReader._get_territories_by_hierarchy()
-            regions={value['name'] : key_region  for key_region,value in territoires_hierarchy['régions-métrople'].items()}
-            regions_names_set=set(regions.keys())
-            regions_sub_to_add=regions_names_set.intersection(set(territoires))
-            if regions_sub_to_add:
-                include_subdivision=None
+            fq = re.sub(regex_territory, "", fq, 0, re.MULTILINE)
+            if territoires:
+                territoires_hierarchy=VocabularyReader._get_territories_by_hierarchy()
+                regions={value['name'] : key_region  for key_region,value in territoires_hierarchy['régions-métrople'].items()}
+                regions_names_set=set(regions.keys())
+                regions_sub_to_add=regions_names_set.intersection(set(territoires))
+                if regions_sub_to_add:
+                    include_subdivision=None
 
-                """ include_subdivision 
+                    """ include_subdivision 
 
-                Si la valeur du paramètre 'ext_include_subdivision' est à 'true', on va alors inclure les subdivisions des territoires inclus dans la reqûete, plui concretement si
-                le filtre territoire inclue une region et ext_include_subdivision=true alors on va rechercher tous les jeux de données appartenant aux départements de la région.
+                    Si la valeur du paramètre 'ext_include_subdivision' est à 'true', on va alors inclure les subdivisions des territoires inclus dans la reqûete, plui concretement si
+                    le filtre territoire inclue une region et ext_include_subdivision=true alors on va rechercher tous les jeux de données appartenant aux départements de la région.
 
-                /dataset/?q=&ext_include_subdivision=true&territory=Nouvelle-Aquitaine
+                    /dataset/?q=&ext_include_subdivision=true&territory=Nouvelle-Aquitaine
+
+                    """
+                    try: 
+                        extras=search_params.get("extras",None)
+                        include_subdivision=extras.get("ext_include_subdivision",None)
+                    except:
+                        pass
+
+                    if include_subdivision == "true":
+                        list_subdivisions=[]
+                        regions_keys=[regions[region_name] for region_name in regions_sub_to_add]
+                        for code_region in regions_keys:
+                            list_subdivisions+=[dept["name"] for dept in territoires_hierarchy["depts_by_region"][code_region]]
+                        
+                        if list_subdivisions:
+                            territoires+=list_subdivisions
+
+                query=''
+                op=''
+                for territoire in territoires:
+                    if query:
+                        op='OR'
+                    query=f'{query} {op} territory:"{territoire}"'
+                fq=f'{fq} {query.strip()}'
+
+
+
+            if extras:=search_params.get("extras",None):
+                """
+                Le schèma de search_params est :
+                    {
+                        'extras': {}, 
+                        'facet.field': ['organization', 'category', 'territory', 'res_format'],
+                        'fq': '', 
+                        'q': '', 
+                        'rows': 20,
+                        'start': 0,
+                        'include_private': True, 
+                        'df': 'text'
+                    }
+
+                Pour récuperer des paramètres supplémentaires, il faut utiliser le champ "extras". 
+                pour récuperer un paramètre dans 'extras', il faut préfixer le nom du paramètre par 'ext_': 
+                    exemple:   reqûete http: dataset/q=&ext_param=param_value
+                            before_search: ext_param = search_params["extras"][ext_param"]
+                
+                """
+            
+                restricted_access=extras.get("ext_restricted_access",None)
+                start_date=extras.get("ext_startdate",None)
+                end_date=extras.get("ext_enddate",None)
+
+
+
+                """ filter par dates de mise à jour 
+                
+                /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z&ext_enddate=2023-07-20T11:48:38.540Z
+                /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z
+                /dataset/?q=&ext_enddate=2022-07-20T11:48:38.540Z
 
                 """
-                try: 
-                    extras=search_params.get("extras",None)
-                    include_subdivision=extras.get("ext_include_subdivision",None)
-                except:
-                    pass
 
-                if include_subdivision == "true":
-                    list_subdivisions=[]
-                    regions_keys=[regions[region_name] for region_name in regions_sub_to_add]
-                    for code_region in regions_keys:
-                        list_subdivisions+=[dept["name"] for dept in territoires_hierarchy["depts_by_region"][code_region]]
+                if start_date or end_date:
                     
-                    if list_subdivisions:
-                        territoires+=list_subdivisions
-
-            query=''
-            op=''
-            for territoire in territoires:
-                if query:
-                    op='OR'
-                query=f'{query} {op} territory:"{territoire}"'
-            fq=f'{fq} {query.strip()}'
-
-
-
-        if extras:=search_params.get("extras",None):
-            """
-            Le schèma de search_params est :
-                {
-                    'extras': {}, 
-                    'facet.field': ['organization', 'category', 'territory', 'res_format'],
-                    'fq': '', 
-                    'q': '', 
-                    'rows': 20,
-                    'start': 0,
-                    'include_private': True, 
-                    'df': 'text'
-                }
-
-            Pour récuperer des paramètres supplémentaires, il faut utiliser le champ "extras". 
-            pour récuperer un paramètre dans 'extras', il faut préfixer le nom du paramètre par 'ext_': 
-                exemple:   reqûete http: dataset/q=&ext_param=param_value
-                           before_search: ext_param = search_params["extras"][ext_param"]
-            
-            """
-        
-            restricted_access=extras.get("ext_restricted_access",None)
-            start_date=extras.get("ext_startdate",None)
-            end_date=extras.get("ext_enddate",None)
-
-
-
-            """ filter par dates de mise à jour 
-            
-            /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z&ext_enddate=2023-07-20T11:48:38.540Z
-            /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z
-            /dataset/?q=&ext_enddate=2022-07-20T11:48:38.540Z
-
-            """
-
-            if start_date or end_date:
-                
-                if not start_date :
-                    start_date="*"
-                
-                if not end_date:
-                    end_date="NOW"
+                    if not start_date :
+                        start_date="*"
                     
-                fq = '{fq} +modified:[{start_date} TO {end_date}]'.format(
-                                        fq=fq, start_date=start_date, end_date=end_date)
-            
-            """ filtrer par données à accès resteint
-            
-            /?q=&ext_restricted_access=true
-            /?q=&ext_restricted_access=false
+                    if not end_date:
+                        end_date="NOW"
+                        
+                    fq = '{fq} +modified:[{start_date} TO {end_date}]'.format(
+                                            fq=fq, start_date=start_date, end_date=end_date)
+                
+                """ filtrer par données à accès resteint
+                
+                /?q=&ext_restricted_access=true
+                /?q=&ext_restricted_access=false
 
-            """
-            if restricted_access is not None:
-                fq = '{fq} extras_restricted_access:{restricted_access} '.format(
-                                        fq=fq, restricted_access=restricted_access)
-            import re
-            q = search_params.get('q', '')
-            search_params['q'] = re.sub(":\s", " ", q)
+                """
+                if restricted_access is not None:
+                    fq = '{fq} extras_restricted_access:{restricted_access} '.format(
+                                            fq=fq, restricted_access=restricted_access)
+                import re
+                q = search_params.get('q', '')
+                search_params['q'] = re.sub(":\s", " ", q)
 
 
 
-        search_params['fq'] = fq
+            search_params['fq'] = fq
         return search_params
     
 

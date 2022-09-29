@@ -132,7 +132,13 @@ def _language(self, subject, predicate,dataset_dict):
 
         _language_list.append(str(attr))
     if _language_list:
-        dataset_dict["language"]= _language_list
+        
+        dataset_dict["language"]= [
+            {
+                'uri':lang 
+            }
+                    for lang in  _language_list
+                            ]
 
 
 def _conforms_to(self, subject, predicate,dataset_dict):
@@ -158,7 +164,16 @@ def _crs_list(self, subject, predicate,dataset_dict):
         _conforms_to_list.append(str(attr))
 
     if _conforms_to_list:
-        dataset_dict['crs']= _conforms_to_list
+
+        
+        dataset_dict['crs']= [
+            {
+                'uri': item
+            }
+            for item in _conforms_to_list
+        ]
+        
+        
 
 
 
@@ -258,7 +273,12 @@ def _qualified_attribution(self, subject, predicate,dataset_dict):
             ):
             value=self._object_value_list(attr, _predicate)
             if value:
-                qualified_attri_dict[key]=value
+                qualified_attri_dict[key]=[
+                    {
+                        "uri": role
+                    }
+                    for role in value
+                ]
             
             #agent
             agent_list=[]
