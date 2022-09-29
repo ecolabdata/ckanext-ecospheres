@@ -108,12 +108,12 @@ class TestGetTerritory(object):
         assert VocabularyReader.get_ecospheres_territory(
             'insee_official_geographic_code',
             'http://id.insee.fr/geo/commune/9ca7148d-1d9f-4cf0-8fd6-db5ed497d8ed'
-        ) == 'http://id.insee.fr/geo/departement/29'
+        ) == 'D29'
 
     def test_get_supra_territory_from_ogc_uri_synonym(self):
         """Récupération du territoire d'Ecosphères incluant le territoire identifié par un URI synonyme du vocabulaire insee_official_geographic_code."""
         assert VocabularyReader.get_ecospheres_territory(
             'insee_official_geographic_code',
             'http://id.insee.fr/geo/commune/29019'
-        ) == 'http://id.insee.fr/geo/departement/29'
+        ) == 'D29'
 
