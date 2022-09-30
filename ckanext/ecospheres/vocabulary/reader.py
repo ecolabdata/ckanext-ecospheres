@@ -379,7 +379,7 @@ class VocabularyReader:
         vocabulary : str
             Name of the vocabulary, ie its ``name``
             property in ``vocabularies.yaml``.
-        uri : rdflib.term.URIRef or str
+        uri : rdflib.term.URIRef or stris_known_uri
             Some URI to test.
         
         Returns

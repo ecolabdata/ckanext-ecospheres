@@ -1,0 +1,13 @@
+{%   set value =data[field.field_name] %}
+{%- for item in value %}
+    {%- if item.get("uri",None) -%}
+    {%- set vocabularies= h.get_vocabulairies_for_given_repeating_subfields(field,"uri") -%}
+    {%- set uri=item.get("uri",None) -%}
+
+        {{ h.get_vocab_label_by_uri_from_list_of_vocabularies(vocabularies,uri) }}
+        <br>
+                        
+
+        {%- endif -%}
+
+    {%- endfor -%}

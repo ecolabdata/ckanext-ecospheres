@@ -195,12 +195,12 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     
     for key, predicate in (
                             ('landing_page', DCAT.landingPage), # landing_page: Accès à la fiche sur le catalogue source
-                            ("attributes_page",FOAF.page),
+                            # ("attributes_page",FOAF.page), # conflit avec documentation 
                             ):
-        if key =="attributes_page":
-            value=self._object_value_list(dataset_ref, predicate)
-        else:
-            value = self._object_value(dataset_ref, predicate)
+        # if key =="attributes_page":
+        #     value=self._object_value_list(dataset_ref, predicate)
+        # else:
+        value = self._object_value(dataset_ref, predicate)
         if value:
             dataset_dict[key] = value
     

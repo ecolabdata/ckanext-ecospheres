@@ -13,19 +13,20 @@ def ecospherefr():
 def get_commands():
     return [ecospherefr]
 
-
 '''
-
 Chargement des vocabulaires en base de données:
 
 `ckan -c ckan.ini ecospherefr load-vocab`
 
 '''
+
+
 @ecospherefr.command()
 def load_vocab():
     click.secho('Loading vocabularies...', fg=u"green")
     load_all_vocab()
     click.secho('Vocabularies loaded', fg=u"green")
     
+
 
     

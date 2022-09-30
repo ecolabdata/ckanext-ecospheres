@@ -13,6 +13,7 @@ import re
 import logging
 from ckanext.ecospheres.commands import ecospheres_commands as ecospherefr_cli
 from ckanext.ecospheres.scheming.tab import get_fields_by_tab
+from ckan.lib.helpers import lang
 
     
 
@@ -55,6 +56,7 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
                 'get_fields_by_tab':get_fields_by_tab,
                 'get_vocabulairies_for_given_repeating_subfields':helpers.get_vocabulairies_for_given_repeating_subfields,
                 'get_vocabulairies_for_given_fields':helpers.get_vocabulairies_for_given_fields,
+                'get_vocab_label_by_uri_from_list_of_vocabularies':helpers.get_vocab_label_by_uri_from_list_of_vocabularies,
                 }
 
     # ------------- IValidators ---------------#
@@ -94,14 +96,13 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         """
 
         validated_dict = json.loads(search_data['validated_data_dict'])
-        if categories:=validated_dict.get("category",None):
-            search_data["category"]=[categorie["theme"] for categorie in categories]
         
-        if subcategories:=validated_dict.get("subcategory",None):
-            search_data["subcategory"]=[subcategorie["subtheme"] for subcategorie in subcategories]
-       
+        if categories:=validated_dict.get("category",None):
+            search_data["category"]=[categorie["uri"] for categorie in categories]
+    
         if territory:=validated_dict.get("territory",None):
-            search_data["territory"]=[ter['label'] for ter in territory]
+            search_data["territory"]=[ter['uri'] for ter in territory]
+
 
         if modified:=validated_dict.get("modified",None):
             search_data["modified"]=modified.replace("+00:00",'')
@@ -137,8 +138,9 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         q=organization:"organisation_1"+organization:"organisation_2" deviendra: q=organization:"organisation_1" OR organization:"organisation_2" 
 
         """
-        
-        if fq := search_params.get('fq',None):
+        fq = search_params.get('fq',None)
+        extras=search_params.get("extras",None)
+        if fq or extras:
 
 
             import re
@@ -213,7 +215,7 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
 
 
-            if extras:=search_params.get("extras",None):
+            if extras:
                 """
                 Le schèma de search_params est :
                     {
@@ -288,13 +290,36 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         
         '''
         search_dicts = search_results.get('results', [])
+        territories = []
+        themes = []
         for _dict in search_dicts:
+            lang_code = lang()
+
+            if territory:=_dict.get('territory',None):
+                for item in territory:
+                    if uri:=item.get("uri",None):
+                        labels=helpers.get_vocabulary_label_by_uri("ecospheres_territory",uri)
+                        territories.append(labels)
+            _dict["territory"]=territories
+
+            if theme:=_dict.get('theme',None):
+                for item in theme:
+                    if uri:=item.get("uri",None):
+                        if labels:=helpers.get_vocabulary_label_by_uri("ecospheres_theme",uri,lang_code):
+                            themes.append(labels)
+                        elif labels:=helpers.get_vocabulary_label_by_uri("eu_theme",uri,lang_code):
+                            themes.append(labels)
+            _dict["theme"]=themes
+
+
             _dict_resources = _dict.get('resources', None)
             for resource in _dict_resources:
                 if resoueces_type:=resource["format"]:
                     label=helpers.get_vocabulary_label_by_uri("iana_media_type",resoueces_type)
                     resource["format"]=label
+
         return search_results
+
 
 
 

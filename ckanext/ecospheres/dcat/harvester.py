@@ -10,7 +10,7 @@ from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 
 
 ###############Constantes & Variables ######################
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 TITLE='title'
 URL='url'
 IDENTIFIER="identifier"

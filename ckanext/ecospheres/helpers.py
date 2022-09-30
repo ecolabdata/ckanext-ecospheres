@@ -114,13 +114,15 @@ def get_type_adminstration_label_by_acronym(acronym):
     except:
         return ""
 
-def get_vocabulary_label_by_uri(vocabulary,uri):
+
+def get_vocabulary_label_by_uri(vocabulary,uri,lang=None):
     try:
-        label_dict=VocabularyReader.is_known_uri(vocabulary=vocabulary,uri=uri)
+        label_dict=VocabularyReader.is_known_uri(vocabulary=vocabulary,uri=uri,language=lang)
         return label_dict.get("label")
     except Exception as e:
         logger.error(f"erreur lors de la recuperation du label du vocabulaire: {vocabulary} -> {str(e)}")
-        return ""
+        return None
+
 
 def get_vocabulairies_for_given_repeating_subfields(data,subfield):
 
@@ -139,3 +141,12 @@ def get_vocabulairies_for_given_fields(data):
 
     if vocabularies:=data.get("vocabularies",None):
         return vocabularies
+
+
+
+def get_vocab_label_by_uri_from_list_of_vocabularies(vocabs,uri,lang=None):
+    for voc in vocabs:
+        if voc_label:=get_vocabulary_label_by_uri(voc,uri,lang=lang):
+            return voc_label
+    return uri
+

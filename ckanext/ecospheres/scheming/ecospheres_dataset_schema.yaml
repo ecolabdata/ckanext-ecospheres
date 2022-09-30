@@ -40,8 +40,6 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       label:
         fr:  URL
         en:  URL
-      # display_snippet: link.html
-      # display_property: skos:prefLabel
       value_type: uri
       known_values: require
       vocabularies:
@@ -82,7 +80,7 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       label: 
         fr: Type
         en: Type
-      # display_snippet: link.html
+      display_snippet: link.html
       display_property: skos:prefLabel
       value_type: uri
       known_values: require
@@ -249,8 +247,7 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       label: 
         fr: URL
         en: URL
-      display_snippet: link.html
-      display_property: skos:prefLabel
+    
       value_type: uri
       known_values: allow
       vocabularies:
@@ -648,6 +645,7 @@ dataset_fields:
     en:  Documentation
   value_type: node or uri
   tab: *tab_docs
+
   repeating_subfields:
 
     # URI
@@ -655,7 +653,8 @@ dataset_fields:
       label: 
         fr: URL
         en: URL
-      display_snippet: link.html
+      display_snippet: null
+
       value_type: uri
 
 
@@ -695,7 +694,7 @@ dataset_fields:
       help_text: URL d'accès à la ressource.
       # TODO: Ajouter un display_snippet qui gère à la fois les
       # listes de valeurs et l'affichage des hyperliens
-      preset: url
+      display_snippet: url_access.html
       value_type: uri
       multiple_values: True
 
@@ -759,7 +758,8 @@ dataset_fields:
   value_type: uri
   known_values: require
   tab: *tab_details
-  
+  display_snippet: themes_fr.html
+
   repeating_subfields:
     - field_name: uri
       label: 
@@ -792,13 +792,16 @@ dataset_fields:
   label:
     fr: Autres thèmes
     en: Other theme
-  display_snippet: null
+    # display_snippet: themes_fr.html
   multiple_values: True
+  display_snippet: null
   value_type: uri
   known_values: require
 
   repeating_subfields:
     - field_name: uri
+      display_snippet: null
+
       label: 
         fr: URI
         en: URI
@@ -868,7 +871,7 @@ dataset_fields:
     label: 
       fr: Langues
       en: language
-    display_snippet: multiple_text.html
+    display_snippet: language_fr.html
     help_text: Langues de rédaction des métadonnées.
     multiple_values: True
     value_type: uri
@@ -958,13 +961,12 @@ dataset_fields:
     en: Spatial coverage
   value_type: node or uri
   tab: *tab_details
+  display_snippet: spatial_coverage.html
   repeating_subfields:
   - field_name: uri
     label: 
       fr: URL
       en: URL
-    display_snippet: link.html
-    display_property: skos:prefLabel
     value_type: uri
     known_values: require
     vocabularies:
@@ -1098,14 +1100,13 @@ dataset_fields:
   help_text: Contraintes réglementaires limitant l'accès au jeu de données.
   value_type: node or uri
   tab: *tab_details
+  display_snippet: access_rights.html
   repeating_subfields:
   # URI
   - field_name: uri
     label: 
       fr: URL
       en: URL
-    display_snippet: link.html
-    display_property: skos:prefLabel
     value_type: uri
     known_values: require
     vocabularies:
@@ -1146,7 +1147,7 @@ dataset_fields:
   label: 
     fr: Référentiels de coordonnées
     en: Coordinate Reference System
-  display_snippet: multiple_text.html
+  display_snippet: crs.html
   # TODO: ajouter un display_snippet qui interroge les URI pour récupérer
   # leurs étiquettes.
   multiple_values: True
@@ -1178,6 +1179,7 @@ dataset_fields:
   help_text: Standard, schéma, etc. auquel se conforment les données.
   value_type: node or uri
   tab: *tab_details
+  display_snippet: conforms_to.html
   <<: *standard_fields
 
 # ACCRUAL_PERIODICITY
@@ -1185,6 +1187,7 @@ dataset_fields:
 # - stockage et exposition sous forme d'URI
 # - affichage de l'étiquette récupérée par interrogation de l'URI
 - field_name: accrual_periodicity
+  display_snippet: accrual_periodicity.html
   label:
     fr:  Fréquence de mise à jour
     en:  Update frequency
@@ -1207,7 +1210,7 @@ dataset_fields:
   label: 
     fr: Langues des données
     en: Data language
-  display_snippet: multiple_text.html
+  display_snippet: language_fr.html
   multiple_values: True
   value_type: uri
   known_values: require
@@ -1437,7 +1440,8 @@ resource_fields:
     fr: Format (registre IANA)
     en: Media type
     value_type: node or uri
-    display_snippet: format_fr.html
+  display_snippet: media_type_fields.html
+
   <<: *media_type_fields
 
 # OTHER_FORMAT [{}]
@@ -1447,7 +1451,8 @@ resource_fields:
     fr: Autres formats
     en: Format
   value_type: node or uri
-  display_snippet: format_fr.html
+  display_snippet: media_type_fields.html
+
   <<: *media_type_fields
 
 # FORMAT []
@@ -1478,6 +1483,8 @@ resource_fields:
     Standard, protocole, référentiel de coordonnées, etc. auquel se conforme
     le service qui met à disposition la ressource.
   value_type: node or uri
+  display_snippet: service_conforms_to.html
+
   <<: *standard_fields
 
 # RIGHTS {*}
