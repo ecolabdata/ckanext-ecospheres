@@ -363,3 +363,51 @@ class TestEcospheresDatasetDict(object):
         assert dataset_dict.get_values('free_tags', language='fr') == [
             'mot', 'clé'
         ]
+
+    def test_get_values_from_first_subfield(self):
+        """Teste la récupération des valeurs pour un champ avec sous-champs."""
+
+        dataset_dict = EcospheresDatasetDict(SIMPLE_DATASET_SCHEMA)
+
+        assert dataset_dict.get_values('creator') == []
+
+        creator_dict_1 = dataset_dict.new_item('creator')
+        creator_dict_1.set_value('name', 'Someone', language='en')
+        creator_dict_1.set_value('name', "Quelqu'un", language='fr')
+        creator_dict_1.set_value('email', 'mailto:someone@something.org')
+        creator_dict_2 = dataset_dict.new_item('creator')
+        creator_dict_2.set_value('name', 'Someone else', language='en')
+        creator_dict_2.set_value('email', 'mailto:someone-else@something.org')
+        creator_dict_3 = dataset_dict.new_item('creator')
+        creator_dict_3.set_value('email', 'mailto:mister-x@something.org')
+
+        assert dataset_dict.get_values('creator') == ['Someone', "Quelqu'un", 'Someone else']
+        assert dataset_dict.get_values('creator', language='en') == ['Someone', 'Someone else']
+
+    def test_copies_are_not_linked(self):
+        """Vérifie qu'il ne reste aucun lien résiduel entre deux copies de dictionnaires de métadonnées."""
+
+        original = EcospheresDatasetDict(SIMPLE_DATASET_SCHEMA)
+        copy = original.copy()
+
+        original.set_value('creator', ['Someone', 'Else'])
+        assert original.get_values('creator') == ['Someone', 'Else']
+        assert copy.get_values('creator') == []
+
+        original.set_value('title', 'Titre', 'fr')
+        assert original.get_values('title') == ['Titre']
+        assert copy.get_values('title') == []
+
+        original.set_value('free_tags', ['mot 1', 'mot 2'], 'fr')
+        assert original.get_values('free_tags', language='fr') == ['mot 1', 'mot 2']
+        assert copy.get_values('free_tags') == []
+
+        original.set_value('category', ['namespace:theme1', 'namespace:theme2'])
+        assert original.get_values('category') == ['namespace:theme1', 'namespace:theme2']
+        assert copy.get_values('category') == []
+
+        original.set_value('version', 'v1')
+        assert original.get_values('version') == ['v1']
+        assert copy.get_values('version') == []
+
+
