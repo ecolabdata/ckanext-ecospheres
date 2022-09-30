@@ -87,6 +87,11 @@ class EcospheresObjectDict(dict):
     def get_values(self, field_name, language=None):
         """Liste toutes les valeurs d'un champ du dictionnaire.
         
+        Pour les champs avec ``repeating_subfields``, cette
+        méthode récupère les valeurs du premier des champs qui décrivent
+        l'objet (de manière récursive si ce champ a lui-même
+        des ``repeating_subfields``).
+
         Parameters
         ----------
         field_name : str
@@ -108,10 +113,7 @@ class EcospheresObjectDict(dict):
         list
 
         """
-        if (
-            not field_name in self
-            or isinstance(self.get(field_name), EcospheresSubfieldsList)
-        ):
+        if not field_name in self:
             return []
         
         values = self[field_name]
@@ -145,14 +147,22 @@ class EcospheresObjectDict(dict):
         
         if isinstance(values, EcospheresMultiValuesList):
             return values
+        
+        if isinstance(values, EcospheresSubfieldsList):
+            return values.list_values(language=language)
+
         return [values] if values else []
 
     def set_value(self, field_name, value, language=None):
         """Définit la valeur ou l'une des valeurs d'un champ du dictionnaire.
         
-        Cette méthode n'a aucun effet sur les champs avec
-        ``repeating_subfields``, pour lesquels on utilisera
-        :py:meth:`EcospheresObjectDict.new_item`.
+        Pour les champs avec ``repeating_subfields``, cette
+        méthode alimente le premier des champs qui décrivent
+        l'objet (de manière récursive si ce champ a lui-même
+        des ``repeating_subfields``). Il est tout à fait justifié
+        de l'utiliser quand il n'y a qu'un seul sous-champ prenant
+        des valeurs littérales ou des URI, sinon il est recommandé
+        d'utiliser :py:meth:`EcospheresObjectDict.new_item`.
 
         Si le champ admet plusieurs valeurs, traduisibles ou non,
         la nouvelle valeur est ajoutée aux précédentes, sauf si
@@ -176,9 +186,7 @@ class EcospheresObjectDict(dict):
         ----------
         field_name : str
             Nom d'un champ (une clé) du dictionnaire présumé
-            être référencé et admettre une valeur de type
-            autre que :py:class:`EcospheresSubfieldsList`. Si ces
-            deux conditions ne sont pas remplies, la méthode n'aura
+            être référencé, sans quoi la méthode n'aura
             silencieusement aucun effet.
         value : str or int or float or list(str or int or float)
             La valeur du champ. Le type n'est pas contrôlé, mais il
@@ -209,8 +217,7 @@ class EcospheresObjectDict(dict):
         {'fr': ['Mot-clé A', 'Mot-clé B']}
 
         """  
-        if not field_name in self \
-            or isinstance(self.get(field_name), EcospheresSubfieldsList):
+        if not field_name in self:
             return
         
         if isinstance(value, list):
@@ -223,7 +230,8 @@ class EcospheresObjectDict(dict):
             value = value.strip(' \r\n') or None
 
         if isinstance(self[field_name], (EcospheresSimpleTranslationDict,
-            EcospheresMultiTranslationsDict, EcospheresMultiValuesList)):
+            EcospheresMultiTranslationsDict, EcospheresMultiValuesList,
+            EcospheresSubfieldsList)):
             self[field_name].add_item(value=value, language=language)
         else:
             # reste le cas où le champ admet des valeurs simples
@@ -287,7 +295,14 @@ class EcospheresObjectDict(dict):
             return self[field_name].new_item()
 
     def copy(self):
-        return type(self).__call__(dict.copy(self))
+        return EcospheresObjectDict.__call__(
+            {
+                k: v.copy() if isinstance(v, (
+                    EcospheresSimpleTranslationDict, EcospheresMultiTranslationsDict,
+                    EcospheresMultiValuesList, EcospheresSubfieldsList
+                )) else None for k, v in self.items()
+            }
+        )
 
 class EcospheresDatasetDict(EcospheresObjectDict):
     """Dictionnaire contenant les métadonnées qui décrivent un jeu de données.
@@ -307,7 +322,7 @@ class EcospheresDatasetDict(EcospheresObjectDict):
 
     """
 
-    def __init__(self, dataset_schema=None, main_language=None):
+    def __init__(self, dataset_schema, main_language=None):
         dataset_dict = schema_reader(dataset_schema['dataset_fields'],
             main_language=main_language)
         resource_model = schema_reader(dataset_schema['resource_fields'],
@@ -398,6 +413,27 @@ class EcospheresSubfieldsList(list):
     def remove_items(self, *args, **kwargs):
         self.clear()
 
+    def add_item(self, value, *args, **kwargs):
+        if not value:
+            return
+        new_item = self.new_item()
+        for field_name in new_item:
+            new_item.set_value(field_name, value, *args, **kwargs)
+            break
+    
+    def list_values(self, *args, **kwargs):
+        values = []
+        for item in self:
+            for field_name in item:
+                values += item.get_values(field_name, *args, **kwargs)
+                break
+        return values
+
+    def copy(self):
+        copy = type(self).__call__(self.model)
+        # une copie est une liste vide avec le même modèle
+        return copy
+
 class EcospheresSimpleTranslationDict(dict):
     """Dictionnaire de traductions (une seule valeur par langue).
     
@@ -421,6 +457,9 @@ class EcospheresSimpleTranslationDict(dict):
             self.clear()
         elif language in self:
             del self[language]
+    
+    def copy(self):
+        return type(self).__call__(self.main_language)
 
 class EcospheresMultiTranslationsDict(dict):
     """Dictionnaire de traductions (plusieurs valeurs par langue).
@@ -449,6 +488,9 @@ class EcospheresMultiTranslationsDict(dict):
             self.clear()
         elif language in self:
             del self[language]
+    
+    def copy(self):
+        return type(self).__call__(self.main_language)
 
 class EcospheresMultiValuesList(list):
     """Liste de valeurs littérales non traduisibles.
@@ -467,6 +509,9 @@ class EcospheresMultiValuesList(list):
     
     def remove_items(self, *args, **kwargs):
         self.clear()
+
+    def copy(self):
+        return type(self).__call__()
 
 def schema_reader(schema_sublist, main_language=None):
     """Génère un dictionnaire vierge à partir d'une liste de champs.
