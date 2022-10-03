@@ -384,6 +384,29 @@ class TestEcospheresDatasetDict(object):
         assert dataset_dict.get_values('creator') == ['Someone', "Quelqu'un", 'Someone else']
         assert dataset_dict.get_values('creator', language='en') == ['Someone', 'Someone else']
 
+    def test_set_value_of_first_subfield(self):
+        """Teste le raccourci pour la mise à jour d'un champ avec sous-champs."""
+
+        dataset_dict = EcospheresDatasetDict(SIMPLE_DATASET_SCHEMA)
+
+        dataset_dict.set_value('creator', 'Someone', language='en')
+        assert dataset_dict['creator'][0].get_values('name') == ['Someone']
+        assert dataset_dict['creator'][0].get_values('name', language='en') == ['Someone']
+
+        dataset_dict.set_value('creator', ["Quelqu'un", "d'autre"], language='fr')
+        assert dataset_dict['creator'][0].get_values('name', language='fr') == []
+        assert dataset_dict['creator'][1].get_values('name') == ["Quelqu'un"]
+        assert dataset_dict['creator'][1].get_values('name', language='fr') == ["Quelqu'un"]
+        assert dataset_dict['creator'][2].get_values('name') == ["d'autre"]
+        assert dataset_dict['creator'][2].get_values('name', language='fr') == ["d'autre"]
+
+        assert len(dataset_dict['creator']) == 3
+        dataset_dict.set_value('creator', [], language='fr')
+        assert len(dataset_dict['creator']) == 3
+        dataset_dict.set_value('creator', None)
+        assert len(dataset_dict['creator']) == 3
+
+
     def test_copies_are_not_linked(self):
         """Vérifie qu'il ne reste aucun lien résiduel entre deux copies de dictionnaires de métadonnées."""
 
