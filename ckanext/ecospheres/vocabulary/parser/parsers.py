@@ -144,9 +144,14 @@ from ckanext.ecospheres.vocabulary.parser.result import VocabularyParsingResult
 
 
 EPSG_NAMESPACES = {
-       'gml': 'http://www.opengis.net/gml/3.2',
-       'epsg': 'urn:x-ogp:spec:schema-xsd:EPSG:2.2:dataset'
-    }
+    'gml': 'http://www.opengis.net/gml/3.2',
+    'epsg': 'urn:x-ogp:spec:schema-xsd:EPSG:2.2:dataset'
+}
+
+IGN_NAMESPACES = {
+    'xmlns': 'http://www.isotc211.org/2005/gmx',
+    'gml': 'http://www.opengis.net/gml'
+}
 
 def basic_rdf(
     name, url, format='xml', schemes=None, 
@@ -912,4 +917,79 @@ def insee_official_geographic_code(name, url, rdf_types=None, **kwargs):
 
     return result
 
+
+def ign_crs(name, url, **kwargs):
+    """Build a vocabulary cluster from IGN's coordinates reference systems register.
+
+    The cluster build by this parser contains an additional
+    ``[name]_synonym (uri, synonym)`` table storing 
+    corresponding URIs from the EPSG register and such.
+
+    Parameters
+    ----------
+    vocabulary : str
+        Name of the vocabulary.
+    url : str
+        Base URL of the register. Should return a XML document
+        listing all coordinates reference systems (CRS) as
+        ``crs`` elements.
+
+    Returns
+    -------
+    VocabularyParsingResult
+
+    """
+    result = VocabularyParsingResult(name)
+
+    result.data.synonym_table()
+
+    try:
+        raw_data = utils.fetch_data(url, format='bytes', **kwargs)
+        tree = etree.parse(BytesIO(raw_data))
+        root = tree.getroot()
+    except Exception as error:
+        result.exit(error)
+        return result
+
+    for elem in root.iter(tag='{*}crs'):
+
+        valid = True
+
+        identifiers = elem.xpath('./*/gml:identifier/text()', namespaces=IGN_NAMESPACES)
+        if not identifiers:
+            result.log_error(
+                exceptions.UnexpectedDataError('missing crs identifier'),
+            )
+            valid = False
+        
+        synonyms = []
+        labels = []
+        for value in elem.xpath('./*/gml:name', namespaces=IGN_NAMESPACES):
+            if value.get('codeSpace'):
+                synonyms.append(value.text)
+            elif value.text:
+                labels.append(value.text)
+        if not labels:
+            result.log_error(
+                exceptions.UnexpectedDataError('missing crs name'),
+            )
+            valid = False
+
+        if valid:
+            identifier = identifiers[0]
+
+            for label in labels:
+                result.add_label(
+                    uri=identifier,
+                    language='fr',
+                    label=label
+                    )
+            
+            for synonym in synonyms:
+                result.data.synonym.add(identifier, synonym)
+
+    if not result.data:
+        result.exit(exceptions.NoVocabularyDataError())
+
+    return result
 
