@@ -83,15 +83,11 @@ tabs:
       label: 
         fr: Type
         en: Type
-      # display_snippet: link.html
       display_property: skos:prefLabel
       value_type: uri
       known_values: require
       vocabularies:
         - adms_publisher_type
-      # TODO: ajouter un display_snippet basé semblable à link mais capable
-      # plus généralement de récupérer le label, quelle que soit la propriété
-      # utilisée (éventuellement autre que skos:prefLabel)
     
     # EMAIL
     # > foaf:mbox
@@ -103,7 +99,6 @@ tabs:
         fr: Courriel
         en: Mail
       value_type: uri
-      # display_snippet: link.html
       # TODO: ajouter un display_snippet pour l'hyperlien + suppression
       # du préfixe à l'affichage.
     
@@ -117,7 +112,6 @@ tabs:
         fr: Téléphone
         en: Phone
       value_type: uri
-      # display_snippet: link.html
       # TODO: ajouter un display_snippet pour l'hyperlien + suppression
       # du préfixe à l'affichage.
 
@@ -131,7 +125,6 @@ tabs:
         fr: Site internet
         en: Website
       value_type: uri
-      # display_snippet: link.html
 
     # AFFILIATION {*}
     # > org:memberOf [-> org:Organization] / foaf:name
@@ -256,10 +249,6 @@ tabs:
       known_values: allow
       vocabularies:
         - ecospheres_data_standard
-      # TODO: ajouter un display_snippet basé semblable à link mais capable
-      # plus généralement de récupérer le label, quelle que soit la propriété
-      # utilisée (éventuellement autre que skos:prefLabel). Si l'URI ne pointe
-      # pas sur un registre, on l'affiche telle quelle.
     # TITLE {*}
     # > dct:title
     # [+ GeoDCAT-AP]
@@ -278,6 +267,7 @@ tabs:
 # -> dcat:Dataset
 
 dataset_fields:
+
 # NAME
 # - sert à construire les URL de CKAN + gestion des doublons
 # - pour les métadonnées INSPIRE, il s'agit de l'identifiant de la fiche
@@ -334,12 +324,21 @@ dataset_fields:
   label: 
     en: Description
     fr: Description
-    # display_snippet: markdown.html
   help_text: Description du jeu de données.
   preset: multilingual_markdown
   value_type: literal
   translatable_values: True
 
+# OWNER_ORG
+# - non affiché en tant que tel, non exposé en DCAT
+# - identifiant de l'organisation CKAN à laquelle est rattaché
+#   le jeu de données
+- field_name: owner_org
+  label:
+    fr: Organisation
+    en: Organization
+  display_snippet: null
+  
 
 # ------- Dates --------
 
@@ -477,7 +476,7 @@ dataset_fields:
   value_type: node
   tab: *tab_contacts
   repeating_subfields:
-  # HAD_ROLE []
+  # HAD_ROLE [{}]
   # > dcat:hadRole
   - field_name: had_role
     label: 
@@ -490,9 +489,6 @@ dataset_fields:
     known_values: require
     vocabularies:
       - inspire_role
-    # TODO: ajouter un display_snippet basé semblable à link mais capable
-    # plus généralement de récupérer le label, quelle que soit la propriété
-    # utilisée
   
   # AGENT [{}]
   # > prov:agent -> prov:Agent
@@ -1057,6 +1053,7 @@ dataset_fields:
   known_values: require
   vocabularies:
     - ogc_epsg
+    - ign_crs
   tab: *tab_details
 
 # CONFORMS_TO [{}]
