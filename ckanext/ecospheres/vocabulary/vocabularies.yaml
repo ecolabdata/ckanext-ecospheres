@@ -110,6 +110,13 @@
   uri_property: http://purl.org/dc/terms/conformsTo
   available: True
 
+- name: ign_crs
+  url: https://librairies.ign.fr/geoportail/resources/IGNF.xml
+  parser: ign_crs
+  verify: False
+  comment: verify à False pour ignorer les erreurs de certificat SSL...
+  available: True
+
 - name: insee_official_geographic_code
   url: http://rdf.insee.fr/geo/cog-20210310.zip
   about: http://rdf.insee.fr/geo/index.html
