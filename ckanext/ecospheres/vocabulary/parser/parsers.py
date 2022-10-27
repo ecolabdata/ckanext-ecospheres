@@ -927,7 +927,7 @@ def ign_crs(name, url, **kwargs):
 
     Parameters
     ----------
-    vocabulary : str
+    name : str
         Name of the vocabulary.
     url : str
         Base URL of the register. Should return a XML document
