@@ -40,72 +40,72 @@ object of a triple whose predicate is one of these properties.
 """
 
 def fetch_data(url, format='json', **kwargs):
-        """Uses the requests module to get some data.
+    """Uses the requests module to get some data.
 
-        This function will raise any possible HTTP error,
-        JSON parsing error, etc. so the vocabulary parser can
-        either:
+    This function will raise any possible HTTP error,
+    JSON parsing error, etc. so the vocabulary parser can
+    either:
 
-        * Log the error (as a critical failure or not).
+    * Log the error (as a critical failure or not).
 
-        * Be assured that some proper data has been
-          returned.
+    * Be assured that some proper data has been
+        returned.
 
-        For instance, if getting the data is required
-        for the parsing to succeed:
+    For instance, if getting the data is required
+    for the parsing to succeed:
 
-            >>> result = VocabularyParsingResult()
-            >>> try:
-            ...     data = fetch_data(some_url)
-            ... except Exception as error:
-            ...     result.exit(error)
-            ...     return result
+        >>> result = VocabularyParsingResult()
+        >>> try:
+        ...     data = fetch_data(some_url)
+        ... except Exception as error:
+        ...     result.exit(error)
+        ...     return result
 
-        If the parser has a work around, the error
-        will just be logged:
+    If the parser has a work around, the error
+    will just be logged:
 
-            >>> result = VocabularyParsingResult()
-            >>> try:
-            ...     data = fetch_data(some_url)
-            ... except Exception as error:
-            ...     result.log_error(error)
+        >>> result = VocabularyParsingResult()
+        >>> try:
+        ...     data = fetch_data(some_url)
+        ... except Exception as error:
+        ...     result.log_error(error)
 
-        Parameters
-        ----------
-        url : str
-            The URL to request to.
-        format : {'json', 'text', 'bytes'}, optional
-            The expected format for the result.
-        **kwargs
-            Any nammed parameter to pass to the
-            :py:func:`requests.get` function.
+    Parameters
+    ----------
+    url : str
+        The URL to request to.
+    format : {'json', 'text', 'bytes'}, optional
+        The expected format for the result.
+    **kwargs
+        Any nammed parameter to pass to the
+        :py:func:`requests.get` function.
 
-        Returns
-        -------
-        dict or list or str or bytes
-            The type of the result depends on the
-            `format` parameter.
+    Returns
+    -------
+    dict or list or str or bytes
+        The type of the result depends on the
+        `format` parameter.
 
-        """
-        clean_kwargs = {
-            key: value for key, value in kwargs.items()
-            if key in (
-                'params', 'data', 'json', 'headers', 'cookies',
-                'files', 'auth', 'timeout', 'allow_redirects',
-                'proxies', 'verify', 'stream', 'cert'
-            )
-        }
+    """
+    clean_kwargs = {
+        key: value for key, value in kwargs.items()
+        if key in (
+            'params', 'data', 'json', 'headers', 'cookies',
+            'files', 'auth', 'timeout', 'allow_redirects',
+            'proxies', 'verify', 'stream', 'cert'
+        )
+    }
 
-        response = requests.get(url, **clean_kwargs)
-        response.raise_for_status()
+    response = requests.get(url, **clean_kwargs)
+    response.raise_for_status()
 
-        if format == 'text':
-            return response.text
-        
-        if format == 'bytes':
-            return response.content
-        
-        return response.json()
+    if format == 'text':
+        return response.text
+    
+    if format == 'bytes':
+        return response.content
+    
+    return response.json()
 
 class VocabularyGraph(Graph):
     """RDF graph holding vocabulary data."""
@@ -243,5 +243,4 @@ class VocabularyGraph(Graph):
             if isinstance(child, URIRef) and not child in children:
                 children.append(child)
         return children
-
 
