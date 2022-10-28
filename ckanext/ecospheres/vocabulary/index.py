@@ -28,13 +28,25 @@ Or just one:
 
     >>> result = VocabularyIndex.load_and_dump('ecospheres_theme')
 
+To save as RDF all vocabulary data previously stored as JSON:
+
+    >>> graph = VocabularyIndex.to_rdf()
+
+Or just one:
+
+    >>> graph = VocabularyIndex.to_rdf('ecospheres_theme')
+
 """
 
-import yaml
+import yaml, json
 from pathlib import Path
+from rdflib import (
+    Graph, URIRef, Literal, SKOS, RDF
+)
 
 from ckanext.ecospheres.vocabulary.parser import parsers
 from ckanext.ecospheres.vocabulary import __path__ as vocabulary_path
+from ckanext import __path__ as ckanext_path
 
 class VocabularyUnit:
     """Single vocabulary metadata.
@@ -306,3 +318,189 @@ class VocabularyIndex:
             )
         return store
 
+    @classmethod
+    def to_rdf(
+        cls, name=None, dirpath=None, all_in_one=False,
+        do_not_save=False, update=False, languages=None
+    ):
+        """Build a RDF graph from a vocabulary serialized as JSON.
+
+        Graphs are stored as turtle files - either one graph
+        for all vocabularies or one graph per vocabulary
+        according to the value of `all_in_one`.
+
+        This method can only be used if the vocabulary
+        is available as JSON data in the ``vocabularies`` 
+        directory, else it does nothing and returns an
+        empty graph.
+
+        Only standard tables will be managed: labels,
+        hierarchy and synonyms. Alternative labels are not
+        supported for now, because it's not possible to
+        determine the right property to use. ``skos:altLabel``
+        wouldn't be appropriate for an identifiers, for instance.
+
+        Schemes are not stored in the vocabulary data, and
+        often didn't exist to begin with. The method will
+        use the scheme referenced in the ``vocabularies.yaml``
+        file. If there is none, the function does nothing and
+        returns an empty graph.
+
+        Parameters
+        ----------
+        name : str or list(str), optional
+            Name of the vocabulary or vocabularies. If not
+            provided, all available vocabularies in
+            the ``vocabularies`` directory will be considered.
+        dirpath : str or pathlib.Path, optional
+            Path of the directory were RDF data should be
+            stored. The function will try to create it
+            if it doesn't already exists. If this isn't provided,
+            the files will be stored in the ``vocabularies/rdf`` 
+            subdirectory (created if needed).
+        all_in_one : bool, default False
+            If this is ``True``, all vocabularies are stored
+            in one unique file named ``vocabularies.ttl``.
+            Else the files will be named after the
+            vocabulary, with a ``'.ttl'`` extension.
+        do_not_save : bool, default False
+            If this is ``True``, no data will be saved.
+        update : bool, default False
+            Force update of vocabulary properties from the
+            ``vocabularies.yaml`` file.
+        languages : list(str), optional
+            If provided, only translatable values in the listed
+            languages will be added to the vocabulary (especially
+            for labels).
+        
+        Returns
+        -------
+        rdflib.graph.Graph
+
+        """
+        VocabularyIndex(update)
+        vocabularies_path = Path(ckanext_path[0]).parent / 'vocabularies'
+        if not vocabularies_path.exists() or not vocabularies_path.is_dir():
+            raise FileNotFoundError('no "vocabularies" directory')
+
+        dirpath = Path(dirpath) if dirpath else vocabularies_path / 'rdf'
+        if not dirpath.exists() or not dirpath.is_dir():
+            dirpath.mkdir()
+
+        if isinstance(name, str):
+            name = [name]
+
+        main_graph = Graph()
+
+        for file in vocabularies_path.iterdir():
+
+            if not file.suffix == '.json' or (
+                name and not file.stem in name
+            ) or not file.stem in cls.VOCABULARY_INDEX:
+                continue
+
+            raw_data = file.read_text(encoding='utf-8')
+            data = json.loads(raw_data)
+            graph = Graph()
+
+            # ----- Concept Scheme ------
+            scheme_uri = cls.get(file.stem, 'eco_uri')
+            scheme_labels = cls.get(file.stem, 'eco_label')
+            if not scheme_uri:
+                continue
+            scheme_uri = URIRef(scheme_uri)
+            graph.add(
+                (
+                    scheme_uri,
+                    RDF.type,
+                    SKOS.ConceptScheme
+                )
+            )
+            for language, scheme_label in scheme_labels.items():
+                if not languages or language in languages:
+                    graph.add(
+                        (
+                            scheme_uri,
+                            SKOS.prefLabel,
+                            Literal(scheme_label, lang=language)
+                        )
+                    )
+
+            # ------ Concepts ------
+            for table in data:
+                if table.endswith('_label'):
+                    for item in data[table]:
+                        graph.add(
+                            (
+                                URIRef(item['uri']),
+                                RDF.type,
+                                SKOS.Concept
+                            )
+                        )
+                        graph.add(
+                            (
+                                URIRef(item['uri']),
+                                SKOS.inScheme,
+                                scheme_uri
+                            )
+                        )
+                        if not languages or item['language'] in languages:
+                            graph.add(
+                                (
+                                    URIRef(item['uri']),
+                                    SKOS.prefLabel,
+                                    Literal(item['label'], lang=item['language'])
+                                )
+                            )
+
+            for table in data:
+                # new iteration, because concepts
+                # should be added first
+                if table.endswith('_synonym'):
+                    for item in data[table]:
+                        graph.add(
+                            (
+                                URIRef(item['uri']),
+                                RDF.type,
+                                SKOS.Concept
+                            )
+                        )
+                        graph.add(
+                            (
+                                URIRef(item['uri']),
+                                SKOS.exactMatch,
+                                URIRef(item['synonym'])
+                            )
+                        )
+
+                if table.endswith('_hierarchy'):
+                    for item in data[table]:
+                        if (
+                            (URIRef(item['parent']), RDF.type, SKOS.Concept) in graph
+                            and (URIRef(item['child']), RDF.type, SKOS.Concept)
+                        ):
+                            graph.add(
+                                (
+                                    URIRef(item['parent']),
+                                    SKOS.narrower,
+                                    URIRef(item['child'])
+                                )
+                            )
+            
+            # ------ Individual storage ------
+            if graph and not do_not_save and not all_in_one:
+                graph.serialize(
+                    destination=dirpath / f'{file.stem}.ttl',
+                    encoding='utf-8'
+                    )
+            
+            main_graph += graph
+
+        # ------ Global storage ------
+        if main_graph and not do_not_save and all_in_one:
+            main_graph.serialize(
+                destination=dirpath / f'vocabularies.ttl',
+                encoding='utf-8'
+                )
+
+        return main_graph
