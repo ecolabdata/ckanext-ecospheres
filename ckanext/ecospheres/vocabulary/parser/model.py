@@ -609,6 +609,193 @@ class VocabularyDataTable(list):
         self.append(row)
         return row
 
+
+class VocabularyLabelTable(VocabularyDataTable):
+    """Special table for labels.
+
+    This table has three fields:
+
+    * ``uri`` is the vocabulary item URI.
+    * ``language`` is a ISO 639-1 language code
+        (2 letter) if possible, else ISO 639-3.
+    * ``label`` is the preferred label for the
+        language.
+
+    Three constraints are declared and used by data validation
+    methods such as :py:meth:`VocabularyDataTable.validate`:
+
+    * ``uri`` can't be empty.
+    * ``label`` can't be empty.
+    * two rows can't have the sames values for both ``uri``
+      and ``language`` (only one label per language).
+
+    Use :py:class:`VocabularyAltLabelTable` instead for
+    alternative labels.
+    
+    Parameters
+    ----------
+    vocabulary : str
+        Name of the vocabulary, ie its ``name``
+        property in ``vocabularies.yaml``.
+
+    Attributes
+    ----------
+    name : str
+        The table name. It's always the vocabulary name
+        with the suffix ``'_label'``.
+    fields : tuple(str)
+        Names of the table fields.
+    constraints : list(TableConstraint)
+        List of the table constraints.
+
+    """
+
+    def __init__(
+        self, vocabulary
+    ):
+        super().__init__(
+            vocabulary,
+            name='label',
+            fields=('uri', 'language', 'label'),
+            not_null=['uri', 'label']
+        )
+        self.set_unique_constraint(
+            ('uri', 'language'),
+            none_as_value=False
+        )
+
+class VocabularyAltLabelTable(VocabularyDataTable):
+    """Special table for alternative labels.
+    
+    This table has three fields:
+
+    * ``uri`` is the vocabulary item URI.
+    * ``language`` is a ISO 639-1 language code
+        (2 letter) if possible, else ISO 639-3.
+    * ``label`` is the preferred label for the
+        language.
+
+    Two constraints are declared and used by data validation
+    methods such as :py:meth:`VocabularyDataTable.validate`:
+
+    * ``uri`` can't be empty.
+    * ``label`` can't be empty.
+
+    Parameters
+    ----------
+    vocabulary : str
+        Name of the vocabulary, ie its ``name``
+        property in ``vocabularies.yaml``.
+
+    Attributes
+    ----------
+    name : str
+        The table name. It's always the vocabulary name
+        with the suffix ``'_altlabel'``.
+    fields : tuple(str)
+        Names of the table fields.
+    constraints : list(TableConstraint)
+        List of the table constraints.
+
+    """
+
+    def __init__(
+        self, vocabulary
+    ):
+        super().__init__(
+            vocabulary,
+            name='altlabel',
+            fields=('uri', 'language', 'label'),
+            not_null=['uri', 'label']
+        )
+
+
+class VocabularyHierarchyTable(VocabularyDataTable):
+    """Special table for parent/child relationships.
+    
+    This table has two fields:
+
+    * ``parent`` is the parent vocabulary item URI.
+    * ``child`` is the child vocabulary item URI.
+
+    Two constraints are declared and used by data validation
+    methods such as :py:meth:`VocabularyDataTable.validate`:
+
+    * ``parent`` can't be empty.
+    * ``child`` can't be empty.
+
+    Parameters
+    ----------
+    vocabulary : str
+        Name of the vocabulary, ie its ``name``
+        property in ``vocabularies.yaml``.
+
+    Attributes
+    ----------
+    name : str
+        The table name. It's always the vocabulary name
+        with the suffix ``'_hierarchy'``.
+    fields : tuple(str)
+        Names of the table fields.
+    constraints : list(TableConstraint)
+        List of the table constraints.
+
+    """
+
+    def __init__(
+        self, vocabulary
+    ):
+        super().__init__(
+            vocabulary,
+            name='hierarchy',
+            fields=('parent', 'child'),
+            not_null=['parent', 'child']
+        )
+
+
+class VocabularySynonymTable(VocabularyDataTable):
+    """Special table for equivalent URIs.
+    
+    This table has two fields:
+
+    * ``uri`` is the vocabulary item URI.
+    * ``synonym`` is the equivalent URI.
+
+    Two constraints are declared and used by data validation
+    methods such as :py:meth:`VocabularyDataTable.validate`:
+
+    * ``uri`` can't be empty.
+    * ``synonym`` can't be empty.
+
+    Parameters
+    ----------
+    vocabulary : str
+        Name of the vocabulary, ie its ``name``
+        property in ``vocabularies.yaml``.
+
+    Attributes
+    ----------
+    name : str
+        The table name. It's always the vocabulary name
+        with the suffix ``'_synonym'``.
+    fields : tuple(str)
+        Names of the table fields.
+    constraints : list(TableConstraint)
+        List of the table constraints.
+
+    """
+
+    def __init__(
+        self, vocabulary
+    ):
+        super().__init__(
+            vocabulary,
+            name='synonym',
+            fields=('uri', 'synonym'),
+            not_null=['uri', 'synonym']
+        )
+
+
 class VocabularyDataCluster(dict):
     """Vocabulary data cluster.
 
@@ -703,24 +890,14 @@ class VocabularyDataCluster(dict):
 
     def __init__(self, vocabulary):
         self.vocabulary = vocabulary
-        table = VocabularyDataTable(
-            self.vocabulary,
-            name='label',
-            fields=('uri', 'language', 'label'),
-            not_null=['uri', 'label']
-        )
-        table.set_unique_constraint(
-            ('uri', 'language'),
-            none_as_value=False
+        table = VocabularyLabelTable(
+            self.vocabulary
         )
         self[table.name] = table
         self.label = table
         setattr(self, table.name, table)
-        table = VocabularyDataTable(
-            self.vocabulary,
-            name='altlabel',
-            fields=('uri', 'language', 'label'),
-            not_null=['uri', 'label']
+        table = VocabularyAltLabelTable(
+            self.vocabulary
         )
         self[table.name] = table
         self.altlabel = table
@@ -791,23 +968,25 @@ class VocabularyDataCluster(dict):
         """
         if self.hierarchy:
             return self.hierarchy.name
-        hierarchy_table = self.table('hierarchy', ('parent', 'child'))
-        self.hierarchy = self[hierarchy_table]
-        self.hierarchy.set_not_null_constraint('parent')
-        self.hierarchy.set_not_null_constraint('child')
+        hierarchy_table = VocabularyHierarchyTable(
+            self.vocabulary
+        )
+        self[hierarchy_table.name] = hierarchy_table
+        self.hierarchy = hierarchy_table
+        setattr(self, hierarchy_table.name, hierarchy_table)
         self.set_reference_constraint(
-            referenced_table=hierarchy_table,
+            referenced_table=hierarchy_table.name,
             referenced_fields=('parent',),
             referencing_table='label',
             referencing_fields=('uri',)
         )
         self.set_reference_constraint(
-            referenced_table=hierarchy_table,
+            referenced_table=hierarchy_table.name,
             referenced_fields=('child',),
             referencing_table='label',
             referencing_fields=('uri',)
         )
-        return hierarchy_table
+        return hierarchy_table.name
 
     def synonym_table(self):
         """Return the name of the cluster table holding synonyms for URIs (alias), creating it if needed.
@@ -825,18 +1004,18 @@ class VocabularyDataCluster(dict):
         """
         if self.synonym:
             return self.synonym.name
-        synonym_table = self.table(
-        'synonym', ('uri', 'synonym')
+        synonym_table = VocabularySynonymTable(
+            self.vocabulary
         )
-        self.synonym = self[synonym_table]
-        self.synonym.set_not_null_constraint('uri')
-        self.synonym.set_not_null_constraint('synonym')
+        self[synonym_table.name] = synonym_table
+        self.synonym = synonym_table
+        setattr(self, synonym_table.name, synonym_table)
         self.set_reference_constraint(
-            referenced_table=synonym_table,
+            referenced_table=synonym_table.name,
             referenced_fields=('uri',),
             referencing_table='label'
         )
-        return synonym_table
+        return synonym_table.name
 
     def validate(self, delete=True):
         """Validate the cluster data.
