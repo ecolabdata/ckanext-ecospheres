@@ -2,7 +2,9 @@ from builtins import object
 import pytest
 
 from ckanext.ecospheres.vocabulary.parser.model import (
-    InvalidConstraintError, TableNotNullConstraint, VocabularyDataCluster, VocabularyDataTable
+    InvalidConstraintError, TableNotNullConstraint, VocabularyDataCluster, VocabularyDataTable,
+    VocabularyHierarchyTable, VocabularyRegexpTable, VocabularySpatialTable, VocabularySynonymTable,
+    VocabularyLabelTable, VocabularyAltLabelTable
 )
 
 class TestVocabularyDataTable(object):
@@ -164,8 +166,10 @@ class TestVocabularyDataCluster(object):
         cluster = VocabularyDataCluster('somevoc')
         assert getattr(cluster, 'label', None) is not None
         assert getattr(cluster, 'somevoc_label', None) is not None
+        assert isinstance(cluster.label, VocabularyLabelTable)
         assert getattr(cluster, 'altlabel', None) is not None
         assert getattr(cluster, 'somevoc_altlabel', None) is not None
+        assert isinstance(cluster.altlabel, VocabularyAltLabelTable)
 
     def test_add_a_custom_table_to_the_cluster(self):
         """Vérifie qu'il est possible d'ajouter une table au cluster."""
@@ -576,7 +580,7 @@ class TestDataValidation(object):
         assert cluster.hierarchy is None
         hierarchy_table = cluster.hierarchy_table()
         assert hierarchy_table == 'voc_hierarchy'
-        assert isinstance(cluster.hierarchy, VocabularyDataTable)
+        assert isinstance(cluster.hierarchy, VocabularyHierarchyTable)
         assert cluster.hierarchy == cluster['voc_hierarchy']
     
     def test_synonym_table_can_be_accessed(self):
@@ -585,6 +589,24 @@ class TestDataValidation(object):
         assert cluster.synonym is None
         synonym_table = cluster.synonym_table()
         assert synonym_table == 'voc_synonym'
-        assert isinstance(cluster.synonym, VocabularyDataTable)
+        assert isinstance(cluster.synonym, VocabularySynonymTable)
         assert cluster.synonym == cluster['voc_synonym']
+
+    def test_regexp_table_can_be_accessed(self):
+        """Vérifie que tout est en ordre avec la création de la table des expressions régulières."""
+        cluster = VocabularyDataCluster('voc')
+        assert cluster.regexp is None
+        regexp_table = cluster.regexp_table()
+        assert regexp_table == 'voc_regexp'
+        assert isinstance(cluster.regexp, VocabularyRegexpTable)
+        assert cluster.regexp == cluster['voc_regexp']
+
+    def test_regexp_table_can_be_accessed(self):
+        """Vérifie que tout est en ordre avec la création de la table des coordonnées de rectangles d'emprise."""
+        cluster = VocabularyDataCluster('voc')
+        assert cluster.spatial is None
+        spatial_table = cluster.spatial_table()
+        assert spatial_table == 'voc_spatial'
+        assert isinstance(cluster.spatial, VocabularySpatialTable)
+        assert cluster.spatial == cluster['voc_spatial']
 
