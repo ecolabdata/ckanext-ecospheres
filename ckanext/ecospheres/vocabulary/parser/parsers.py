@@ -326,15 +326,8 @@ def basic_rdf(
                     result.log_error(exceptions.InvalidDataError(anomaly))
 
     if regexp_property:
-        table_name = result.data.table('regexp', ('uri', 'regexp'))
-        table = result.data[table_name]
-        table.set_not_null_constraint('uri')
-        table.set_not_null_constraint('regexp')
-        result.data.set_reference_constraint(
-            referenced_table=table_name,
-            referenced_fields=('uri',),
-            referencing_table='label'
-        )
+        result.data.regexp_table()
+        table = result.data.regexp
         for exp in regexp:
             table.add(*exp)
         response = result.data.validate()
@@ -707,24 +700,9 @@ def ecospheres_territory(name, url, **kwargs):
     # the order matters: included territories should be handled
     # after including territories.
 
-    territory_table = result.data.table(
-        'spatial', ('uri', 'westlimit', 'southlimit', 'eastlimit', 'northlimit')
-        )
-    table = result.data[territory_table]
-    table.set_not_null_constraint('uri')
-    table.set_unique_constraint('uri')
-    table.set_not_null_constraint('westlimit')
-    table.set_not_null_constraint('southlimit')
-    table.set_not_null_constraint('eastlimit')
-    table.set_not_null_constraint('northlimit')
-    result.data.set_reference_constraint(
-        referenced_table=territory_table,
-        referenced_fields=('uri',),
-        referencing_table='label'
-    )
-
     result.data.hierarchy_table()
     result.data.synonym_table()
+    result.data.spatial_table()
 
     for territory_type in territory_types:
         if not territory_type in json_data:
@@ -772,7 +750,7 @@ def ecospheres_territory(name, url, **kwargs):
                 continue
             
             result.add_label(id, language='fr', label=label)
-            result.data[territory_table].add(
+            result.data.spatial.add(
                 id, westlimit, southlimit, eastlimit, northlimit
             )
     
