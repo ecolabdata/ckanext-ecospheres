@@ -796,6 +796,99 @@ class VocabularySynonymTable(VocabularyDataTable):
         )
 
 
+class VocabularyRegexpTable(VocabularyDataTable):
+    """Special table for regular expressions (used for mapping).
+    
+    This table has two fields:
+
+    * ``uri`` is the vocabulary item URI.
+    * ``regexp`` is a regular expression that can be used to
+      determine if a given text is related to the vocabulary item.
+
+    Two constraints are declared and used by data validation
+    methods such as :py:meth:`VocabularyDataTable.validate`:
+
+    * ``uri`` can't be empty.
+    * ``regexp`` can't be empty.
+
+    Parameters
+    ----------
+    vocabulary : str
+        Name of the vocabulary, ie its ``name``
+        property in ``vocabularies.yaml``.
+
+    Attributes
+    ----------
+    name : str
+        The table name. It's always the vocabulary name
+        with the suffix ``'_regexp'``.
+    fields : tuple(str)
+        Names of the table fields.
+    constraints : list(TableConstraint)
+        List of the table constraints.
+
+    """
+
+    def __init__(
+        self, vocabulary
+    ):
+        super().__init__(
+            vocabulary,
+            name='regexp',
+            fields=('uri', 'regexp'),
+            not_null=['uri', 'regexp']
+        )
+
+
+class VocabularySpatialTable(VocabularyDataTable):
+    """Special table for bounding box coordinates.
+    
+    This table has five fields:
+
+    * ``uri`` is the vocabulary item URI.
+    * ``westlimit``, ``southlimit``, ``eastlimit``,
+      and ``northlimit`` define the bounding box.
+
+    Five constraints are declared and used by data validation
+    methods such as :py:meth:`VocabularyDataTable.validate`:
+
+    * ``uri`` can't be empty.
+    * ``uri`` is unique.
+    * ``westlimit`` can't be empty.
+    * ``southlimit`` can't be empty.
+    * ``eastlimit`` can't be empty.
+    * ``northlimit`` can't be empty.
+
+    Parameters
+    ----------
+    vocabulary : str
+        Name of the vocabulary, ie its ``name``
+        property in ``vocabularies.yaml``.
+
+    Attributes
+    ----------
+    name : str
+        The table name. It's always the vocabulary name
+        with the suffix ``'_spatial'``.
+    fields : tuple(str)
+        Names of the table fields.
+    constraints : list(TableConstraint)
+        List of the table constraints.
+
+    """
+
+    def __init__(
+        self, vocabulary
+    ):
+        super().__init__(
+            vocabulary,
+            name='spatial',
+            fields=('uri', 'westlimit', 'southlimit', 'eastlimit', 'northlimit'),
+            not_null=['uri', 'westlimit', 'southlimit', 'eastlimit', 'northlimit'],
+            unique=['uri']
+        )
+
+
 class VocabularyDataCluster(dict):
     """Vocabulary data cluster.
 
@@ -814,7 +907,15 @@ class VocabularyDataCluster(dict):
     the attributes :py:attr:`VocabularyDataCluster.label` and 
     :py:attr:`VocabularyDataCluster.altlabel`.
 
-    Additionnal tables may be added with :py:meth:`VocabularyDataCluster.table`.
+    The methods :py:meth:`VocabularyDataCluster.hierarchy_table`,
+    :py:meth:`VocabularyDataCluster.synonym_table`,
+    :py:meth:`VocabularyDataCluster.regexp_table` and
+    :py:meth:`VocabularyDataCluster.spatial_table` can be used
+    to add specific tables to the cluster if they are relevant
+    for the vocabulary.
+
+    Custom additionnal tables may be added with 
+    :py:meth:`VocabularyDataCluster.table`.
 
     A cluster has a boolean value of ``False`` when none of its
     tables holds any data.
@@ -830,7 +931,7 @@ class VocabularyDataCluster(dict):
     vocabulary : str
         Name of the vocabulary, ie its ``name``
         property in ``vocabularies.yaml``.
-    label : VocabularyDataTable
+    label : VocabularyLabelTable
         The table containing the vocabulary labels.
         This table has three fields:
 
@@ -851,7 +952,7 @@ class VocabularyDataCluster(dict):
           issue would be to add labels in the cluster
           with the :py:meth:`VocabularyDataCluster.add_label`
           method.
-    altlabel : VocabularyDataTable
+    altlabel : VocabularyAltLabelTable
         The table containing the vocabulary alternative
         labels. Same structure as `label` whithout
         unicity constraint. If an entry is created
@@ -866,15 +967,27 @@ class VocabularyDataCluster(dict):
         method.
         Alternative labels are used to find matching vocabulary
         items during harvest. Users will never see them.
-    hierarchy : VocabularyDataTable or None
+    hierarchy : VocabularyHierarchyTable or None
         The table holding the relationships between 
         vocabulary items, if any. This table has to be created
         first with :py:meth:`VocabularyDataCluster.hierarchy_table`
         or this attribute's value will be ``None``.
-    synonym : VocabularyDataTable or None
+    synonym : VocabularySynonymTable or None
         The table holding the synonyms for the vocabulary URIs,
         if any. This table has to be created first with
         :py:meth:`VocabularyDataCluster.synonym_table`
+        or this attribute's value will be ``None``.
+    regexp : VocabularyRegexpTable or None
+        The table holding regular expressions to match
+        data with the vocabulary URIs, if any. This table
+        has to be created first with
+        :py:meth:`VocabularyDataCluster.regexp_table`
+        or this attribute's value will be ``None``.
+    spatial : VocabularySpatialTable or None
+        The table holding the coordinates of bounding boxes
+        associated to the vocabulary URIs, if any. This
+        table has to be created first with
+        :py:meth:`VocabularyDataCluster.spatial_table`
         or this attribute's value will be ``None``.
     constraints : list(ClusterConstraint)
         List of cluster constraints, ie constraints
@@ -911,6 +1024,8 @@ class VocabularyDataCluster(dict):
         )
         self.hierarchy = None
         self.synonym = None
+        self.regexp = None
+        self.spatial = None
 
     def __bool__(self):
         return any(table for table in self.values())
@@ -960,6 +1075,11 @@ class VocabularyDataCluster(dict):
         the parent's URI, one for the child's. Both
         URIs should exist in the labels table.
 
+        It is a :py:class:`VocabularyHierarchyTable`
+        object that can be accessed via the
+        :py:attribute:`VocabularyDataCluster.hierarchy`
+        attribute of the cluster.
+
         Returns
         -------
         str
@@ -996,6 +1116,11 @@ class VocabularyDataCluster(dict):
         exist in the labels table, synonym may exist
         but it's not mandatory.
 
+        It is a :py:class:`VocabularySynonymTable`
+        object that can be accessed via the
+        :py:attribute:`VocabularyDataCluster.synonym`
+        attribute of the cluster.
+
         Returns
         -------
         str
@@ -1016,6 +1141,72 @@ class VocabularyDataCluster(dict):
             referencing_table='label'
         )
         return synonym_table.name
+
+    def regexp_table(self):
+        """Return the name of the cluster table holding the regular expressions associated with the vocabulary URIs, creating it if needed.
+
+        A regexp table has two fields: one for
+        the URI, one for the regular expression. The
+        URI should exist in the labels table.
+
+        It is a :py:class:`VocabularyRegexpTable`
+        object that can be accessed via the
+        :py:attribute:`VocabularyDataCluster.regexp`
+        attribute of the cluster.
+
+        Returns
+        -------
+        str
+            The name of the regexp table.
+
+        """
+        if self.regexp:
+            return self.regexp.name
+        regexp_table = VocabularyRegexpTable(
+            self.vocabulary
+        )
+        self[regexp_table.name] = regexp_table
+        self.regexp = regexp_table
+        setattr(self, regexp_table.name, regexp_table)
+        self.set_reference_constraint(
+            referenced_table=regexp_table.name,
+            referenced_fields=('uri',),
+            referencing_table='label'
+        )
+        return regexp_table.name
+
+    def spatial_table(self):
+        """Return the name of the cluster table holding the coordinates of the bounding boxes associated with the vocabulary URIs, creating it if needed.
+
+        A spatial table has five fields: one for
+        the URI, four for the coordinates. The
+        URI should exist in the labels table.
+
+        It is a :py:class:`VocabularySpatialTable`
+        object that can be accessed via the
+        :py:attribute:`VocabularyDataCluster.spatial`
+        attribute of the cluster.
+
+        Returns
+        -------
+        str
+            The name of the spatial table.
+
+        """
+        if self.spatial:
+            return self.spatial.name
+        spatial_table = VocabularySpatialTable(
+            self.vocabulary
+        )
+        self[spatial_table.name] = spatial_table
+        self.spatial = spatial_table
+        setattr(self, spatial_table.name, spatial_table)
+        self.set_reference_constraint(
+            referenced_table=spatial_table.name,
+            referenced_fields=('uri',),
+            referencing_table='label'
+        )
+        return spatial_table.name
 
     def validate(self, delete=True):
         """Validate the cluster data.
