@@ -20,6 +20,47 @@ providing of proxy mapping, authentification info, etc.
     ...     }
     ... )
 
+The result is a :py:class:`ckanext.ecospheres.vocabulary.parser.result.VocabularyParsingResult`
+object holding the parsed vocabulary in its 
+:py:attr:`ckanext.ecospheres.vocabulary.parser.result.VocabularyParsingResult.data`
+attribute.
+
+The boolean value of the object can be checked to
+know if a critical error occured during the parsing. In this
+case, no data will be available.
+
+The :py:attr:`ckanext.ecospheres.vocabulary.parser.result.VocabularyParsingResult.status_code`
+tells if other non critical errors occured. To check the complete absence
+of error:
+
+    >>> if result.status_code == 0:
+    ...    pass
+
+Whether critical or not, errors are stored in the 
+:py:attr:`ckanext.ecospheres.vocabulary.parser.result.VocabularyParsingResult.log`
+attribute, as a list of :py:class:`Exception` objects.
+
+The vocabulary data is stored in a
+:py:class:`ckanext.ecospheres.vocabulary.parser.model.VocabularyDataCluster`
+object. The simplest way to work with a cluster would be to
+handle it as a list of tables. Tables are list of dictionaries. Each item is a
+table row, the dictionary provides the values for each field (field names are
+the keys, all fields are present for every item though they might be empty).
+
+The structure of the table can be infered from its type.
+
+Some types are mandatory in a cluster:
+
+* :py:class:`ckanext.ecospheres.vocabulary.parser.model.VocabularyLabelTable`
+* :py:class:`ckanext.ecospheres.vocabulary.parser.model.VocabularyAltLabelTable`
+
+Others are optional:
+
+* :py:class:`ckanext.ecospheres.vocabulary.parser.model.VocabularyHierarchyTable`
+* :py:class:`ckanext.ecospheres.vocabulary.parser.model.VocabularySynonymTable`
+* :py:class:`ckanext.ecospheres.vocabulary.parser.model.VocabularyRegexpTable`
+* :py:class:`ckanext.ecospheres.vocabulary.parser.model.VocabularySpatialTable`
+
 To quickly load and dump all vocabulary data as JSON:
 
     >>> results = VocabularyIndex.load_and_dump_all()
