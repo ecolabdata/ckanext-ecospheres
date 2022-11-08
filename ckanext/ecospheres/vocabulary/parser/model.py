@@ -1,7 +1,11 @@
 
-import json
+import json, sqlalchemy
 from pathlib import Path
+
 from ckanext import __path__ as ckanext_path
+
+SQL_SCHEMA = 'vocabulary'
+SQL_METADATA = sqlalchemy.MetaData(schema=SQL_SCHEMA)
 
 class DataConstraint:
     """Constraint.
@@ -286,6 +290,10 @@ class VocabularyDataTable(list):
 
         for fields in unique or []:
             self.set_unique_constraint(fields)
+
+        table_key = f'{SQL_SCHEMA}.{self.name}'
+        if table_key in SQL_METADATA.tables:
+            SQL_METADATA.remove(SQL_METADATA.tables[table_key])
 
     def set_not_null_constraint(self, field):
         """Declare a field that should not be empty.
@@ -647,6 +655,8 @@ class VocabularyLabelTable(VocabularyDataTable):
         Names of the table fields.
     constraints : list(TableConstraint)
         List of the table constraints.
+    sql : sqlalchemy.sql.schema.Table or None
+        SQL commands to create the table in a database.
 
     """
 
@@ -662,6 +672,15 @@ class VocabularyLabelTable(VocabularyDataTable):
         self.set_unique_constraint(
             ('uri', 'language'),
             none_as_value=False
+        )
+        self.sql = sqlalchemy.Table(
+            self.name,
+            SQL_METADATA,
+            sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True),
+            sqlalchemy.Column('uri', sqlalchemy.String, nullable=False, index=True),
+            sqlalchemy.Column('language', sqlalchemy.String),
+            sqlalchemy.Column('label', sqlalchemy.String, nullable=False, index=True),
+            sqlalchemy.UniqueConstraint('uri', 'language')
         )
 
 class VocabularyAltLabelTable(VocabularyDataTable):
@@ -696,6 +715,8 @@ class VocabularyAltLabelTable(VocabularyDataTable):
         Names of the table fields.
     constraints : list(TableConstraint)
         List of the table constraints.
+    sql : sqlalchemy.sql.schema.Table or None
+        SQL commands to create the table in a database.
 
     """
 
@@ -707,6 +728,15 @@ class VocabularyAltLabelTable(VocabularyDataTable):
             name='altlabel',
             fields=('uri', 'language', 'label'),
             not_null=['uri', 'label']
+        )
+        self.sql = sqlalchemy.Table(
+            self.name,
+            SQL_METADATA,
+            sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True),
+            sqlalchemy.Column('uri', sqlalchemy.String, nullable=False, index=True),
+            sqlalchemy.Column('language', sqlalchemy.String),
+            sqlalchemy.Column('label', sqlalchemy.String, nullable=False, index=True),
+            sqlalchemy.Index(f'{self.name}_uri_language_idx', 'uri', 'language')
         )
 
 
@@ -739,6 +769,8 @@ class VocabularyHierarchyTable(VocabularyDataTable):
         Names of the table fields.
     constraints : list(TableConstraint)
         List of the table constraints.
+    sql : sqlalchemy.sql.schema.Table or None
+        SQL commands to create the table in a database.
 
     """
 
@@ -750,6 +782,13 @@ class VocabularyHierarchyTable(VocabularyDataTable):
             name='hierarchy',
             fields=('parent', 'child'),
             not_null=['parent', 'child']
+        )
+        self.sql = sqlalchemy.Table(
+            self.name,
+            SQL_METADATA,
+            sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True),
+            sqlalchemy.Column('parent', sqlalchemy.String, nullable=False, index=True),
+            sqlalchemy.Column('child', sqlalchemy.String, nullable=False, index=True)
         )
 
 
@@ -782,6 +821,8 @@ class VocabularySynonymTable(VocabularyDataTable):
         Names of the table fields.
     constraints : list(TableConstraint)
         List of the table constraints.
+    sql : sqlalchemy.sql.schema.Table or None
+        SQL commands to create the table in a database.
 
     """
 
@@ -793,6 +834,13 @@ class VocabularySynonymTable(VocabularyDataTable):
             name='synonym',
             fields=('uri', 'synonym'),
             not_null=['uri', 'synonym']
+        )
+        self.sql = sqlalchemy.Table(
+            self.name,
+            SQL_METADATA,
+            sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True),
+            sqlalchemy.Column('uri', sqlalchemy.String, nullable=False, index=True),
+            sqlalchemy.Column('synonym', sqlalchemy.String, nullable=False, index=True)
         )
 
 
@@ -826,6 +874,8 @@ class VocabularyRegexpTable(VocabularyDataTable):
         Names of the table fields.
     constraints : list(TableConstraint)
         List of the table constraints.
+    sql : sqlalchemy.sql.schema.Table or None
+        SQL commands to create the table in a database.
 
     """
 
@@ -837,6 +887,13 @@ class VocabularyRegexpTable(VocabularyDataTable):
             name='regexp',
             fields=('uri', 'regexp'),
             not_null=['uri', 'regexp']
+        )
+        self.sql = sqlalchemy.Table(
+            self.name,
+            SQL_METADATA,
+            sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True),
+            sqlalchemy.Column('uri', sqlalchemy.String, nullable=False, index=True),
+            sqlalchemy.Column('regexp', sqlalchemy.String, nullable=False)
         )
 
 
@@ -874,6 +931,8 @@ class VocabularySpatialTable(VocabularyDataTable):
         Names of the table fields.
     constraints : list(TableConstraint)
         List of the table constraints.
+    sql : sqlalchemy.sql.schema.Table or None
+        SQL commands to create the table in a database.
 
     """
 
@@ -886,6 +945,16 @@ class VocabularySpatialTable(VocabularyDataTable):
             fields=('uri', 'westlimit', 'southlimit', 'eastlimit', 'northlimit'),
             not_null=['uri', 'westlimit', 'southlimit', 'eastlimit', 'northlimit'],
             unique=['uri']
+        )
+        self.sql = sqlalchemy.Table(
+            self.name,
+            SQL_METADATA,
+            sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True),
+            sqlalchemy.Column('uri', sqlalchemy.String, nullable=False, unique=True),
+            sqlalchemy.Column('westlimit', sqlalchemy.Numeric, nullable=False),
+            sqlalchemy.Column('southlimit', sqlalchemy.Numeric, nullable=False),
+            sqlalchemy.Column('eastlimit', sqlalchemy.Numeric, nullable=False),
+            sqlalchemy.Column('northlimit', sqlalchemy.Numeric, nullable=False)
         )
 
 
@@ -1022,6 +1091,14 @@ class VocabularyDataCluster(dict):
             referencing_table='label',
             none_as_value=False
         )
+        self.altlabel.sql.append_constraint(
+            sqlalchemy.ForeignKeyConstraint(
+                columns=['uri'],
+                refcolumns=[f'{self.label.name}.uri'],
+                ondelete='CASCADE',
+                onupdate='CASCADE'
+            )
+        )
         self.hierarchy = None
         self.synonym = None
         self.regexp = None
@@ -1100,11 +1177,27 @@ class VocabularyDataCluster(dict):
             referencing_table='label',
             referencing_fields=('uri',)
         )
+        self.hierarchy.sql.append_constraint(
+            sqlalchemy.ForeignKeyConstraint(
+                columns=['parent'],
+                refcolumns=[f'{self.label.name}.uri'],
+                ondelete='CASCADE',
+                onupdate='CASCADE'
+            )
+        )
         self.set_reference_constraint(
             referenced_table=hierarchy_table.name,
             referenced_fields=('child',),
             referencing_table='label',
             referencing_fields=('uri',)
+        )
+        self.hierarchy.sql.append_constraint(
+            sqlalchemy.ForeignKeyConstraint(
+                columns=['child'],
+                refcolumns=[f'{self.label.name}.uri'],
+                ondelete='CASCADE',
+                onupdate='CASCADE'
+            )
         )
         return hierarchy_table.name
 
@@ -1140,6 +1233,14 @@ class VocabularyDataCluster(dict):
             referenced_fields=('uri',),
             referencing_table='label'
         )
+        self.synonym.sql.append_constraint(
+            sqlalchemy.ForeignKeyConstraint(
+                columns=['uri'],
+                refcolumns=[f'{self.label.name}.uri'],
+                ondelete='CASCADE',
+                onupdate='CASCADE'
+            )
+        )
         return synonym_table.name
 
     def regexp_table(self):
@@ -1173,6 +1274,14 @@ class VocabularyDataCluster(dict):
             referenced_fields=('uri',),
             referencing_table='label'
         )
+        self.regexp.sql.append_constraint(
+            sqlalchemy.ForeignKeyConstraint(
+                columns=['uri'],
+                refcolumns=[f'{self.label.name}.uri'],
+                ondelete='CASCADE',
+                onupdate='CASCADE'
+            )
+        )
         return regexp_table.name
 
     def spatial_table(self):
@@ -1205,6 +1314,14 @@ class VocabularyDataCluster(dict):
             referenced_table=spatial_table.name,
             referenced_fields=('uri',),
             referencing_table='label'
+        )
+        self.spatial.sql.append_constraint(
+            sqlalchemy.ForeignKeyConstraint(
+                columns=['uri'],
+                refcolumns=[f'{self.label.name}.uri'],
+                ondelete='CASCADE',
+                onupdate='CASCADE'
+            )
         )
         return spatial_table.name
 
