@@ -61,6 +61,15 @@ Others are optional:
 * :py:class:`ckanext.ecospheres.vocabulary.parser.model.VocabularyRegexpTable`
 * :py:class:`ckanext.ecospheres.vocabulary.parser.model.VocabularySpatialTable`
 
+To make table creation easier, tables from the subclasses listed above will provide
+a :py:class:`sqlalchemy.sql.schema.Table` object through their
+:py:attr:`ckanext.ecospheres.vocabulary.parser.model.VocabularyDataTable.sql` 
+attribute, that can be used to create the table in a database.
+
+Note that there are dependencies between tables (at the very least, the URIs from
+the label table are referenced by every other table), therefore they should be
+created in the original order of the list.
+
 To quickly load and dump all vocabulary data as JSON:
 
     >>> results = VocabularyIndex.load_and_dump_all()
