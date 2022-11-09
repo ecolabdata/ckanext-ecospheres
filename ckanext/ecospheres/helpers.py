@@ -101,9 +101,11 @@ def get_territories_label(territories):
     departements=resultats.split(',')
     depts_labels=list()
     for code_dep in departements:
-        _,label_territory,_= VocabularyReader.get_territory_by_code_region(code_region=code_dep)
-        if label_territory:
-            depts_labels.append(label_territory)
+        values=VocabularyReader.get_territory_by_code_region(code_region=code_dep)
+        if values:
+            _,label_territory,_= VocabularyReader.get_territory_by_code_region(code_region=code_dep)
+            if label_territory:
+                depts_labels.append(label_territory)
 
     return depts_labels
 

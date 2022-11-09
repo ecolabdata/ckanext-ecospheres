@@ -80,7 +80,7 @@ class VocabularyReader:
                 statement=select([_table.c.uri, _table.c.label,_table.c.language])
                 return [cls._resultset_to_dict(resultset) for resultset in s.execute(statement).fetchall()]
             except Exception as e:
-                logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
+                logging.error("Erreur lors de la création du table")
                 return {}
 
 
@@ -114,7 +114,7 @@ class VocabularyReader:
                 statement=select([_table.c.uri, _table.c.regexp])
                 return  s.execute(statement).fetchall()
             except Exception as e:
-                logging.error(f"Erreur lors de la récuperation des regex thèmes de la table {_table}\t {str(e)}")
+                logging.error(f"Erreur lors de la récuperation des regex thèmes de la table {_table}")
                 return {}
 
     @classmethod
@@ -175,7 +175,7 @@ class VocabularyReader:
                     uri_themes_with_hierarchy[uri_parent].append(uri_child)
                 return uri_themes_with_hierarchy
             except Exception as e:
-                logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
+                logging.error(f"Erreur lors de la création du table {_table}")
                 return {}
         
     @classmethod
@@ -206,7 +206,7 @@ class VocabularyReader:
                     return cls._resultset_to_dict(res)
                 return None
             except Exception as e:
-                logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
+                logging.error(f"Erreur lors de la création du table {_table}")
                 return {}
 
 
@@ -338,7 +338,7 @@ class VocabularyReader:
 
             return all_themes
         except Exception as e:
-            logging.error(f"Erreur lors du chargement des données {str(e)}")
+            logging.error(f"Erreur lors du chargement des données {_table}")
             return {}
 
     @classmethod
@@ -410,7 +410,7 @@ class VocabularyReader:
                     return cls._resultset_to_dict(res)
                 return None
             except Exception as e:
-                logging.error(f"Erreur lors du chargement de la table: {_table}\t {str(e)}")
+                logging.error(f"Erreur lors du chargement de la table {_table}")
                 return list()
 
 
@@ -474,7 +474,7 @@ class VocabularyReader:
                     return res[0]
                 return None
             except Exception as e:
-                logging.error(f"Erreur lors de la création du table {_table}\t {str(e)}")
+                logging.error(f"Erreur lors de la création du table {_table}")
                 return list()
 
 
@@ -549,7 +549,7 @@ class VocabularyReader:
 
             return list_of_organizations_as_dict
         except Exception as e:
-            logging.error(f"Erreur lors du chargement de la liste des territoires {str(e)}")
+            logging.error(f"Erreur lors du chargement de la liste des territoires: {_table}")
             return {}
 
 
@@ -579,7 +579,7 @@ class VocabularyReader:
                     return res
                 return None
             except Exception as e:
-                logging.error(f"Erreur lors du chargement de la table {_table}\t {str(e)}")
+                logging.error(f"Erreur lors du chargement de la table: {_table}")
                 return {}
 
 
@@ -619,7 +619,7 @@ class VocabularyReader:
                     }
                 return None
             except Exception as e:
-                logging.error(f"Erreur lors du chargement de la table: {_table}\t {str(e)}")
+                logging.error(f"Erreur lors du chargement de la table: {_table}")
                 return {}
 
     @classmethod
@@ -690,6 +690,6 @@ class VocabularyReader:
             res_territoires_dict["depts_by_region"]=depts_by_region
             return res_territoires_dict
         except Exception as e:
-            logger.error("erreur lors de la récuperation des territoires par hierarchy ")
-            logging.error(str(e))
+            logger.error(f"erreur lors de la récuperation des territoires par hierarchy: {_table}")
+            
             return {}

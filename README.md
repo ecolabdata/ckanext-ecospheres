@@ -12,7 +12,9 @@ CKAN extension for the french minister of ecology  Open Data Portals.
 - [Installation](#installation)
 - [Development Installation](#development-installation)
 - [Running the Tests](#running-the-tests)
+- [Running harvest manually](#running-harvest-manually)
 - [APIs](#apis)
+- [Administration tasks](#administration-tasks)
 - [Contributing](#contributing)
 - [Support, Communication and Credits](#support-communication-and-credits)
 
@@ -41,9 +43,8 @@ Ajouter une desription
 - [ckanext-dcat](https://github.com/ckan/ckanext-dcat)
 - [ckanext-hierarchy](https://github.com/ckan/ckanext-hierarchy)
 - [ckanext-fluent](https://github.com/ckan/ckanext-fluent)
-- [ckanext-scheming](https://github.com/ckan/ckanext-scheming)
 
-
+For the proper functioning of the echosphere extension it is strongly recommended to install the extension [ckanext-dsfr](https://github.com/ecolabdata/ckanext-dsfr)
 ## Installation
 
 
@@ -93,10 +94,8 @@ To install ckanext-ecospheres:
 
 5. Set the following configuration properties in the production.ini file:
 
-    - Enable de dcatfrench profile: 
-
-            ckanext.dcat.rdf.profiles = euro_dcat_ap fr_dcat_ap
-    - Set de DCAT catalog endpoint: 
+      
+    - Set de DCAT catalog endpoint (more detail [here](https://github.com/ckan/ckanext-dcat#rdf-dcat-endpoints)): 
         
             ckanext.dcat.catalog_endpoint = /dcat/catalog/{_format}
 
@@ -115,7 +114,7 @@ To install ckanext-ecospheres:
             ckan.locale_default = fr
             ckan.locale_order =  fr en
     
-    - Set Scheming configuration:
+    - Set Scheming configuration (more details [here](https://github.com/ckan/ckanext-scheming#configuration)):
     
             scheming.dataset_schemas = ckanext.ecospheres.scheming:ecospheres_dataset_schema.yaml
             scheming.presets =  ckanext.ecospheres.scheming:presets.yml
@@ -124,7 +123,8 @@ To install ckanext-ecospheres:
 
 
 
-    - Set spatial 
+    - spatial settings
+    
             ckanext.spatial.harvest.continue_on_validation_errors = True
             ckanext.spatial.common_map.type = custom
             ckanext.spatial.common_map.custom.url = https://wxs.ign.fr/decouverte/geoportail/wmts?service=WMTS&request=GetTile&version=1.0.0&tilematrixset=PM&tilematrix={z}&tilecol={x}&tilerow={y}&layer=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&format=image/png&style=normal
@@ -133,27 +133,27 @@ To install ckanext-ecospheres:
 
 <br>
 
-5. Enable the dcatfrench profile adding the following configuration property in the production.ini file:
+5. Enable the dcatfrench profile adding the following configuration property in the production.ini file,  (more details [here](https://github.com/ckan/ckanext-dcat#profiles)):
 
         ckanext.dcat.rdf.profiles = euro_dcat_ap fr_dcat_ap
 
 
 <br>
 
-6. Configure the CKAN base URI as reported in the [dcat documentation](https://github.com/ckan/ckanext-dcat/blob/master/README.md#uris):
+6. Configure the CKAN base URI as reported in the [dcat documentation](https://github.com/ckan/ckanext-dcat#dataset-endpoints):
 
         ckanext.dcat.base_uri = YOUR_BASE_URI
 
 <br>
 
 
-7. Initialize the vocabularies needed to run the ckanext-ecosphere extension
+7. Initialize the vocabularies needed to run the ckanext-ecosphere extension (more detail about command line in CKAN [here](https://docs.ckan.org/en/2.9/extensions/plugin-interfaces.html#ckan.plugins.interfaces.IClick))
 
         ckan --config=/etc/ckan/default/production.ini ecospherefr load-vocab
 
 <br>
 
-8. Update the Solr schema.xml file used by CKAN introducing the following element:
+8. Update the Solr schema.xml file used by CKAN introducing the following element (more about defining multivaluted fields the Solr [here](https://solr.apache.org/guide/7_4/defining-fields.html)):
         
         <fields>
         .........
@@ -201,15 +201,26 @@ do:
    
     
 ### Running the Tests                                                                    
-
-
        cd /usr/lib/ckan/default/src/ckanext-ecospheres
         . /usr/lib/ckan/default/bin/activate
 
         pytest --ckan-ini=test.ini --disable-warnings ckanext/ecospheres/tests
 
-## APIs
 
+## Running harvest manually
+To start a harvest
+- you must first load the vocabularies
+- create an admin account
+- add a harvesting source 
+- get the id of the harvesting source
+
+        ckan --config=/etc/ckan/default/production.ini harvester sources
+- launch the harvesting 
+
+        ckan --config=/etc/ckan/default/production.ini harvester run-test id_src_harvest
+
+## APIs
+Access to these APIs does not require a token 
 
 1. Thèmes
         
@@ -223,6 +234,11 @@ do:
 1. Organisations
         
         GET /api/organizations
+
+## Administration tasks
+
+the creation of organizations and harvesting sources is done by API. To do this you need to generate a token and be an admin
+The creation scripts are stored in this [repository](https://github.com/ecolabdata/guichetdonnees-public)
 
 
 ## Contributing

@@ -60,6 +60,7 @@ class DCATfrRDFHarvester(DCATRDFHarvester):
             org_owner_id=source_dataset.owner_org
         except Exception as e:
             pass
+
         user = p.toolkit.get_action('get_site_user')(
                 {'ignore_auth': True, 'defer_commit': True},
                 {}) 
@@ -105,6 +106,7 @@ class DCATfrRDFHarvester(DCATRDFHarvester):
                                                 "uri": uri})
                             #TODO: ajouter algo calculate GeoJSON
                             # spatial=VocabularyReader.get_territory_spatial_by_code_region(code_region=code_dep)
+                print(territories)
                 dataset_dict["territory"]=territories
         except Exception as e:
             logger.error("Erreur lors du traitement du champ territory: {}".format(str(e)))
@@ -159,10 +161,10 @@ class DCATfrRDFHarvester(DCATRDFHarvester):
             if re.match(r'^(https://).*$',identifier):
                 res=re.match(r'^.*\/(.*)$',identifier)
                 if res:
-                    id=res.group(1)
+                    _id=res.group(1)
             else:
-                id=title
-            name = HarvesterBase._gen_new_name(id)
+                _id=title
+            name = HarvesterBase._gen_new_name(_id)
             if not name:
                     raise Exception('Could not generate a unique name '
                                 'from the title or the GUID. Please '

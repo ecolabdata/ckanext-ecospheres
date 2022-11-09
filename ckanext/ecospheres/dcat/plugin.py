@@ -86,6 +86,35 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         
         return facets_dict
 
+    def organization_facets(
+            self, facets_dict: 'OrderedDict[str, Any]', organization_type,
+            package_type) -> 'OrderedDict[str, Any]':
+        u'''Modify and return the ``facets_dict`` for an organization's page.
+
+        The ``package_type`` is the type of dataset that these facets apply to.
+        Plugins can provide different search facets for different types of
+        dataset. See :py:class:`~ckan.plugins.interfaces.IDatasetForm`.
+
+        The ``organization_type`` is the type of organization that these facets
+        apply to.  Plugins can provide different search facets for different
+        types of organization. See
+        :py:class:`~ckan.plugins.interfaces.IGroupForm`.
+
+        :param facets_dict: the search facets as currently specified
+        :type facets_dict: OrderedDict
+
+        :param organization_type: the organization type that these facets apply
+                                    to
+        :type organization_type: string
+
+        :param package_type: the dataset type that these facets apply to
+        :type package_type: string
+
+        :returns: the updated ``facets_dict``
+        :rtype: OrderedDict
+
+        '''
+        return facets_dict
 
     def before_index(self, search_data):
 
