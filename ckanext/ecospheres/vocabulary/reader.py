@@ -549,7 +549,7 @@ class VocabularyReader:
 
             return list_of_organizations_as_dict
         except Exception as e:
-            logging.error(f"Erreur lors du chargement de la liste des territoires: {_table}")
+            logging.error(f"Erreur lors du chargement de la liste des territoires")
             return {}
 
 
