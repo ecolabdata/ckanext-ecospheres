@@ -42,9 +42,11 @@ attribute, as a list of :py:class:`Exception` objects.
 
 The vocabulary data is stored in a
 :py:class:`ckanext.ecospheres.vocabulary.parser.model.VocabularyDataCluster`
-object. The simplest way to work with a cluster would be to
-handle it as a list of tables. Tables are list of dictionaries. Each item is a
-table row, the dictionary provides the values for each field (field names are
+object. The simplest way to work with a cluster would be to handle it as
+a dictionary. The values are tables, the keys are the tables' names. 
+
+Tables are list of dictionaries. Each item is a table row, the dictionary
+provides the values for each field (field names are
 the keys, all fields are present for every item though they might be empty).
 
 The structure of the table can be infered from its type.
@@ -68,7 +70,7 @@ attribute, that can be used to create the table in a database.
 
 Note that there are dependencies between tables (at the very least, the URIs from
 the label table are referenced by every other table), therefore they should be
-created in the original order of the list.
+created in the original order of the dictionary.
 
 To quickly load and dump all vocabulary data as JSON:
 
