@@ -266,6 +266,11 @@ class VocabularyDataTable(list):
         Names of the table fields.
     constraints : list(TableConstraint)
         List of the table constraints.
+    sql : sqlalchemy.sql.schema.Table or None
+        SQL commands to create the table in a database.
+        This will be generated automatically for 
+        subclasses, else it's ``None`` unless manually
+        provided after initialization.
 
     """
 
@@ -291,6 +296,7 @@ class VocabularyDataTable(list):
         for fields in unique or []:
             self.set_unique_constraint(fields)
 
+        self.sql = None
         table_key = f'{SQL_SCHEMA}.{self.name}'
         if table_key in SQL_METADATA.tables:
             SQL_METADATA.remove(SQL_METADATA.tables[table_key])
