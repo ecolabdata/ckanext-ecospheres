@@ -186,6 +186,7 @@ def load_vocab():
 
             for table_name in vocab_data.keys():
                 
+                print('testttttttttttttttttttttttttttttttttttttttttt',table_name)
                 #les tables echosphere spatial, echosphere_hierarchy et echosphere_regex ont des schemas de données differents.
                 #donc il faut les gérer individuellement. 
                 if re.match(REGEX_PATTERN_ECOSPHERE_SPATIAL,table_name):
@@ -198,9 +199,9 @@ def load_vocab():
                     _table = _get_generic_schema(table_name)
                 
                 __create_table_and_load_data(table_name=table_name,
-                                             table_schema=_table,
-                                             data=vocab_data)    
-                                
+                                            table_schema=_table,
+                                            data=vocab_data)    
+                            
         except Exception as e:
             print("Erreur pendant le chargement des vocabulaires",str(e))
 

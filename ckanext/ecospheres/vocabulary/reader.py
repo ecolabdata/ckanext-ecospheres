@@ -663,6 +663,7 @@ class VocabularyReader:
                     ckan_ecosphere_index=ckanext_path.index(ckanext)
 
             path = Path(ckanext_path[ckan_ecosphere_index]).parent / f'vocabularies/{vocabulary}.json'
+            
             if not path.exists() or not path.is_file():
                 raise FileNotFoundError(f"could not find vocabulary data for '{vocabulary}'")
             with open(path, 'r', encoding='utf-8') as src:

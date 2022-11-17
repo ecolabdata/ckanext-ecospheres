@@ -1,0 +1,126 @@
+{
+    "inspire_role_label": [
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/resourceProvider",
+            "language": "fr",
+            "label": "Fournisseur de la ressource"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/custodian",
+            "language": "fr",
+            "label": "Gestionnaire"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/owner",
+            "language": "fr",
+            "label": "Propriétaire"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/user",
+            "language": "fr",
+            "label": "Utilisateur"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/distributor",
+            "language": "fr",
+            "label": "Distributeur"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/originator",
+            "language": "fr",
+            "label": "Commanditaire"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/pointOfContact",
+            "language": "fr",
+            "label": "Point de contact"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/principalInvestigator",
+            "language": "fr",
+            "label": "Maître d’œuvre"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/processor",
+            "language": "fr",
+            "label": "Intégrateur"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/publisher",
+            "language": "fr",
+            "label": "Éditeur"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/author",
+            "language": "fr",
+            "label": "Auteur"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole",
+            "language": "fr",
+            "label": "Rôle de la partie responsable"
+        }
+    ],
+    "inspire_role_altlabel": [
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/resourceProvider",
+            "language": null,
+            "label": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/resourceProvider"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/custodian",
+            "language": null,
+            "label": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/custodian"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/owner",
+            "language": null,
+            "label": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/owner"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/user",
+            "language": null,
+            "label": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/user"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/distributor",
+            "language": null,
+            "label": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/distributor"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/originator",
+            "language": null,
+            "label": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/originator"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/pointOfContact",
+            "language": null,
+            "label": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/pointOfContact"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/principalInvestigator",
+            "language": null,
+            "label": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/principalInvestigator"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/processor",
+            "language": null,
+            "label": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/processor"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/publisher",
+            "language": null,
+            "label": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/publisher"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/author",
+            "language": null,
+            "label": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/author"
+        },
+        {
+            "uri": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole",
+            "language": null,
+            "label": "http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole"
+        }
+    ]
+}

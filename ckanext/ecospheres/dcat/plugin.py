@@ -14,8 +14,11 @@ import logging
 from ckanext.ecospheres.commands import ecospheres_commands as ecospherefr_cli
 from ckanext.ecospheres.scheming.tab import get_fields_by_tab
 from ckan.lib.helpers import lang
+from ckanext.ecospheres.vocabulary.loader import load_vocab as load_all_vocab
 
-    
+import ckan.logic
+_check_access = ckan.logic.check_access
+   
 
 
 class DcatFrenchPlugin(plugins.SingletonPlugin):
@@ -385,5 +388,35 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
             ]
         for rule in rules:
             blueprint.add_url_rule(*rule)
-        return blueprint
 
+        from flask import request
+        @blueprint.route('/api/test', methods=["POST"])
+        def test():
+            # username = request.get_json()
+            # user = plugins.toolkit.get_action('get_site_user')(
+            #     {'ignore_auth': False, 'defer_commit': True},
+            #     {}) 
+            # _user_name = user['name']
+            # ctx = {'ignore_auth': True,
+            #     'user': _user_name}
+
+            # data_dict={}
+            # _check_access('user_delete', ctx, data_dict)
+            import threading
+            import time
+
+            class BackgroundTasks(threading.Thread):
+                def run(self,*args,**kwargs):
+                    load_all_vocab()
+            import  os
+
+
+            t = BackgroundTasks()
+            t.start()           
+
+            
+            return {
+                "username": "name"
+            }
+
+        return blueprint

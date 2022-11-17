@@ -1,0 +1,845 @@
+{
+    "eu_access_right_label": [
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "bg",
+            "label": "поверителен"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "cs",
+            "label": "důvěrné"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "da",
+            "label": "fortrolig"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "de",
+            "label": "vertraulich"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "el",
+            "label": "εμπιστευτικό"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "en",
+            "label": "confidential"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "es",
+            "label": "confidencial"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "et",
+            "label": "konfidentsiaalne"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "fi",
+            "label": "luottamuksellinen"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "fr",
+            "label": "confidentiel"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "ga",
+            "label": "rúnda"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "hr",
+            "label": "povjerljivo"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "hu",
+            "label": "bizalmas"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "it",
+            "label": "riservato"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "lt",
+            "label": "konfidencialus"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "lv",
+            "label": "konfidenciāls"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "mt",
+            "label": "kunfidenzjali"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "nl",
+            "label": "vertrouwelijk"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "pl",
+            "label": "poufny"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "pt",
+            "label": "confidencial"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "ro",
+            "label": "confidențial"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "sk",
+            "label": "dôverné"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "sl",
+            "label": "zaupno"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/CONFIDENTIAL",
+            "language": "sv",
+            "label": "konfidentiellt"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "bg",
+            "label": "непубличен"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "cs",
+            "label": "neveřejné"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "da",
+            "label": "ikke-offentlig"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "de",
+            "label": "nicht öffentlich"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "el",
+            "label": "μη δημόσιο"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "en",
+            "label": "non-public"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "es",
+            "label": "no público"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "et",
+            "label": "mitteavalik"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "fi",
+            "label": "ei-julkinen"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "fr",
+            "label": "non public"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "ga",
+            "label": "neamhphoiblí"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "hr",
+            "label": "nije za javnu objavu"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "hu",
+            "label": "nem nyilvános"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "it",
+            "label": "non pubblico"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "lt",
+            "label": "neviešas"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "lv",
+            "label": "nav publisks"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "mt",
+            "label": "mhux pubbliku"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "nl",
+            "label": "niet-openbaar"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "pl",
+            "label": "niepubliczny"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "pt",
+            "label": "não público"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "ro",
+            "label": "neaccesibil publicului"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "sk",
+            "label": "neverejné"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "sl",
+            "label": "nejavno"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NON_PUBLIC",
+            "language": "sv",
+            "label": "icke-offentligt"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "bg",
+            "label": "нормален"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "cs",
+            "label": "obvyklé"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "da",
+            "label": "normal"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "de",
+            "label": "normal"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "el",
+            "label": "κανονικό"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "en",
+            "label": "normal"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "es",
+            "label": "normal"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "et",
+            "label": "tavaline"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "fi",
+            "label": "tavanomainen"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "fr",
+            "label": "normal"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "ga",
+            "label": "normálta"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "hr",
+            "label": "tipično"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "hu",
+            "label": "normál"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "it",
+            "label": "normale"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "lt",
+            "label": "normalus"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "lv",
+            "label": "parasts"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "mt",
+            "label": "normali"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "nl",
+            "label": "normaal"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "pl",
+            "label": "zwykły"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "pt",
+            "label": "normal"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "ro",
+            "label": "normal"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "sk",
+            "label": "normálne"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "sl",
+            "label": "običajno"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/NORMAL",
+            "language": "sv",
+            "label": "normal åtkomst"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "bg",
+            "label": "Неокончателни данни"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "cs",
+            "label": "Předběžné údaje"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "da",
+            "label": "Midlertidige data"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "de",
+            "label": "Vorläufige Daten"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "el",
+            "label": "Προσωρινά δεδομένα"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "en",
+            "label": "Provisional data"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "es",
+            "label": "Datos provisionales"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "et",
+            "label": "Esialgsed andmed"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "fi",
+            "label": "Alustavat tiedot"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "fr",
+            "label": "Données provisoires"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "ga",
+            "label": "Sonraí sealadacha"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "hr",
+            "label": "Privremeni podaci"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "hu",
+            "label": "Ideiglenes adatok"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "it",
+            "label": "Dati provvisori"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "lt",
+            "label": "Laikinieji duomenys"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "lv",
+            "label": "Provizoriski dati"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "mt",
+            "label": "Dejta provviżorja"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "nl",
+            "label": "Voorlopige gegevens"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "pl",
+            "label": "Dane tymczasowe"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "pt",
+            "label": "Dados provisórios"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "ro",
+            "label": "Date provizorii"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "sk",
+            "label": "Predbežné údaje"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "sl",
+            "label": "Začasni podatki"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/OP_DATPRO",
+            "language": "sv",
+            "label": "Tillfälliga uppgifter"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "bg",
+            "label": "публичен"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "cs",
+            "label": "veřejné"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "da",
+            "label": "offentlig"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "de",
+            "label": "öffentlich"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "el",
+            "label": "δημόσιο"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "en",
+            "label": "public"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "es",
+            "label": "público"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "et",
+            "label": "avalik"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "fi",
+            "label": "julkinen"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "fr",
+            "label": "public"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "ga",
+            "label": "poiblí"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "hr",
+            "label": "za javnu objavu"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "hu",
+            "label": "nyilvános"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "it",
+            "label": "pubblico"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "lt",
+            "label": "viešas"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "lv",
+            "label": "publiski pieejams"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "mt",
+            "label": "pubbliku"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "nl",
+            "label": "openbaar"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "pl",
+            "label": "publiczny"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "pt",
+            "label": "público"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "ro",
+            "label": "public"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "sk",
+            "label": "verejné"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "sl",
+            "label": "javno"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/PUBLIC",
+            "language": "sv",
+            "label": "offentligt"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "bg",
+            "label": "с ограничен достъп"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "cs",
+            "label": "vyhrazeno"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "da",
+            "label": "til tjenestebrug"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "de",
+            "label": "eingeschränkt"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "el",
+            "label": "περιορισμένης χρήσης"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "en",
+            "label": "restricted"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "es",
+            "label": "restringido"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "et",
+            "label": "piiratud"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "fi",
+            "label": "rajoitettu"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "fr",
+            "label": "restreint"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "ga",
+            "label": "teoranta"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "hr",
+            "label": "ograničen pristup"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "hu",
+            "label": "korlátozott terjesztésű"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "it",
+            "label": "limitato"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "lt",
+            "label": "taikomi ribojimai"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "lv",
+            "label": "ierobežotas pieejamības"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "mt",
+            "label": "ristrett"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "nl",
+            "label": "beperkt"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "pl",
+            "label": "zastrzeżony"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "pt",
+            "label": "restrito"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "ro",
+            "label": "cu acces restricționat"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "sk",
+            "label": "vyhradené"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "sl",
+            "label": "interno"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/RESTRICTED",
+            "language": "sv",
+            "label": "begränsad åtkomst"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "bg",
+            "label": "чувствителен"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "cs",
+            "label": "citlivé"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "da",
+            "label": "følsom"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "de",
+            "label": "sensibel"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "el",
+            "label": "ευαίσθητο"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "en",
+            "label": "sensitive"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "es",
+            "label": "sensible"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "et",
+            "label": "tundlik"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "fi",
+            "label": "arkaluonteinen"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "fr",
+            "label": "sensible"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "ga",
+            "label": "íogair"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "hr",
+            "label": "osjetljivo"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "hu",
+            "label": "érzékeny"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "it",
+            "label": "sensibile"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "lt",
+            "label": "neskelbtinas"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "lv",
+            "label": "sensitīvs"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "mt",
+            "label": "sensittiv"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "nl",
+            "label": "gevoelig"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "pl",
+            "label": "sensytywny"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "pt",
+            "label": "sensível"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "ro",
+            "label": "sensibil"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "sk",
+            "label": "citlivé"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "sl",
+            "label": "občutljivo"
+        },
+        {
+            "uri": "http://publications.europa.eu/resource/authority/access-right/SENSITIVE",
+            "language": "sv",
+            "label": "känsligt"
+        }
+    ],
+    "eu_access_right_altlabel": []
+}

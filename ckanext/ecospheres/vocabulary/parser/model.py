@@ -1021,13 +1021,43 @@ class VocabularyDataCluster(dict):
             GIT root.
         
         """
+
+
         if dirpath:
             base_path = Path(dirpath)
         else:
-            base_path = Path(ckanext_path[0]).parent / 'vocabularies'
+
+            import re
+            for ckanext in ckanext_path:
+                if re.match(r'.*ckanext-ecospheres.*', ckanext):
+                    ckan_ecosphere_index=ckanext_path.index(ckanext)
+
+            base_path = Path(ckanext_path[ckan_ecosphere_index]).parent / 'vocabularies'
+
+
+            print(ckanext_path)
             if not base_path.exists() or not base_path.is_dir():
                 base_path.mkdir()
         path = base_path / f'{self.vocabulary}.json'
-        with open(path, 'w', encoding='utf-8') as target:
+
+
+        import os
+
+        # The default umask is 0o22 which turns off write permission of group and others
+        os.umask(0)
+
+        descriptor = os.open(
+            path=path,
+            flags=(
+                os.O_WRONLY  # access mode: write only
+                | os.O_CREAT  # create if not exists
+                | os.O_TRUNC  # truncate the file to zero
+            ),
+            mode=0o777
+        )
+
+        import logging
+        logging.info("testttttttt")
+        with open(descriptor, 'w', encoding='utf-8') as target:
             json.dump(self, target, ensure_ascii=False, indent=4)
 
