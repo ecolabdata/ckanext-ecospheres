@@ -3,8 +3,13 @@ try:
     from ckan.plugins import toolkit
     from ckantoolkit import config
     from rdflib import URIRef, BNode
-
+    import os
     import json,logging,re 
+    from pathlib import Path
+    from os.path import exists
+    from ckanext.ecospheres.vocabulary.reader import VocabularyReader
+
+
     from rdflib.namespace import RDF, SKOS
     from ..constants import (
         _IS_PART_OF,
@@ -29,7 +34,6 @@ try:
 
     )
     from ckan.lib.helpers import lang
-
     from ._functions import (_parse_agent,
                                     _contact_points,
                                     _get_frequency,
@@ -44,30 +48,41 @@ try:
                                     _spatial_coverage,
                                     _access_rights,
                                     _conforms_to,
-                                    _accrual_periodicity,
                                     _language,
                                     _provenance,
                                     _version_notes,
-                                    _tags_keywords
+                                    _tags_keywords,
+                                    _check_sous_theme,
+                                    _crs_list
                             )
 except Exception as e: 
     raise ValueError("Erreur lors de l'import de librairies: ",str(e))
 
 
 
+
+
+import os
 log = logging.getLogger(__name__)
 
 
-def afficher(data):
-        print(json.dumps(data, indent=4, sort_keys=True))
+
 
 def parse_dataset(self, dataset_dict, dataset_ref):
+    '''
+    Crée un jeu de données CKAN dict à partir du graphe RDF `dataset_ref`.
+    
+    Retourne un dict `dataset_dict` de données qui peut être passé à `package_create`.
+        ou `package_update`.
+    '''
+    
     
     """------------------------------------------<Littéraux>------------------------------------------"""
 
     for key, predicate in (
                             ('uri', DCT.identifier), #uri du dataset
                             ('identifier', DCT.identifier), #idetifier
+                            ('accrual_periodicity', DCT.accrualPeriodicity), #idetifier
                             ):
         value = self._object_value(dataset_ref, predicate)
         if value:
@@ -118,17 +133,6 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     ############################################   Organisations  ############################################
     
     """-------------------------------------------<contact_point>-------------------------------------------"""        
-    """ champs communs à [contact_point, publisher, creator, rights_holder] 
-    - name: Nom
-    - type: type
-    - email: Courriel
-    - phone: Téléphone
-    - url: Site internet
-    - acronym: Sigle
-    - title: titre
-    - comment: Commentaire
-    """
-    """Points de contact"""
     
     _contact_points(self,
         dataset_ref,
@@ -169,8 +173,7 @@ def parse_dataset(self, dataset_dict, dataset_ref):
 
     
     ############################################   Relations  ############################################
-    """-------------------------------------------<in_series>-------------------------------------------"""        
-    """-------------------------------------------<serie_datasets>-------------------------------------------"""        
+    """-------------------------------------------<serie_datasets,in_series>-------------------------------------------"""        
     """ 
         in_series: isPartOf (Inclus dans les séries de données)
         serie_datasets: hasPart (Jeux de données de la série)
@@ -188,21 +191,14 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     """
     landing_page: Accès à la fiche sur le catalogue source
     attributes_page: Lien de la page où sont décrits les champs du jeu de données.
-    page: Documentation
-        -> uri: URL
-        -> title:Titre
-        -> Description: Description
-        -> modified: Date de modification
-        -> created: Date de création
-        -> issued: Date de publication
     """
     
     for key, predicate in (
                             ('landing_page', DCAT.landingPage), # landing_page: Accès à la fiche sur le catalogue source
-                            ("attributes_page",FOAF.page),
+                            # ("attributes_page",FOAF.page), # conflit avec documentation 
                             ):
-        if key =="attributes_page":
-            value=self._object_value_list(dataset_ref, predicate)
+        # if key =="attributes_page":
+        #     value=self._object_value_list(dataset_ref, predicate)
         # else:
         value = self._object_value(dataset_ref, predicate)
         if value:
@@ -210,61 +206,72 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     
     
     """-------------------------------------------<page>-------------------------------------------"""        
+    '''
+    page: Documentation
+        -> uri: URL
+        -> title:Titre
+        -> Description: Description
+        -> modified: Date de modification
+        -> created: Date de création
+        -> issued: Date de publication
+
+    '''
     _get_documentation_dict(self,dataset_ref,dataset_dict,FOAF.page)
     
 
 
+
+
     ############################################   Thèmes et mots clés  ############################################
+    themes=VocabularyReader.themes()
+
+    list_keywords=list(self._object_value_list(dataset_ref,DCAT.keyword))
+    title = self._object_value(dataset_ref, DCT.title)
+    categories=dict()
     
+    for theme in themes:
+        sous_theme,uri_sous_theme=_check_sous_theme(themes[theme]["child"],list_keywords,title)
+        if sous_theme:
+            theme_label=themes[theme].get("label")
+            if not categories.get(theme_label,None):
+                categories[theme_label]={
+                                        "theme":theme_label,
+                                        "uri": themes[theme].get("uri")
+                                    }
+
+
+            if not categories.get(sous_theme,None):
+                categories[sous_theme]={
+                                        "theme":sous_theme,
+                                        "uri": uri_sous_theme
+                                        }
+
     """-------------------------------------------<category>-------------------------------------------"""        
+
     # CATEGORY []
-    # > dcat:theme
-    # - pour le premier niveau de thèmes de la nomenclature du guichet
-    # - déduit de "theme", "subject" et "free_tag" lors du moissonnage
-    # - stockage sous forme d'une liste d'URI (appartenant au registre
-    #   du guichet)
-    # - les étiquettes des URI seraient à mapper sur la propriété
-    #   "tags" lors du moissonnage
+    if categories:
+        dataset_dict["category"]=list(categories.values())
 
 
-    """-------------------------------------------<subcategory>-------------------------------------------"""        
-    # SUBCATEGORY []
-    # > dcat:theme
-    # - pour le second niveau de thèmes de la nomenclature du guichet
-    # - déduit de "theme", "subject" et "free_tag" lors du moissonnage
-    # - stockage sous forme d'une liste d'URI (appartenant au registre
-    #   du guichet)
-    # - les étiquettes des URI seraient à mapper sur la propriété
-    #   "tags" lors du moissonnage
-    
-    
+
     """-------------------------------------------<theme>-------------------------------------------"""        
+    themes=[]
     # THEME []
     # > dcat:theme
-    # - pour les nomemclatures externes, notamment celle de la commission
-    #   européenne et la nomenclature INSPIRE
-    # - mapper dct:subject vers cette propriété (utilisé dans GeoDCAT-AP v2
-    #   pour les catégories ISO)
-    # - stockage sous la forme d'une liste d'URI
-    # - les étiquettes des URI seraient à mapper sur la propriété
-    #   "tags" lors du moissonnage
-
-    """-------------------------------------------<subject>-------------------------------------------"""        
-    # > dct:subject
-    # nomenclatures externes, notamment les thèmes ISO
-    # stockage sous la forme d'une liste d'URI
-        
+    themes_dataset=list(self._object_value_list(dataset_ref,DCAT.theme))
+    if themes_dataset:
+        for t in themes_dataset:
+            themes.append({"uri":t})
+    subject=self._object_value(dataset_ref,DCT.subject)
+    if subject:
+        themes.append(
+            {
+            "uri": subject
+            })
     
+    dataset_dict["theme"]=themes
     
-    """-------------------------------------------<free_tags>-------------------------------------------"""        
-    tags=dataset_dict["tags"]
-    # TODO: juste pour tester
-    add_tag(tags,['un','deux'])
-    add_tag(tags,'trois')
-    dataset_dict["tags"]=tags
-    dataset_dict["free_tags"]=tags
-    
-    """-------------------------------------------<tags>-------------------------------------------"""        
+    """-------------------------------------------< tags, free_tags >-------------------------------------------"""        
     _tags_keywords(self,dataset_ref,
                             DCAT.keyword,
                             dataset_dict)
@@ -285,28 +292,27 @@ def parse_dataset(self, dataset_dict, dataset_ref):
     
     """-------------------------------------------<spatial_coverage>-------------------------------------------"""        
     _spatial_coverage(self,dataset_ref, DCT.spatial,dataset_dict)
+    
 
-
+    """-------------------------------------------<TERRITORY>-------------------------------------------"""        
 
     ############################################   Etc. ############################################
 
     """-------------------------------------------<access_rights>-------------------------------------------"""        
     _access_rights(self,dataset_ref, DCT.accessRights,dataset_dict)
 
-
+    """-------------------------------------------<restricted_access>-------------------------------------------"""   
+    #TODO: 
+    import random
+    dataset_dict["restricted_access"]=random.choice([True,False])
 
     """-------------------------------------------<crs>-------------------------------------------"""   
-    # TODO: 
+    _crs_list(self,dataset_ref, DCT.conformsTo,dataset_dict)
 
     """-------------------------------------------<conforms_to>-------------------------------------------"""        
     _conforms_to(self,dataset_ref, DCT.conformsTo,dataset_dict)
     
     
-    """-------------------------------------------<accrual_periodicity>-------------------------------------------"""        
-    _accrual_periodicity(self,dataset_ref,DCT.accrualPeriodicity,dataset_dict)
-
-    
-
     """-------------------------------------------<language>-------------------------------------------"""        
     _language(self,dataset_ref,DCT.language,dataset_dict)
     
@@ -408,7 +414,7 @@ def parse_dataset(self, dataset_dict, dataset_ref):
         
 
         """-------------------------------------------<other_format>-------------------------------------------"""        
-        #TODO: corriger 
+        other_format_list=[]
         for format_node in self.g.objects(distribution, DCT['format']):
             other_format_dict={}
             for key, predicate in (
@@ -418,16 +424,24 @@ def parse_dataset(self, dataset_dict, dataset_ref):
                         if value:
                             other_format_dict[key]=value
             other_format_dict["uri"]=str(format_node)
+            other_format_list.append(other_format_dict)
             if other_format_dict:
-                resource_dict["other_format"]=other_format_dict
+                resource_dict["other_format"]=other_format_list
         
         """-------------------------------------------<format>-------------------------------------------"""        
-        for key, predicate in (
-                    ('format', DCAT.mediaType),
-                    ):
-                value = self._object_value(distribution, predicate)
-                if value:
-                    resource_dict[key]=value
+        if media_type:=resource_dict.get("media_type_ressource",None):
+            try:
+                resource_dict["format"]=media_type[0].get('uri')
+            except:
+                pass
+
+
+        if not resource_dict.get("format",None):
+            try:
+                if other_format:=resource_dict.get("other_format",None):
+                    resource_dict["format"]=other_format[0].get('uri')
+            except:
+                pass
 
         """-------------------------------------------<service_conforms_to>-------------------------------------------"""        
         for node in self.g.objects(distribution, DCAT.accessService):
@@ -478,6 +492,17 @@ def parse_dataset(self, dataset_dict, dataset_ref):
                     value = self._object_value(distribution, predicate)
                     if value:
                         resource_dict[key] = value
+
+
         dataset_dict['resources'].append(resource_dict)
-        
+    
+    if not dataset_dict.get('modified',None):
+        if creation_data:=dataset_dict.get('created',None):
+            dataset_dict['modified']=creation_data
+        elif issued_date:=dataset_dict.get('issued',None):
+            dataset_dict['modified']=issued_date
+        else:
+            import datetime
+            dataset_dict['modified'] = datetime.datetime.today().isoformat("T")
+
     return dataset_dict

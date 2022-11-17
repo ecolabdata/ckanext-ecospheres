@@ -28,6 +28,7 @@
     <dc:description xml:lang="en">EN Données locales de consommation d'électricité, de gaz naturel et de chaleur et de froid - consommations annuelles et points de livraison d'électricité, de gaz naturel, et de chaleur et de froid, répartis en cinq secteurs (agriculture, industrie, tertiaire, résidentiel et non affecté) ou selon le code NAF à 2 niveaux selon les cas, à la maille IRIS</dc:description>
     
     <dc:identifier rdf:datatype="http://www.w3.org/2001/XMLSchema#string">https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/datasets/610244c9e436671e84ec5da8</dc:identifier>
+    <dc:subject rdf:datatype="http://www.w3.org/2001/XMLSchema#string">subject_uri</dc:subject>
     
     <dc:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2021-07-29T06:02:34.134Z</dc:created>
 
@@ -79,7 +80,7 @@
         <foaf:title xml:lang="fr">Bureau de l'état des milieux</foaf:title>
         <foaf:mbox rdf:resource="ckan@mtes.fr"/>
         <foaf:phone rdf:resource="0158585858"/>
-        <dc:type>type</dc:type>
+        <dc:type rdf:resource="https://type_uri"/>
         <foaf:workplaceHomepage rdf:resource="https://statistiques.developpement-durable.gouv.fr/contact"/>
       
         <org:memberOf>
@@ -129,7 +130,7 @@
         <foaf:title xml:lang="fr">Bureau de l'état des milieux</foaf:title>
         <foaf:mbox rdf:resource="ckan@mtes.fr"/>
         <foaf:phone rdf:resource="0158585858"/>
-        <dc:type>type</dc:type>
+        <dc:type rdf:resource="https://type_uri"/>
         <foaf:workplaceHomepage rdf:resource="https://statistiques.developpement-durable.gouv.fr/contact"/>
         <org:memberOf>
           <org:Organization>
@@ -143,6 +144,7 @@
     <prov:qualifiedAttribution>
         <prov:Attribution>
           <ns0:hadRole>owner</ns0:hadRole>
+          <ns0:hadRole>owner_1</ns0:hadRole>
             <prov:agent>
               <prov:Agent>
                 <foaf:givenName>mtes</foaf:givenName>
@@ -174,29 +176,42 @@
               <vcard:organization xml:lang="en">en_Organisation-Name_pt</vcard:organization>
             </vcard:Kind>
           </dcat:contactPoint>
+
+
+          <dcat:inCatalog>
+            <dcat:Catalog>    
+            <dc:title xml:lang="fr">title_french</dc:title>
+            <dc:title xml:lang="en">title_english</dc:title>
+            <foaf:homepage>wwww.homepage.com</foaf:homepage>
+            </dcat:Catalog>    
+          </dcat:inCatalog>
+
         </dcat:CatalogRecord>
       </foaf:isPrimaryTopicOf>
 
     <!-- Couverture spatiale -->
   
     <!-- BBOX -->
-    <dc:spatial>
+    <!-- <dc:spatial>
       <dc:Location rdf:about="https://location_ressorce_bbox">
         <dcat:bbox  rdf:resource="Ile-de-France"/>
       </dc:Location>
-    </dc:spatial>
+    </dc:spatial> -->
 
     <!-- SPATIAL_COVERAGE -->
     <dc:spatial>
       <dc:Location rdf:about="https://location_ressorce">
-        <skos:inScheme>
-          <skos:prefLabel>label</skos:prefLabel>
-        </skos:inScheme>
-        <skos:prefLabel xml:lang="fr">fr-label</skos:prefLabel>
-        <skos:prefLabel xml:lang="en">en-label</skos:prefLabel>
-        <dc:identifier rdf:resource="identifier-location"/>
+            <skos:inScheme rdf:resource="https://in_scheme_uri" />
+            <dc:identifier >identifier_spatial_coverage</dc:identifier>
+            <skos:prefLabel xml:lang="fr">label_french</skos:prefLabel>
+            <skos:prefLabel xml:lang="en">label_english</skos:prefLabel>
+
+
       </dc:Location>
     </dc:spatial>
+  
+    
+    
 
 
     <!-- access_rights -->
@@ -212,8 +227,8 @@
 
 
       <!-- conformsTo: liste d'URI --> 
-      <!-- <dc:conformsTo rdf:resource="test"/> 
-      <dc:conformsTo rdf:resource="terrrst"/>  -->
+      <dc:conformsTo rdf:resource="crs_uri_1"/> 
+      <dc:conformsTo rdf:resource="crs_uri_2"/> 
 
       <!-- conformsTo -->
       <dc:conformsTo> 
@@ -228,6 +243,11 @@
       <dc:language rdf:resource="http://publications.europa.eu/resource/authority/language/ENG"/>
       
       
+      <!-- accrualPeriodicity -->
+
+      <dc:accrualPeriodicity rdf:resource="http://publications.europa.eu/resource/authority/frequency/ANNUAL"/> 
+
+
       <!-- dct:provenance -->
       <dc:provenance>
           <dc:ProvenanceStatement>
@@ -271,6 +291,18 @@
 
     <dcat:keyword xml:lang="fr">fr_gaz-naturel</dcat:keyword>
     <dcat:keyword xml:lang="en">en_gaz-naturel</dcat:keyword>
+    
+    
+    
+    <dcat:keyword xml:lang="fr">habitat</dcat:keyword>
+    <dcat:keyword xml:lang="fr">logement</dcat:keyword>
+    <dcat:keyword xml:lang="fr">hydrologie</dcat:keyword>
+    <dcat:keyword xml:lang="fr">climatique</dcat:keyword>
+    <dcat:keyword xml:lang="fr">climat</dcat:keyword>
+    <dcat:keyword xml:lang="fr">air</dcat:keyword>
+
+
+
 
     <dc:temporal>
         <dc:PeriodOfTime>
@@ -316,13 +348,6 @@
           </dcat:DataService>
         </dcat:accessService>
 
-        <!-- dct:format -->
-        <dc:format>
-          <dc:MediaTypeOrExtent rdf:about="https://MediaTypeOrExtent_uri">
-              <rdfs:label  xml:lang="en">label_en</rdfs:label>
-              <rdfs:label xml:lang="fr">label_fr</rdfs:label>
-          </dc:MediaTypeOrExtent>
-        </dc:format>
 
     <!-- dcat:mediaType  -->
     <dcat:mediaType>
@@ -332,6 +357,14 @@
       </dc:MediaType>
     </dcat:mediaType>
     
+      <!-- dct:format -->
+      <dc:format>
+        <dc:MediaTypeOrExtent rdf:about="https://MediaTypeOrExtent_uri">
+            <rdfs:label  xml:lang="en">label_en</rdfs:label>
+            <rdfs:label xml:lang="fr">label_fr</rdfs:label>
+        </dc:MediaTypeOrExtent>
+      </dc:format>
+
      <!-- dct:rights -->
       <dc:rights>
           <dc:RightsStatement>

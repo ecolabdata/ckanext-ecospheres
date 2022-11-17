@@ -332,6 +332,8 @@ class VocabularyIndex:
         print(name, res.status_code)
         if res.status_code == 0 or permissive and res.status_code:
             res.data.dump()
+
+
         return res
 
     @classmethod

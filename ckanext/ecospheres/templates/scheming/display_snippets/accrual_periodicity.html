@@ -1,0 +1,17 @@
+{%- set accrual_periodicity_value = data[field.field_name] -%}
+
+
+{%- set vocabularies = h.get_vocabulairies_for_given_fields(field) -%}
+
+
+{%- set res=h.get_vocab_label_by_uri_from_list_of_vocabularies(vocabularies,accrual_periodicity_value,lang='fr') -%}
+    
+    {%- if res==accrual_periodicity_value -%}
+
+    <a href="{{ res }}">{{ res }}</a>
+
+    {%- else -%}
+        {{ res }}
+    {%- endif -%}     
+
+

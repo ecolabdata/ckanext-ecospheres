@@ -4,21 +4,19 @@
   ] -%}
 {%- set schema = h.scheming_get_dataset_schema(dataset_type) -%}
 
-{% block resource_additional_information_inner %}
+{% block resource_additional_information_inner_not %}
   {% if res.datastore_active %}
     {% block resource_data_dictionary %}
       {{ super() }}
     {% endblock %}
   {% endif %}
 
-    
   <div class="module-content">
     
     {%- block additional_info_heading -%}<h2>{{ _('Additional Information') }}</h2>{%- endblock -%}
     <table class="table table-striped table-bordered table-condensed" data-module="table-toggle-more">
       <tbody>
-      
-
+     
 
 
         <div >
@@ -26,12 +24,16 @@
             {%- for field in schema.resource_fields -%}
               {%- if field.field_name not in exclude_fields
                   and field.display_snippet is not none
+                  and res[field.field_name] 
                     -%}
-                <tr style="background-color: #FCF3CF;">
+                    
+                 
+                <tr>
                   <th scope="row" style="width:200px">
                     {{- h.scheming_language_text(field.label) -}}
                   </th>
                   <td> 
+
                     {%- snippet 'scheming/snippets/display_field.html',
                         field=field, data=res, entity_type='dataset',
                         object_type=dataset_type -%}

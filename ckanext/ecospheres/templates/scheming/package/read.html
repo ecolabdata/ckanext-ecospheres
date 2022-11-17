@@ -12,7 +12,6 @@
 {% endblock %}
 
 
-
 {%- set schema = h.scheming_get_dataset_schema(dataset_type) -%}
 
 {% block package_notes %}
@@ -27,6 +26,8 @@
     pkg.notes%}
     <div class="notes embedded-content">
       {{ h.render_markdown(h.get_localized_value_for_display(pkg.get('notes', ''))) }}
+
+   
     </div>
   {% endif %}
 {% endblock %}

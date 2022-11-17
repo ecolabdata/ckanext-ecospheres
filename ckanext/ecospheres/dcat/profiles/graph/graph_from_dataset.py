@@ -36,6 +36,8 @@ try:
         _set_bbox,
         _set_spatial_coverage,
         _set_provenance,
+        _set_category,
+        _set_theme
         
     )
 except Exception as e:
@@ -65,7 +67,18 @@ def _add_multilang_value(self, subject, predicate, dataset_key=None, dataset_dic
 
 
 def graph_from_dataset(self, dataset_dict, dataset_ref):
-    
+        
+        
+    '''
+
+    Étant donné un jeu de données CKAN `dataset_dict`, crée un graphe RDF `dataset_ref`.      
+
+    `dataset_dict` est un dict avec les métadonnées du jeu de données comme celui
+    retournées par `package_show`. `dataset_ref` est un objet rdflib URIRef
+    qui doit être utilisé pour référencer le jeu de données.
+    '''
+
+
     logging.info("Create graph from dataset '%s'" % dataset_dict['name'])
 
     g=self.g
@@ -80,14 +93,6 @@ def graph_from_dataset(self, dataset_dict, dataset_ref):
     items = [
         # identifier
         ('identifier', DCT.identifier, ['guid', 'id'], Literal),
-        # date de modification
-        ('modified', DCT.modified, None, Literal),
-        
-        # date de creation 
-        ('created', DCT.created, None, Literal),
-        
-        # date de publication
-        ('issued', DCT.issued, None, Literal),
         
         # URL de la fiche sur le catalogue source
         ('landing_page', DCAT.landingPage, None, Literal),
@@ -104,54 +109,51 @@ def graph_from_dataset(self, dataset_dict, dataset_ref):
         # spatial_resolution
         ('spatial_resolution', DCAT.spatialResolutionInMeters, None, Literal),
         
-        # subject
-        ('subject', DCT.subject, None, Literal),
-        
-        # subject
+        # attributes_page
         ('attributes_page', FOAF.page, None, Literal),
         
     ]
     
-
-    
     self._add_triples_from_dict(dataset_dict, dataset_ref, items)
-        
-    items = [
-        # date de modification
-        ('modified', DCT.modified, None, Literal),
-        
-        # date de creation 
-        ('created', DCT.created, None, Literal),
-        
-        # date de publication
-        ('issued', DCT.issued, None, Literal),
-        
-        
-    ]
-    
 
-    self._add_date_triples_from_dict(dataset_dict, dataset_ref, items)
+    # date de modification
+    if modified:=dataset_dict.get("modified",None):
+        g.add((dataset_ref, DCT.modified, Literal(modified,
+                                                  datatype=XSD.dateTime)))
+    # date de creation 
+    if created:=dataset_dict.get("created",None):
+        g.add((dataset_ref, DCT.created, Literal(created,
+                                                  datatype=XSD.dateTime)))
+    # date de publication
+    if issued:=dataset_dict.get("issued",None):
+        g.add((dataset_ref, DCT.issued, Literal(issued,
+                                                  datatype=XSD.dateTime)))
 
-        
+
+
     
     
-    ############################################   LItteruw multilangue  ############################################
-    # # description {*}
-    # g.add((_dataset_ref, ADMS.versionNotes, Literal(notes, lang=lang)))
+    ############################################   Littéraux multilangue  ############################################
     for obj in g.objects(dataset_ref, DCT.description):
         g.remove((dataset_ref, DCT.description, obj,))
     
-    notes_dict=dataset_dict.get("notes",None)
-    for lang, notes in notes_dict.items():
-        g.add((dataset_ref, DCT.description, Literal(notes, lang=lang)))
+    # description {*}
+    if notes_dict:=dataset_dict.get("notes",None):
+        for lang in notes_dict:
+            g.add((dataset_ref, DCT.description, Literal(notes_dict[lang], lang=lang)))
 
 
     for obj in g.objects(dataset_ref, DCT.title):
         g.remove((dataset_ref, DCT.title, obj,))
     
-    notes_dict=dataset_dict.get("title",None)
-    for lang, _title in notes_dict.items():
-        g.add((dataset_ref, DCT.title, Literal(_title, lang=lang)))
+    # title {*}
+    if title_dict:=dataset_dict.get("title",None):
+
+        if isinstance(title_dict,str):
+            import json
+            title_dict=json.loads(title_dict)
+        for lang in title_dict:
+            g.add((dataset_ref, DCT.title, Literal(title_dict[lang], lang=lang)))
 
 
 
@@ -212,7 +214,6 @@ def graph_from_dataset(self, dataset_dict, dataset_ref):
     """------------------------------------------<attributes_page>------------------------------------------"""
     # ATTRIBUTE_PAGE
     # > foaf:page
-    # [+ DCAT-AP]
     
     
     """------------------------------------------<page>------------------------------------------"""
@@ -224,31 +225,27 @@ def graph_from_dataset(self, dataset_dict, dataset_ref):
 
 
     ############################################   Thèmes et mots clés   ############################################
-
+    for obj in g.objects(dataset_ref, DCAT.theme):
+        g.remove((dataset_ref, DCAT.theme, obj))
+    
     """------------------------------------------ category ------------------------------------------"""
     # CATEGORY []
     # > dcat:theme
-    
-    """------------------------------------------ subcategory ------------------------------------------"""
-    # SUBCATEGORY []
-    # > dcat:theme
+    _set_category(self, g , dataset_dict, dataset_ref)
+
     
     """------------------------------------------ theme ------------------------------------------"""
     # THEME []
     # > dcat:theme
     
+    _set_theme(self, g , dataset_dict, dataset_ref)
     
-    """------------------------------------------ subject ------------------------------------------"""
-    # > dct:subject
 
 
     """------------------------------------------ free_tags ------------------------------------------"""
     # FREE_TAG [{*}]
     # > dcat:keyword
     
-    #pas tres clair pour l'instant Cf. ecospheres_dataset_schema.yaml
-    
-
 
     
     ############################################   Métadonnées sur les métadonnées   ############################################
@@ -323,7 +320,6 @@ def graph_from_dataset(self, dataset_dict, dataset_ref):
     # > owl:versionInfo
     # voir littéraux
     
-    
     """------------------------------------------  temporal_resolution ------------------------------------------"""
     # TEMPORAL_RESOLUTION
     # > dcat:temporalResolution
@@ -345,12 +341,27 @@ def graph_from_dataset(self, dataset_dict, dataset_ref):
         g.add((distribution, RDF.type, DCAT.Distribution))
 
 
+        """------------------------------------------ url   ------------------------------------------"""
+
+        if url:=resource_dict.get("url",None):
+            g.add((distribution,  DCAT.accessURL, Literal(url)))
+        
+        """------------------------------------------ download_url   ------------------------------------------"""
+
+        if download_url:=resource_dict.get("download_url",None):
+            g.add((distribution,  DCAT.downloadURL, Literal(download_url)))
+        
+
+
         """------------------------------------------ title   ------------------------------------------"""
         # # TITLE {*}
         # # > dct:title
+        for obj in g.objects(distribution, DCT.title):
+            g.remove((distribution, DCT.title, obj))
         if names:=resource_dict.get("name",None):
             for lang in names:
-                g.add((distribution,  DCT.title, Literal(names[lang], lang=lang)))
+                if names[lang] != "":
+                    g.add((distribution,  DCT.title, Literal(names[lang], lang=lang)))
 
 
         """------------------------------------------ description   ------------------------------------------"""
@@ -367,45 +378,52 @@ def graph_from_dataset(self, dataset_dict, dataset_ref):
         if media_type_ressource:=resource_dict.get("media_type_ressource",None):
             for media_type_element in media_type_ressource:
 
-            if uri:=media_type_element.get("uri",None):
-                media_type_ressource_node=URIRef(uri)
-            else:
-                media_type_ressource_node=BNode()
-                
-            g.add((media_type_ressource_node, RDF.type, DCT.MediaType))
-            g.add((distribution, DCT.mediaType, media_type_ressource_node))
+                if uri:=media_type_element.get("uri",None):
+                    media_type_ressource_node=URIRef(uri)
+                else:
+                    media_type_ressource_node=BNode()
+                    
+                g.add((media_type_ressource_node, RDF.type, DCT.MediaType))
+                g.add((distribution, DCT.mediaType, media_type_ressource_node))
 
-            if labels:=media_type_element.get("label",None):
-                for lang in labels:
-                    g.add((media_type_ressource_node, RDFS.label, Literal(labels[lang],lang=lang)))
+                if labels:=media_type_element.get("label",None):
+                    for lang in labels:
+                        g.add((media_type_ressource_node, RDFS.label, Literal(labels[lang],lang=lang)))
 
 
         """------------------------------------------ other_format   ------------------------------------------"""
         # OTHER_FORMAT [{}]
         # > dct:format -> dct:MediaTypeOrExtent
-        if other_format:=resource_dict.get("other_format",None):
-            if uri:=other_format.get("uri",None):
-                other_format_node=URIRef(uri)
-            else:
-                other_format_node=BNode()
-                
-            g.add((other_format_node, RDF.type, DCT.MediaTypeOrExtent))
-            g.add((distribution, DCT["format"], other_format_node))
+        if _other_formats:=resource_dict.get("other_format",None):
+            for _other_format in _other_formats:
+                if uri:=_other_format.get("uri",None):
+                    other_format_node=URIRef(uri)
+                else:
+                    other_format_node=BNode()
+                    
+                g.add((other_format_node, RDF.type, DCT.MediaTypeOrExtent))
+                g.add((distribution, DCT["format"], other_format_node))
 
-            if labels:=other_format.get("label",None):
-                for lang in labels:
-                    g.add((other_format_node, RDFS.label, Literal(labels[lang],lang=lang)))
+                if labels:=_other_format.get("label",None):
+                    for lang in labels:
+                        g.add((other_format_node, RDFS.label, Literal(labels[lang],lang=lang)))
 
         """------------------------------------------ service_conforms_to   ------------------------------------------"""
         # SERVICE_CONFORMS_TO [{}]
         # > dcat:accessService [-> dcat:DataService] / dct:conformsTo
-        if service_conforms_to:=resource_dict.get("service_conforms_to",None):
-            service_conforms_to_node=BNode()
-            g.add((service_conforms_to_node, RDF.type, DCAT.DataService))
-            g.add((distribution, DCT.accessService, service_conforms_to_node))
-            
-            for lang in service_conforms_to:
-                g.add((service_conforms_to_node, DCT.conformsTo, Literal(service_conforms_to[lang],lang=lang)))
+        if service_conforms_to_dict:=resource_dict.get("service_conforms_to",None):
+            for service_conforms_to_item in service_conforms_to_dict:
+                if uri_service_conforms_to:=service_conforms_to_item.get("uri",None):
+                    service_conforms_to_node=URIRef(uri_service_conforms_to.rstrip('/'))
+                else:
+                    service_conforms_to_node=BNode()
+
+                g.add((service_conforms_to_node, RDF.type, DCAT.DataService))
+                g.add((distribution, DCT.accessService, service_conforms_to_node))
+
+                if labels:=service_conforms_to_item.get("title",None):
+                    for lang in labels:
+                        g.add((service_conforms_to_node, DCT.conformsTo, Literal(labels[lang],lang=lang)))
 
 
         """------------------------------------------ rights   ------------------------------------------"""
@@ -436,7 +454,8 @@ def graph_from_dataset(self, dataset_dict, dataset_ref):
                 # TYPE []
                 # > dct:type
                 if _type:=license.get("type",None):
-                    g.add((license_node, DCT.type, Literal(_type)))
+                    for _type_items in _type:
+                        g.add((license_node, DCT.type, Literal(_type_items)))
                 
                 # LABEL {*}
                 # > rdfs:label

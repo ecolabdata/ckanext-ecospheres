@@ -4,14 +4,11 @@ from rdflib import URIRef, BNode, Literal
 
 
 _IS_PART_OF='isPartOf'
-_HAS_PART='hasPart'
+_HAS_PART='series_member'
 FREQ_BASE_URI = 'http://publications.europa.eu/resource/authority/frequency/'
 REGEX_PATTERN_THEME=r'.*data\.statistiques\.developpement\-durable\.gouv.*'
 
-aggregation_mapping={
-    _IS_PART_OF: "in_series",
-    _HAS_PART: "serie_datasets",
-}
+
 
 DCT = Namespace("http://purl.org/dc/terms/")
 DCAT = Namespace("http://www.w3.org/ns/dcat#")

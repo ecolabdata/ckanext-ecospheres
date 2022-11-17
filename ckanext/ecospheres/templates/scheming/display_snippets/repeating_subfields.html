@@ -7,10 +7,22 @@
     <div class="panel-body">
         <dl class="scheming-subfield-list">
         {# Traitement des champs avec subfield : in_series et dateset_series  #}
-        {% if field.field_name == "in_series" or field.field_name == "serie_datasets" %}
+        {% if field.field_name == "in_series" or field.field_name == "series_member" %}
             {# création d'un lien vers la ressource           {{ data[field.field_name] }}  #}
             <a href="/dataset/{{ field_data['url']   }}"> {{ field_data['title'] }} </a> 
             </br>
+
+        {%- elif field.field_name == "media_type_ressource" -%}
+
+              {%- for item in data[field.field_name] -%}
+                {%- if item.get("label",None) -%}
+                  {{ item.get("label",None) }}
+                {%- else -%}
+                  {{ h.get_vocabulary_label_by_uri("iana_media_type",item.get("uri",None)) }}
+                {%- endif -%}
+                  
+              {%- endfor -%}
+
 
 
         {% else %}
@@ -32,7 +44,7 @@
                                 object_type=object_type
                               -%}
                               </dd>
-
+                              <br>
                             </div>  
                           {%- endif -%}
               {% endfor %}

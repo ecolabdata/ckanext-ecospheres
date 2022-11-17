@@ -22,11 +22,7 @@ assert_true = nose.tools.assert_true
 
 class BaseParseTest(object):
 
-    def _extras(self, dataset):
-        extras = {}
-        for extra in dataset.get('extras'):
-            extras[extra['key']] = extra['value']
-        return extras
+
 
 
         
@@ -62,7 +58,6 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         eq_(dataset["title"]['en'],"en_Données locales de consommation d'électricité, de gaz naturel et de chaleur et de froid - IRIS (à partir de 2018)")
 
 
-
         
         #ct:description
         eq_(dataset['notes']['fr'], "FR Données locales de consommation d'électricité, de gaz naturel et de chaleur et de froid - consommations annuelles et points de livraison d'électricité, de gaz naturel, et de chaleur et de froid, répartis en cinq secteurs (agriculture, industrie, tertiaire, résidentiel et non affecté) ou selon le code NAF à 2 niveaux selon les cas, à la maille IRIS")
@@ -94,12 +89,15 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         # NAME {*} > vcard:fn
         eq_(dataset['contact_point'][0]['name']['fr'],'Point de contact DiDo')
         eq_(dataset['contact_point'][0]['name']['en'],'Point de contact DiDo')
+        
         # EMAIL []
         # > vcard:hasEmail
         eq_(dataset['contact_point'][0]['email'],'ckan@mtes.fr')
+        
         # PHONE []
         # > vcard:hasTelephone
         eq_(dataset['contact_point'][0]['phone'],'0158585858')
+
         # URL 
         # > vcard:hasURL
         eq_(dataset['contact_point'][0]['url'],'https://statistiques.developpement-durable.gouv.fr/contact')
@@ -128,6 +126,12 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         
         eq_(dataset['creator'][0]['title'],"Bureau de l'état des milieux")
         
+        # > dct:type
+        eq_(dataset['creator'][0]['type'],'https://type_uri')
+
+        eq_(dataset['creator'][0]['acronym'],'CGDD/SDES/SDIE/BEM')
+
+
         # > foaf:phone
         eq_(dataset['creator'][0]['phone'],'0158585858')
         
@@ -158,6 +162,8 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
 
         # > foaf:phone
         eq_(dataset['rights_holder'][0]['phone'],'0158585858')
+        
+        eq_(dataset['rights_holder'][0]['acronym'],'CGDD/SDES/SDIE/BEM')
 
         # COMMENT {*}
         eq_(dataset['rights_holder'][0]['comment']['fr'],"Bureau de l'état des milieux")
@@ -188,6 +194,8 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         # > foaf:phone
         eq_(dataset['publisher'][0]['phone'],'0158585858')
 
+        eq_(dataset['publisher'][0]['type'],'https://type_uri')
+
         # COMMENT {*}
         eq_(dataset['publisher'][0]['comment']['fr'],"Bureau de l'état des milieux")
         eq_(dataset['publisher'][0]['comment']['en'],"Bureau de l'état des milieux")
@@ -204,12 +212,12 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         # > prov:qualifiedAttribution -> prov:Attribution
         
         # > dcat:hadRole
-        eq_(dataset['qualified_attribution'][0]['had_role'],'owner')
+        eq_(set([ item["uri"] for item in dataset['qualified_attribution'][0]['had_role']]),set(['owner','owner_1']))
         
         #foaf:givenName
         eq_(dataset['qualified_attribution'][0]['agent'][0]['name'],'mtes')
         #foaf:mbox
-        eq_(dataset['qualified_attribution'][0]['agent'][0]['mail'],'ckan@mtes.fr')
+        eq_(dataset['qualified_attribution'][0]['agent'][0]['email'],'ckan@mtes.fr')
         #foaf:homePage
         eq_(dataset['qualified_attribution'][0]['agent'][0]['url'],'mtes.website.com')
 
@@ -225,7 +233,7 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
 
         # ATTRIBUTE_PAGE
         # > foaf:page
-        
+        # attributes_page
         #TODO
 
         """-------------------------------------------<page>-------------------------------------------"""        
@@ -263,31 +271,25 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
     
         ############################################   Thèmes et mots clés    ############################################
         """-------------------------------------------<category>-------------------------------------------"""        
-        #TODO
-        """-------------------------------------------<subcategory>-------------------------------------------"""        
-        #TODO
+
+        assert len(dataset['category']) ==4
+
 
         """-------------------------------------------<theme>-------------------------------------------"""        
-        #TODO
+        assert len(dataset["theme"]) ==3
+        assert set([item["uri"] for item in dataset["theme"]]) == set(['http://publications.europa.eu/resource/authority/data-theme/ENER', 'https://data.statistiques.developpement-durable.gouv.fr/dido/api/harvesting/dcat-ap/id/themes/energie','subject_uri'])
 
         """-------------------------------------------<subject>-------------------------------------------"""        
         #TODO
 
         """-------------------------------------------<free_tags>-------------------------------------------"""        
-        #TODO
+        assert dataset['free_tags'] 
 
         """-------------------------------------------<keywords>-------------------------------------------"""        
-        fr_keywords=dataset["keywords"]["fr"]
-        en_keywords=dataset["keywords"]["en"]
-        eq_(len(fr_keywords),6)
-        eq_(len(en_keywords),6)
-        list_en=['enelectricite', 'enenergie', 'enconsommation-d-energie', 'engaz-naturel', 'enchaleur', 'enfroid']
-        list_fr=['frchaleur', 'frfroid', 'frelectricite', 'frconsommation-d-energie', 'frgaz-naturel', 'frenergie']
-        for f_k in fr_keywords:
-            assert f_k in list_fr
-            
-        for e_k in en_keywords:
-            assert e_k in list_en
+        assert dataset['keywords']
+        assert dataset["keywords"].get("fr",None)
+        assert dataset["keywords"].get("en",None)
+    
 
         ############################################   Métadonnées sur les métadonnées   ############################################
         
@@ -328,6 +330,13 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         # > vcard:organization-name
         eq_(dataset['is_primary_topic_of'][0]['contact_point'][0]['affiliation']["fr"],'fr_Organisation-Name_pt')
         eq_(dataset['is_primary_topic_of'][0]['contact_point'][0]['affiliation']["en"],'en_Organisation-Name_pt')
+        
+        
+        # IN_CATALOG [{}]
+        # > dcat:inCatalog -> dcat:Catalog
+        eq_(dataset['is_primary_topic_of'][0]['in_catalog'][0]['title']['fr'],'title_french')
+        eq_(dataset['is_primary_topic_of'][0]['in_catalog'][0]['title']['en'],'title_english')
+        eq_(dataset['is_primary_topic_of'][0]['in_catalog'][0]['homepage'],'wwww.homepage.com')
 
 
         ############################################   Couverture spatiale  ############################################
@@ -336,25 +345,22 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         
         # BBOX
         # > dct:spatial [-> dct:Location] / dcat:bbox
-        eq_(dataset['bbox'],'Ile-de-France')
+        # eq_(dataset['bbox'],'Ile-de-France')
         
         """-------------------------------------------<spatial_coverage>-------------------------------------------"""        
         # SPATIAL_COVERAGE [{}]
         # > dct:spatial -> dct:Location
-    
-        # LABEL {*}
-        # > skos:prefLabel
-        # eq_(dataset['spatial_coverage'][0]['label']['fr'], 'fr-label')
-        # eq_(dataset['spatial_coverage'][0]['label']['en'], 'en-label')
-        # eq_(dataset['spatial_coverage'][0]['uri'], 'https://location_ressorce')
-        
+        eq_(dataset['spatial_coverage'][0]['uri'], 'https://location_ressorce')
         # IN_SCHEME
         # > skos:inScheme
-        #TODO
-
+        eq_(dataset['spatial_coverage'][0]['in_scheme'], 'https://in_scheme_uri')
         # IDENTIFIER
-        # > dct:identifier
-        # eq_(dataset['spatial_coverage'][0]['identifier'], 'identifier-location')
+        eq_(dataset['spatial_coverage'][0]['identifier'], 'identifier_spatial_coverage')
+        #LABEL
+        eq_(dataset['spatial_coverage'][0]['label']["fr"], 'label_french')
+        eq_(dataset['spatial_coverage'][0]['label']["en"], 'label_english')
+    
+        
     
     
         ############################################   Etc. ############################################
@@ -373,29 +379,31 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         
         
         """-------------------------------------------<crs>-------------------------------------------"""        
-
-    
+        
+        for uri in set(["crs_uri_1","crs_uri_2"]):
+            assert uri in set([crs["uri"] for crs in dataset['crs']])
         """-------------------------------------------<conforms_to>-------------------------------------------"""        
         # > dct:conformsTo -> dct:Standard
         #   dct:Standard 
 
         # TITLE {*}
         # > dct:title
-        eq_(dataset["conforms_to"][0]['title']["fr"],"title_fr")
-        eq_(dataset["conforms_to"][0]['title']["en"],"title_en")
+        # eq_(dataset["conforms_to"][0]['title']["fr"],"title_fr")
+        # eq_(dataset["conforms_to"][0]['title']["en"],"title_en")
 
-        # URI
-        eq_(dataset["conforms_to"][0]['uri'],'conformsTo_Standard-uri')    
+        # # # URI
+        # eq_(dataset["conforms_to"][0]['uri'],'conformsTo_Standard-uri')    
         
         """-------------------------------------------<accrual_periodicity>-------------------------------------------"""        
         # ACCRUAL_PERIODICITY
         # > dct:accrualPeriodicity
-        assert dataset["accrual_periodicity"]
+        assert dataset["accrual_periodicity"]=="http://publications.europa.eu/resource/authority/frequency/ANNUAL"
 
 
         """-------------------------------------------<language>-------------------------------------------"""        
         # LANGUAGE []
         # > dct:language
+        assert set([lang["uri"] for lang in dataset['language']])==set(['http://publications.europa.eu/resource/authority/language/ENG', 'http://publications.europa.eu/resource/authority/language/FRA'])
         eq_(len(dataset['language']),2)
 
         """-------------------------------------------<provenance>-------------------------------------------"""        
@@ -458,12 +466,15 @@ class TestFranchDCATAPProfileParsing(BaseParseTest):
         eq_(dataset["resources"][0]["media_type_ressource"][0]['label']['en'],"label_en")
         
         
+        """-------------------------------------------<format>-------------------------------------------"""        
+        assert dataset["resources"][0]["format"] == "https://www.iana.org/assignments/media-types/application/geo+json"
         
         """-------------------------------------------<other_format>-------------------------------------------"""        
-        eq_(dataset["resources"][0]["other_format"]['label']['fr'],'label_fr')
-        eq_(dataset["resources"][0]["other_format"]['label']['en'],'label_en')
-        eq_(dataset["resources"][0]["other_format"]['uri'],'https://MediaTypeOrExtent_uri')
-        print(dataset["resources"][0]["other_format"])
+        eq_(dataset["resources"][0]["other_format"][0]['label']['fr'],'label_fr')
+        eq_(dataset["resources"][0]["other_format"][0]['label']['en'],'label_en')
+        eq_(dataset["resources"][0]["other_format"][0]['uri'],'https://MediaTypeOrExtent_uri')
+
+
         """-------------------------------------------<service_conforms_to>-------------------------------------------"""        
         eq_(dataset["resources"][0]["service_conforms_to"]['fr'],'fr_title')
         eq_(dataset["resources"][0]["service_conforms_to"]['en'],'en_title')

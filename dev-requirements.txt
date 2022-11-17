@@ -3,3 +3,4 @@ rdflib
 pyyaml
 geomet
 ckantoolkit
+unidecode

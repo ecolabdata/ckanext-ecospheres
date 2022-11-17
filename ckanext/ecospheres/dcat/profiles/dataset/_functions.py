@@ -5,6 +5,8 @@ from rdflib.namespace import Namespace, RDFS, RDF, SKOS
 from rdflib import URIRef, BNode
 from ckan.lib.i18n import get_locales
 from ckan.lib.munge import munge_tag
+import re
+import unidecode 
 
 from ..constants import (
     ADMS,
@@ -33,30 +35,8 @@ from ckanext.dcat.profiles import (
 
 aggregation_mapping={
     _IS_PART_OF: "in_series",
-    _HAS_PART: "serie_datasets",
+    _HAS_PART: "series_member",
 }
-
-def _strip_uri( value, base_uri):
-        return value.replace(base_uri, '')
-
-
-def get_langs():
-    language_priorities = ['en','fr']
-    return language_priorities
-    
-def _tags_keywords(self, subject, predicate,dataset_dict):
-    keywords = {}
-    # initialize the keywords with empty lists for all languages
-    for lang in get_langs():
-        keywords[lang] = []
-
-    for keyword_node in self.g.objects(subject, predicate):
-        lang = keyword_node.language
-        keyword = munge_tag(str(keyword_node))
-        keywords.setdefault(lang, []).append(keyword)
-
-    dataset_dict["keywords"] = keywords
-
 def _object_value_multilang(self, subject, predicate, multilang=False):
     '''
     Given a subject and a predicate, returns the value of the object
@@ -77,12 +57,60 @@ def _object_value_multilang(self, subject, predicate, multilang=False):
         # when translation does not exist, create an empty one
         for lang in get_langs():
             if lang not in lang_dict:
-                # TODO: à adapter ( Développé sur DIDO pas de traduction disponible, données originales prises par défaut dans les autres langues)
-                lang_dict[lang] = ''
+                if value_in_french:=lang_dict.get(default_lang, None):
+                    lang_dict[lang] = value_in_french
 
     __values=sum([bool(lang_dict[key]) for key in lang_dict]) == 0
     return None if __values else lang_dict
     
+
+def _strip_uri( value, base_uri):
+        return value.replace(base_uri, '')
+
+
+def get_langs():
+    language_priorities = ['en','fr']
+    return language_priorities
+    
+def _check_sous_theme(theme_ecosphere,list_keywords,title) -> (str,str):
+
+    for th_child in theme_ecosphere:
+        alt_labels_sous_theme=th_child.get("altlabel",None)
+        pref_label_sous_theme=th_child.get("label",None)
+        uri_sous_theme=th_child.get("uri",None)
+        #on verifie si le pref_label_sous_theme correspend à un mot clé
+        for kw in list_keywords:
+            if kw.lower() == unidecode.unidecode(pref_label_sous_theme.lower()):
+                return  pref_label_sous_theme, uri_sous_theme
+
+        #on verifie si le alt_labels_sous_theme correspend à un mot clé 
+        if alt_labels_sous_theme:
+            for kw in list_keywords:
+                for alt_lab in alt_labels_sous_theme:
+                    if kw.lower() == unidecode.unidecode(alt_lab.lower()):
+                        return   pref_label_sous_theme, uri_sous_theme  
+        #on essaye de faire matcher les regex avec le titre du dataset 
+        if regexp:=th_child.get("regexp",None):
+            for _regexp_ in regexp:
+                if re.search(_regexp_,title):
+                    return pref_label_sous_theme, uri_sous_theme  
+
+    return None,None
+
+
+def _tags_keywords(self, subject, predicate,dataset_dict):
+    keywords = {}
+    for lang in get_langs():
+        keywords[lang] = []
+
+    for keyword_node in self.g.objects(subject, predicate):
+        lang = keyword_node.language
+        keyword = munge_tag(str(keyword_node))
+        keywords.setdefault(lang, []).append(keyword)
+    if keywords:
+        dataset_dict["keywords"] = keywords
+        dataset_dict["free_tags"] = keywords
+
 
 def _version_notes(self, subject, predicate,dataset_dict):
     value=_object_value_multilang(self, subject, predicate, multilang=True)
@@ -101,22 +129,16 @@ def _provenance(self, subject, predicate,dataset_dict):
 def _language(self, subject, predicate,dataset_dict):
     _language_list=[]
     for attr in self.g.objects(subject, predicate):
-        #TODO: raffiner si possible
 
         _language_list.append(str(attr))
     if _language_list:
-        dataset_dict["language"]= _language_list
-
-
-
-def _accrual_periodicity(self, subject, predicate,dataset_dict):
-    _accrual_periodicity_list=[]
-    for attr in self.g.objects(subject, predicate):
-        #TODO: raffiner si possible
-
-        _accrual_periodicity_list.append(str(attr))
-    if _accrual_periodicity_list:
-        dataset_dict["accrual_periodicity"]= _accrual_periodicity_list
+        
+        dataset_dict["language"]= [
+            {
+                'uri':lang 
+            }
+                    for lang in  _language_list
+                            ]
 
 
 def _conforms_to(self, subject, predicate,dataset_dict):
@@ -135,6 +157,23 @@ def _conforms_to(self, subject, predicate,dataset_dict):
     if _conforms_to_list:
         dataset_dict['conforms_to']= _conforms_to_list
 
+
+def _crs_list(self, subject, predicate,dataset_dict):
+    _conforms_to_list=[]
+    for attr in self.g.objects(subject, predicate):
+        _conforms_to_list.append(str(attr))
+
+    if _conforms_to_list:
+
+        
+        dataset_dict['crs']= [
+            {
+                'uri': item
+            }
+            for item in _conforms_to_list
+        ]
+        
+        
 
 
 
@@ -156,7 +195,6 @@ def _access_rights(self, subject, predicate,dataset_dict):
         dataset_dict['access_rights']= access_rights_list
 
 
-
 def _spatial_coverage(self, subject, predicate,dataset_dict):
     spatial_coverage_list=[]
     for attr in self.g.objects(subject, predicate):
@@ -164,14 +202,12 @@ def _spatial_coverage(self, subject, predicate,dataset_dict):
         for key,_predicate in (
                 ("label",SKOS.prefLabel) ,
                 ("identifier",DCT.identifier) ,
-                ("prefLabel",SKOS.inScheme) ,
-                
+                ("in_scheme",SKOS.inScheme) ,
             ):
             if key == "label":
                 value=_object_value_multilang(self, attr, _predicate, multilang=True)
 
             elif key == "prefLabel":
-                #TODO: à clarifier
                 for _attr in self.g.objects(attr, _predicate):
                     value=self._object_value(_attr, SKOS.prefLabel)
                     if value:
@@ -181,6 +217,7 @@ def _spatial_coverage(self, subject, predicate,dataset_dict):
             
             if value:
                 spatial_coverage_dict[key]=value
+
         spatial_coverage_dict["uri"]=str(attr)
         if spatial_coverage_dict:
             spatial_coverage_list.append(spatial_coverage_dict)
@@ -206,6 +243,7 @@ def _is_primary_topic_of(self, subject, predicate,dataset_dict):
     
                 is_primary_topic_of_dict[key]=value
         is_primary_topic_of_dict["contact_point"]=_contact_points(self, attr, DCAT.contactPoint,dataset_dict,return_value=True)
+        is_primary_topic_of_dict["in_catalog"]=_in_catalog(self, attr, DCAT.inCatalog,dataset_dict,return_value=True)
         is_primary_topic_of_list.append(is_primary_topic_of_dict)
 
     dataset_dict["is_primary_topic_of"]= is_primary_topic_of_list
@@ -222,7 +260,6 @@ def _bbox_spatial(self, subject, predicate,dataset_dict):
             value=self._object_value(attr, _predicate)
             if value:
                 res=value
-
     if res:
         dataset_dict['bbox']=res
 
@@ -234,9 +271,14 @@ def _qualified_attribution(self, subject, predicate,dataset_dict):
         for key,_predicate in (
                 ("had_role",NS.hadRole) ,# foaf:phone
             ):
-            value=self._object_value(attr, _predicate)
+            value=self._object_value_list(attr, _predicate)
             if value:
-                qualified_attri_dict[key]=value
+                qualified_attri_dict[key]=[
+                    {
+                        "uri": role
+                    }
+                    for role in value
+                ]
             
             #agent
             agent_list=[]
@@ -244,7 +286,7 @@ def _qualified_attribution(self, subject, predicate,dataset_dict):
                 agent_dict={}
                 for key,__predicate in (
                             ("name",FOAF.givenName) ,# foaf:phone
-                            ("mail",FOAF.mbox) ,# foaf:phone
+                            ("email",FOAF.mbox) ,# foaf:phone
                             ("url",FOAF.homePage) ,# foaf:phone
                             ):
                     value=self._object_value(agent,__predicate)
@@ -264,41 +306,25 @@ def _parse_agent(self, subject, predicate,dataset_dict,keybase=None):
     
         list_publisher=[]
         
-        #TODO: initialiser à agent_dict={}
-        agent_dict ={
-                    # "name":{
-                    #         "fr":"fr-Indisponible",
-                    #         "en":"en-Indisponible"},
-                    # "title":"Indisponible",
-                    # "comment":{
-                    #         "fr":"fr-Indisponible",
-                    #         "en":"en-Indisponible"},
-                    # "type":"Indisponible",
-                    # "email":"Indisponible",
-                    # "phone":"Indisponible",
-                    # "url":"Indisponible",
-                    # "affiliation":{
-                    #         "fr":"fr-Indisponible",
-                    #         "en":"en-Indisponible"},
-                    }
+        agent_dict ={}
         
         for agent in self.g.objects(subject, predicate):
             if agent is None:
                 continue
             
             # non-multilangue
-            #TODO: type à clarifier    
             for key,_predicate in (
                 ("title",FOAF.title), #dido -> présent
                 ("type",DCT.type), 
                 ("email",FOAF.mbox) , #foaf:mbox 
                 ("phone",FOAF.phone) ,# foaf:phone
                 ("url",FOAF.workplaceHomepage), #foaf:workplaceHomepage
+                ("acronym",FOAF.name), #dido
             ):
                 value=self._object_value(agent, _predicate)
                 if value:
                     agent_dict[key] = value
-            
+                
             # multilangue    
             for key,_predicate in (
                 ("name",FOAF.name), #dido -> présent
@@ -325,17 +351,7 @@ def _parse_agent(self, subject, predicate,dataset_dict,keybase=None):
 
 def _contact_points(self, subject, predicate,dataset_dict,return_value=False):
         
-        contact_points_dict = {
-            # "name":{
-            #     "fr":"fr-Indisponible",
-            #     "en":"en-Indisponible"},
-            # "email":"Indisponible",
-            # "phone":"Indisponible",
-            # "url":"Indisponible",
-            # "affiliation":{
-            #     "fr":"fr-Indisponible",
-            #     "en":"en-Indisponible"},
-        }
+        contact_points_dict = dict()
         contact_points_list = []
         for contact_node in self.g.objects(subject, predicate):
             
@@ -344,6 +360,7 @@ def _contact_points(self, subject, predicate,dataset_dict,return_value=False):
                 ("phone",VCARD.hasTelephone) ,
                 ("url",VCARD.hasURL), 
             ):
+            
                 value=self._object_value(contact_node, _predicate)
                 if value:
                     contact_points_dict[key] = value
@@ -357,12 +374,40 @@ def _contact_points(self, subject, predicate,dataset_dict,return_value=False):
                 if _value:
                     contact_points_dict[key] = _value
                     
-            
-                    
             contact_points_list.append(contact_points_dict)
         if return_value:
             return contact_points_list
         dataset_dict["contact_point"]= contact_points_list
+        
+    
+def _in_catalog(self, subject, predicate,dataset_dict,return_value=False):
+        
+        _in_catalog_dict = dict()
+        _in_catalog_list = []
+        for _in_catalog_node in self.g.objects(subject, predicate):
+            
+            for key,_predicate in (
+                ("homepage",FOAF.homepage), 
+            ):
+            
+                value=self._object_value(_in_catalog_node, _predicate)
+                if value:
+                    _in_catalog_dict[key] = value
+                    
+            #multilangue        
+            for key,_predicate in (
+                ("title",DCT.title),
+            ):
+                _value=_object_value_multilang(self, _in_catalog_node, _predicate, multilang=True)
+                if _value:
+                    _in_catalog_dict[key] = _value
+                    
+            
+                    
+            _in_catalog_list.append(_in_catalog_dict)
+        if return_value:
+            return _in_catalog_list
+        dataset_dict["in_catalog"]= contact_points_list
         
     
     
