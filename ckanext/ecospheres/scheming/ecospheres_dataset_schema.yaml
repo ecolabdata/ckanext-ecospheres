@@ -331,6 +331,7 @@ dataset_fields:
   label:
     fr: Organisation
     en: Organization
+  value_type: literal
   display_snippet: null
   
 
@@ -1392,7 +1393,7 @@ resource_fields:
   label: 
     fr: Format (registre IANA)
     en: Media type
-    value_type: node or uri
+  value_type: node or uri
   display_snippet: media_type_fields.html
 
   <<: *media_type_fields
