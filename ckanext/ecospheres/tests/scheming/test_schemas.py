@@ -118,15 +118,21 @@ class TestEcospheresDatasetSchema(object):
                 fields += field['repeating_subfields']
 
     def test_only_nodes_have_repeating_subfields(self):
-        """Vérifie que seuls les champs de type noeud ont des sous-champs."""
+        """Vérifie que seuls les champs de type noeud ont des sous-champs.
+        
+        Exception admise : les champs de type URI avec un unique sous-champ uri.
+        """
         schema = _get_schema('ecospheres_dataset_schema')
         fields = schema['dataset_fields'] + schema['resource_fields']
         while fields:
             field = fields.pop()
             value_type = field.get('value_type')
             assert value_type in ('node', 'node or uri') \
-                or not 'repeating_subfields' in field, \
-                field.get('field_name')
+                or not 'repeating_subfields' in field \
+                or (
+                    value_type == 'uri' and len(field['repeating_subfields']) == 1
+                    and field['repeating_subfields'][0].get('field_name') == 'uri'
+                ), field.get('field_name')
             if 'repeating_subfields' in field:
                 fields += field['repeating_subfields']
 
