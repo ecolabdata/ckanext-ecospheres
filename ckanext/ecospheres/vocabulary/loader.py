@@ -172,13 +172,23 @@ def __create_table_and_load_data(table_name,table_schema,data):
 
 
 
-
-def load_vocab():
+def intersection(lst1, lst2):
+    return list(set(lst1) & set(lst2))
+import logging
+def load_vocab(vocab_list=[]):
     """ Create table schema and load data for given vocabularies from vocabularies.yaml 
     """
+    print("vocab list: ",vocab_list)
+    logging.info(vocab_list)
+    vocab_to_load=[]
+    if vocab_list != []:
+        vocab_to_load=intersection(vocab_list, VocabularyIndex.names())
+    else:   
+        vocab_to_load=list(VocabularyIndex.names())
 
-    for name in VocabularyIndex.names():       
+    for name in vocab_to_load:       
         try:
+            print("vocab_to_load: ",name)
             vocab_data=VocabularyIndex.load_and_dump(name).data
             if not vocab_data:
                 raise Exception(f"Erreur lors du chargement du vocabulaire {name}")
@@ -186,7 +196,6 @@ def load_vocab():
 
             for table_name in vocab_data.keys():
                 
-                print('testttttttttttttttttttttttttttttttttttttttttt',table_name)
                 #les tables echosphere spatial, echosphere_hierarchy et echosphere_regex ont des schemas de données differents.
                 #donc il faut les gérer individuellement. 
                 if re.match(REGEX_PATTERN_ECOSPHERE_SPATIAL,table_name):

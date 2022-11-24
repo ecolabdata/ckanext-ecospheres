@@ -16,8 +16,9 @@ from ckanext.ecospheres.scheming.tab import get_fields_by_tab
 from ckan.lib.helpers import lang
 from ckanext.ecospheres.vocabulary.loader import load_vocab as load_all_vocab
 
-import ckan.logic
-_check_access = ckan.logic.check_access
+import ckan.logic as logic
+
+_check_access = logic.check_access
    
 
 
@@ -353,9 +354,6 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         return search_results
 
 
-
-
-
     # ------------- IBlueprint ---------------#
     
     def _get_territoires(self):
@@ -390,33 +388,44 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
             blueprint.add_url_rule(*rule)
 
         from flask import request
-        @blueprint.route('/api/test', methods=["POST"])
-        def test():
-            # username = request.get_json()
-            # user = plugins.toolkit.get_action('get_site_user')(
-            #     {'ignore_auth': False, 'defer_commit': True},
-            #     {}) 
-            # _user_name = user['name']
-            # ctx = {'ignore_auth': True,
-            #     'user': _user_name}
+        @blueprint.route('/api/load-vocab', methods=["POST"])
+        def _load_vocab_():
+        
+            import ckan.lib.base as base
+            import ckan.model as model
+            import ckan.logic as logic
+            c = base.c
 
-            # data_dict={}
-            # _check_access('user_delete', ctx, data_dict)
+
+            context = {'model': model,
+                'user': c.user, 'auth_user_obj': c.userobj}
+            try:
+                logic.check_access('sysadmin', context, {})
+            except logic.NotAuthorized:
+                base.abort(403, 'Need to be system administrator to administer')
+
+            vocab = request.get_json()
             import threading
-            import time
+
+            vocab_list=vocab.get("vocab_list",[])
 
             class BackgroundTasks(threading.Thread):
                 def run(self,*args,**kwargs):
-                    load_all_vocab()
-            import  os
+                    load_all_vocab(vocab_list=vocab_list)
 
 
             t = BackgroundTasks()
-            t.start()           
-
+            t.start()       
+            
+            if vocab_list==[]:
+                msg=f'chargement des vocabulaires: { vocab.get("vocab_list",None)} lancé'
+            else:
+                msg='chargement de tous les vocabulaires lancé'
             
             return {
-                "username": "name"
-            }
+                "msg": msg
+                     }
 
         return blueprint
+
+
