@@ -1032,7 +1032,7 @@ class VocabularyDataCluster(dict):
                 if re.match(r'.*ckanext-ecospheres.*', ckanext):
                     ckan_ecosphere_index=ckanext_path.index(ckanext)
 
-            base_path = Path(ckanext_path[ckan_ecosphere_index]).parent / 'vocabularies'
+            base_path = Path(ckanext_path[2]).parent / 'vocabularies'
 
 
             print(ckanext_path)
@@ -1057,7 +1057,6 @@ class VocabularyDataCluster(dict):
         )
 
         import logging
-        logging.info("testttttttt")
         with open(descriptor, 'w', encoding='utf-8') as target:
             json.dump(self, target, ensure_ascii=False, indent=4)
 

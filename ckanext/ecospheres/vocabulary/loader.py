@@ -189,7 +189,7 @@ def load_vocab(vocab_list=[]):
     for name in vocab_to_load:       
         try:
             print("vocab_to_load: ",name)
-            vocab_data=VocabularyIndex.load_and_dump(name).data
+            vocab_data=VocabularyIndex.load(name).data
             if not vocab_data:
                 raise Exception(f"Erreur lors du chargement du vocabulaire {name}")
                 continue
@@ -213,7 +213,3 @@ def load_vocab(vocab_list=[]):
                             
         except Exception as e:
             print("Erreur pendant le chargement des vocabulaires",str(e))
-
-
-
-
