@@ -1,11 +1,21 @@
 
 import json, sqlalchemy
 from pathlib import Path
-
+import os
 from ckanext import __path__ as ckanext_path
+from sqlalchemy import create_engine
 
 SQL_SCHEMA = 'vocabulary'
 SQL_METADATA = sqlalchemy.MetaData(schema=SQL_SCHEMA)
+
+try:
+    DB=os.environ.get("CKAN_SQLALCHEMY_URL")
+except:
+    raise ValueError("CKAN_SQLALCHEMY_URL is missing")
+
+engine=create_engine(DB)
+SQL_METADATA.bind=engine
+
 
 class DataConstraint:
     """Constraint.
@@ -1102,7 +1112,8 @@ class VocabularyDataCluster(dict):
                 columns=['uri'],
                 refcolumns=[f'{self.label.name}.uri'],
                 ondelete='CASCADE',
-                onupdate='CASCADE'
+                onupdate='CASCADE',
+                initially=True
             )
         )
         self.hierarchy = None
@@ -1188,7 +1199,8 @@ class VocabularyDataCluster(dict):
                 columns=['parent'],
                 refcolumns=[f'{self.label.name}.uri'],
                 ondelete='CASCADE',
-                onupdate='CASCADE'
+                onupdate='CASCADE',
+                initially=True
             )
         )
         self.set_reference_constraint(
@@ -1202,7 +1214,9 @@ class VocabularyDataCluster(dict):
                 columns=['child'],
                 refcolumns=[f'{self.label.name}.uri'],
                 ondelete='CASCADE',
-                onupdate='CASCADE'
+                onupdate='CASCADE',
+                                initially=True
+
             )
         )
         return hierarchy_table.name
@@ -1244,7 +1258,9 @@ class VocabularyDataCluster(dict):
                 columns=['uri'],
                 refcolumns=[f'{self.label.name}.uri'],
                 ondelete='CASCADE',
-                onupdate='CASCADE'
+                onupdate='CASCADE',
+                                initially=True
+
             )
         )
         return synonym_table.name
@@ -1285,7 +1301,9 @@ class VocabularyDataCluster(dict):
                 columns=['uri'],
                 refcolumns=[f'{self.label.name}.uri'],
                 ondelete='CASCADE',
-                onupdate='CASCADE'
+                onupdate='CASCADE',
+                                initially=True
+
             )
         )
         return regexp_table.name
@@ -1326,7 +1344,9 @@ class VocabularyDataCluster(dict):
                 columns=['uri'],
                 refcolumns=[f'{self.label.name}.uri'],
                 ondelete='CASCADE',
-                onupdate='CASCADE'
+                onupdate='CASCADE',
+                                initially=True
+
             )
         )
         return spatial_table.name

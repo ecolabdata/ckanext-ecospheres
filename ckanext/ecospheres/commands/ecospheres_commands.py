@@ -22,9 +22,12 @@ Chargement des vocabulaires en base de données:
 
 
 @ecospherefr.command()
-def load_vocab():
+@click.option('--name_vocab', required=False, help=f'Retained for backward compatibility')
+
+def load_vocab(name_vocab):
     click.secho('Loading vocabularies...', fg=u"green")
-    load_all_vocab()
+    click.secho(name_vocab, fg=u"green")
+    load_all_vocab(vocab_list=[])
     click.secho('Vocabularies loaded', fg=u"green")
     
 

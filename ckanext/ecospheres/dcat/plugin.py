@@ -14,6 +14,7 @@ import logging
 from ckanext.ecospheres.commands import ecospheres_commands as ecospherefr_cli
 from ckanext.ecospheres.scheming.tab import get_fields_by_tab
 from ckan.lib.helpers import lang
+from ckanext.ecospheres.vocabulary.loader import load_vocab as load_all_vocab
 
     
 
@@ -385,5 +386,44 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
             ]
         for rule in rules:
             blueprint.add_url_rule(*rule)
-        return blueprint
 
+
+        from flask import request
+        @blueprint.route('/api/load-vocab', methods=["POST"])
+        def _load_vocab_():
+        
+            import ckan.lib.base as base
+            import ckan.model as model
+            import ckan.logic as logic
+            c = base.c
+
+
+            context = {'model': model,
+                'user': c.user, 'auth_user_obj': c.userobj}
+            try:
+                logic.check_access('sysadmin', context, {})
+            except logic.NotAuthorized:
+                base.abort(403, 'Need to be system administrator to administer')
+
+            vocab = request.get_json()
+            import threading
+
+            vocab_list=vocab.get("vocab_list",[])
+
+            class BackgroundTasks(threading.Thread):
+                def run(self,*args,**kwargs):
+                    load_all_vocab(vocab_list=vocab_list)
+
+            t = BackgroundTasks()
+            t.start()       
+            
+            if vocab_list!=[]:
+                msg=f'chargement des vocabulaires: { "".join(vocab.get("vocab_list",None)) } lancé'
+            else:
+                msg='chargement de tous les vocabulaires lancé'
+            
+            return {
+                "msg": msg
+            
+                        }
+        return blueprint
