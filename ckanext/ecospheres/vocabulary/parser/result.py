@@ -40,6 +40,10 @@ class VocabularyParsingCompletedWithErrors(VocabularyParsingStatusCode):
 class VocabularyParsingResult:
     """Result of parsing of vocabulary raw data.
 
+    The boolean value of a :py:class:`VocabularyParsingResult`
+    object is the boolean value of its :py:attr:`VocabularyParsingResult.status_code`
+    attribute.
+
     Parameters
     ----------
     vocabulary : str
@@ -134,6 +138,9 @@ class VocabularyParsingResult:
         if self.log:
             return VocabularyParsingCompletedWithErrors()
         return VocabularyParsingSuccess()
+
+    def __bool__(self):
+        return bool(self.status_code)
 
     def add_label(self, *data, **kwdata):
         """Declare a label.
