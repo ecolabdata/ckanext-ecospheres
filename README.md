@@ -235,10 +235,32 @@ Access to these APIs does not require a token
         
         GET /api/organizations
 
+1. Vocabulaires
+        
+        POST /api/load-vocabs
+            --header 'Content-Type: application/json'
+            --header 'Authorization: <token_admin>
+            --data-raw '{
+                        "vocab_list":[
+                                        ]
+                        }'
+
+
+**token_admin**: Générer un token sur cette url **/user/<i>username</i>/api-tokens**
+
+**vocab_list**: liste des vocabulaires à re/charger, si la **vocab_list** est vide alors tous les vocabulaires seront re/chargé
+
+L'API permet de lancer un job en asynchrone dans l'instance CKAN et l'api renvera un message informant que le chargement a été lancé. On ne peut pas suivre la progression de chargement des vocabulaires 
+
+<br>
+<br>
+
 ## Administration tasks
 
 the creation of organizations and harvesting sources is done by API. To do this you need to generate a token and be an admin
 The creation scripts are stored in this [repository](https://github.com/ecolabdata/guichetdonnees-public)
+
+
 
 
 ## Contributing

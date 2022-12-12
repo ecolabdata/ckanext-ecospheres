@@ -415,8 +415,8 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
                     load_all_vocab(vocab_list=vocab_list)
 
             t = BackgroundTasks()
-            t.start()       
-            
+            t.start()    
+               
             if vocab_list!=[]:
                 msg=f'chargement des vocabulaires: { "".join(vocab.get("vocab_list",None)) } lancé'
             else:

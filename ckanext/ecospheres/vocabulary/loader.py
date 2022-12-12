@@ -165,9 +165,9 @@ def __create_table_and_load_data(table_name,table_schema,data):
                 s.execute('drop table if exists {}.{} CASCADE'.format(SQL_SCHEMA,table_name))                
 
                 logger.info(f"Création de la table : {table_name}")
-                table_schema.create()
-                # table_creation_sql = CreateTable(table_schema)
-                # s.execute(table_creation_sql)
+                # table_schema.create()
+                table_creation_sql = CreateTable(table_schema)
+                s.execute(table_creation_sql)
                 stm=table_schema.insert().values(data[table_name])
                 logging.info(f"Insetion des données dans la table {table_name}")
                 s.execute(stm)
@@ -190,14 +190,13 @@ def intersection(lst1, lst2):
 def load_vocab(vocab_list=None):
     """ Create table schema and load data for given vocabularies from vocabularies.yaml 
     """
-    print(vocab_list)
-
 
     vocab_to_load=[]
     if vocab_list != []:
         vocab_to_load=intersection(vocab_list, VocabularyIndex.names())
     else:   
         vocab_to_load=list(VocabularyIndex.names())
+
 
     for name in vocab_to_load:
 
