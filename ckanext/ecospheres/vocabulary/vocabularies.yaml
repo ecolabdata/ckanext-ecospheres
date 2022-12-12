@@ -162,7 +162,7 @@
     fr: Type de média (IANA)
 
 - name: ign_crs
-  url: https://librairies.ign.fr/geoportail/resources/IGNF.xml
+  url: https://geodesie.ign.fr/contenu/fichiers/IGNF.xml
   parser: ign_crs
   verify: False
   comment: > 
@@ -245,8 +245,6 @@
 
 - name: inspire_theme
   url: https://inspire.ec.europa.eu/theme/theme.fr.rdf
-  rdf_types:
-    - http://purl.org/net/provenance/ns#DataItem
   comment: French only.
   available: True
   eco_uri: http://inspire.ec.europa.eu/theme
