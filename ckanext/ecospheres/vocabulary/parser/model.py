@@ -1,7 +1,6 @@
 
 import json, sqlalchemy
 from pathlib import Path
-
 from ckanext import __path__ as ckanext_path
 
 SQL_SCHEMA = 'vocabulary'

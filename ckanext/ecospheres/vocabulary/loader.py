@@ -13,11 +13,14 @@ from contextlib import contextmanager
 import logging
 from sqlalchemy.schema import MetaData
 import ckan.plugins as p
+import sqlalchemy
 
 SPECIAL_TABLES=("ecospheres_territory","ecospheres_theme")
 REGEX_PATTERN_ECOSPHERE_SPATIAL = r'.*ecospheres_territory_spatial.*'
 REGEX_PATTERN_ECOSPHERE_HIERARCHY = r'.*ecospheres_theme_hierarchy.*'
 REGEX_PATTERN_ECOSPHERE_REGEX = r'.*ecospheres_theme_regexp.*'
+
+from ckanext.ecospheres.vocabulary.parser.model import SQL_SCHEMA
 
 
 
@@ -30,8 +33,11 @@ except:
     raise ValueError("CKAN_SQLALCHEMY_URL is missing")
 
 
-# engine = create_engine(DB)
+# SQL_SCHEMA = 'vocabulary'
+# # engine = create_engine(DB)
 metadata = MetaData()
+
+
 
 @contextmanager
 def Session(database):
@@ -152,9 +158,10 @@ def __create_table_and_load_data(table_name,table_schema,data):
         with Session(database=DB) as s:
             try:
                 logger.info(f"purge de la table : {table_name}")
-                s.execute('drop table if exists {}'.format(table_name))                
+                s.execute('drop table if exists {}.{} CASCADE'.format(SQL_SCHEMA,table_name))                
 
                 logger.info(f"Création de la table : {table_name}")
+                # table_schema.create()
                 table_creation_sql = CreateTable(table_schema)
                 s.execute(table_creation_sql)
                 stm=table_schema.insert().values(data[table_name])
@@ -172,37 +179,49 @@ def __create_table_and_load_data(table_name,table_schema,data):
 
 
 
+def intersection(lst1, lst2):
+    return list(set(lst1) & set(lst2))
 
-def load_vocab():
+def load_vocab(vocab_list=None):
     """ Create table schema and load data for given vocabularies from vocabularies.yaml 
     """
 
-    for name in VocabularyIndex.names():       
-        try:
-            vocab_data=VocabularyIndex.load_and_dump(name).data
-            if not vocab_data:
-                raise Exception(f"Erreur lors du chargement du vocabulaire {name}")
-                continue
+    vocab_to_load=[]
+    if vocab_list != []:
+        vocab_to_load=intersection(vocab_list, VocabularyIndex.names())
+    else:   
+        vocab_to_load=list(VocabularyIndex.names())
 
-            for table_name in vocab_data.keys():
-                
-                #les tables echosphere spatial, echosphere_hierarchy et echosphere_regex ont des schemas de données differents.
-                #donc il faut les gérer individuellement. 
-                if re.match(REGEX_PATTERN_ECOSPHERE_SPATIAL,table_name):
-                    _table=_get_spatial_schema_table(table_name)
-                elif re.match(REGEX_PATTERN_ECOSPHERE_HIERARCHY,table_name):
-                    _table=_get_hierarchy_schema_table(table_name)
-                elif re.match(REGEX_PATTERN_ECOSPHERE_REGEX,table_name):
-                    _table=_get_regex_schema_table(table_name)
-                else:
-                    _table = _get_generic_schema(table_name)
-                
-                __create_table_and_load_data(table_name=table_name,
-                                             table_schema=_table,
-                                             data=vocab_data)    
-                                
-        except Exception as e:
-            print("Erreur pendant le chargement des vocabulaires",str(e))
+    for name in vocab_to_load:
+        logger.debug(f'Loading vocabulary "{name}"')
+        result = VocabularyIndex.load(name)
+        if not result: # erreur critique
+            logger.critical(
+                'Failed to load vocabulary "{}". {}'.format(
+                    name, str(result.log[-1])
+                )
+            )
+            continue
+        if result.status_code !=0: # erreur non critique
+            for e in result.log:
+                logger.warning(
+                    'Anomaly while loading vocabulary "{}". {}'.format(
+                        name, str(e)
+                    )
+                )
+        vocab_data = result.data
+
+        for table_name, table in vocab_data.items():
+            if  table.sql is None:
+                logging.info(
+                    'No SQL definition available for ' f'table "{table_name}" .')
+                continue
+            __create_table_and_load_data(
+                table_name=table_name,
+                table_schema=table.sql,
+                data=vocab_data
+            ) 
+
 
 
 
