@@ -1,183 +1,107 @@
+import os
+import logging
+from contextlib import contextmanager
 
-
+from sqlalchemy import create_engine
+from sqlalchemy.schema import CreateTable
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 from ckanext.ecospheres.vocabulary.index import VocabularyIndex
-from sqlalchemy import create_engine
-import os
-import re
-from sqlalchemy import Table, Column, Integer, String, MetaData,select
-
-from sqlalchemy.schema import DropTable, CreateTable
-from sqlalchemy.orm import scoped_session, sessionmaker
-from contextlib import contextmanager
-import logging
-from sqlalchemy.schema import MetaData
-import ckan.plugins as p
-import sqlalchemy
-
-SPECIAL_TABLES=("ecospheres_territory","ecospheres_theme")
-REGEX_PATTERN_ECOSPHERE_SPATIAL = r'.*ecospheres_territory_spatial.*'
-REGEX_PATTERN_ECOSPHERE_HIERARCHY = r'.*ecospheres_theme_hierarchy.*'
-REGEX_PATTERN_ECOSPHERE_REGEX = r'.*ecospheres_theme_regexp.*'
-
-from ckanext.ecospheres.vocabulary.parser.model import SQL_SCHEMA
-
-
 
 logger = logging.getLogger(__name__)
 
-
 try:
-    DB=os.environ.get("CKAN_SQLALCHEMY_URL")
+    DB = os.environ.get("CKAN_SQLALCHEMY_URL")
 except:
     raise ValueError("CKAN_SQLALCHEMY_URL is missing")
 
-
-# SQL_SCHEMA = 'vocabulary'
-# # engine = create_engine(DB)
-metadata = MetaData()
-
-
-
 @contextmanager
 def Session(database):
-
-    """Return SQLAchemy Session Object
+    """Database session context manager.
         
-        Parameters
-        ----------
-        database : str
-            postgreSQL CKAN URI        
-        Returns
-        -------
-        Session
+    Parameters
+    ----------
+    database : str
+        postgreSQL CKAN URI
+    
+    Yields
+    ------
+    sqlalchemy.orm.Session
+    
     """
+    engine = create_engine(database)
+    session_factory = sessionmaker(bind=engine)
+    Session = scoped_session(session_factory)
+    session = Session()
     try:
-        Session = scoped_session(sessionmaker(
-            bind=create_engine(database)))
-        session = Session()
         yield session
         session.commit()
-    except Exception as e:
-        print("Error sending session",str(e))
+    except:
         session.rollback()
-        raise
     finally:
-        session.close()
+        session.remove()
 
-
-def _get_generic_schema(table_name):
-    """Return Generic SQL Table for given table name
-        
-        Parameters
-        ----------
-        table_name : str
-
-        Returns
-        -------
-        Table: sqlalchemy.Table
-    """
-    return Table(table_name, metadata,
-                        Column('id', Integer, primary_key=True),
-                        Column('uri', String, nullable=True),
-                        Column('label', String ,nullable=True),
-                        Column('language', String, nullable=True),
-                        extend_existing=True,
-                    )
-
-
-
-
-def _get_hierarchy_schema_table(table_name):
-    """Return hierarchy SQL Table for given table name
-        
-        Parameters
-        ----------
-        table_name : str
-
-        Returns
-        -------
-        Table: sqlalchemy.Table
-    """
-    return Table(table_name, metadata,
-                        Column('parent', String),
-                        Column('child', String),
-                        extend_existing=True,
-                    )
-
-
-def _get_regex_schema_table(table_name):
-    """Return regex theme SQL Table for given table name
-        
-        Parameters
-        ----------
-        table_name : str
-
-        Returns
-        -------
-        Table: sqlalchemy.Table
-    """
-    return Table(table_name, metadata,
-                        Column('uri', String),
-                        Column('regexp', String),
-                        extend_existing=True,
-                    )
-
-def _get_spatial_schema_table(table_name):
-    """Return territory spatial data theme SQL Table  for given table name
-        
-        Parameters
-        ----------
-        table_name : str
-
-        Returns
-        -------
-        Table: sqlalchemy.Table
-    """
-    return Table(table_name, metadata,
-                        Column('uri', String),
-                        Column('westlimit', String),
-                        Column('southlimit', String),
-                        Column('eastlimit', String),
-                        Column('northlimit', String),
-                        extend_existing=True,
-    )
-
-def __create_table_and_load_data(table_name,table_schema,data):
+def __create_table_and_load_data(table_name, schema_name, table_schema, data):
     """Return territory spatial data theme SQL Table 
         
-        Parameters
-        ----------
-        table_name : str
-
-        Returns
-        -------
-        Table: sqlalchemy.Table
+    Parameters
+    ----------
+    table_name : str
+        Table name. This has to be a proper PostgreSQL
+        identifier or the table creation will fail.
+    schema_name : str
+        Schema name (namespace). This has to be a proper
+        PostgreSQL identifier or the table creation will
+        fail.
+    table_schema : sqlalchemy.sql.schema.Table
+        Table object.
+    data : dict
+        Vocabulary data.
+    
+    Returns
+    -------
+    sqlalchemy.sql.schema.Table
+        The `table_schema` parameter is returned.
+    
     """
     try:
         with Session(database=DB) as s:
             try:
-                logger.info(f"purge de la table : {table_name}")
-                s.execute('drop table if exists {}.{} CASCADE'.format(SQL_SCHEMA,table_name))                
-
-                logger.info(f"Création de la table : {table_name}")
-                # table_schema.create()
+                logger.debug(
+                    'Drop table "{0}.{1}"'.format(
+                        schema_name, table_name
+                    )
+                )
+                s.execute(
+                    'DROP TABLE IF EXISTS {0}.{1} CASCADE'.format(
+                        schema_name, table_name
+                    )
+                )
+                logger.debug(
+                    'Create table "{0}.{1}"'.format(
+                        schema_name, table_name
+                    )
+                )
                 table_creation_sql = CreateTable(table_schema)
                 s.execute(table_creation_sql)
-                stm=table_schema.insert().values(data[table_name])
-                logging.info(f"Insetion des données dans la table {table_name}")
+                stm = table_schema.insert().values(data)
+                logger.debug(
+                    'Insert vocabulary data into "{0}.{1}"'.format(
+                        schema_name, table_name
+                    )
+                )
                 s.execute(stm)
             except Exception as e:
-                logging.error(f"Erreur lors de la création du table {table_name}\t {str(e)}")
-
+                logger.error(
+                    'Failed to store table "{0}.{1}" into the database. {2}'.format(
+                        schema_name, table_name, str(e)
+                    )
+                )
+                raise # need to raise the exception for the rollback to happen
         return table_schema
-
     except Exception as e:
-        print(e)
-        raise Exception(f"Erreur lors de la creation de la table {table_name}")
-
-
-
+        # something went wrong with the database session
+        logger.error('Database session error. {0}'.format(str(e)))
 
 def intersection(lst1, lst2):
     return list(set(lst1) & set(lst2))
@@ -197,7 +121,7 @@ def load_vocab(vocab_list=None):
         result = VocabularyIndex.load(name)
         if not result: # erreur critique
             logger.critical(
-                'Failed to load vocabulary "{}". {}'.format(
+                'Failed to load vocabulary "{0}". {1}'.format(
                     name, str(result.log[-1])
                 )
             )
@@ -205,7 +129,7 @@ def load_vocab(vocab_list=None):
         if result.status_code !=0: # erreur non critique
             for e in result.log:
                 logger.warning(
-                    'Anomaly while loading vocabulary "{}". {}'.format(
+                    'Anomaly while loading vocabulary "{0}". {1}'.format(
                         name, str(e)
                     )
                 )
@@ -218,8 +142,9 @@ def load_vocab(vocab_list=None):
                 continue
             __create_table_and_load_data(
                 table_name=table_name,
+                schema_name=table.schema,
                 table_schema=table.sql,
-                data=vocab_data
+                data=table
             ) 
 
 
