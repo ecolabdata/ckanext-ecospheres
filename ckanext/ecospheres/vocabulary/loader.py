@@ -154,8 +154,6 @@ def __create_table_and_load_data(table_name,table_schema,data):
         -------
         Table: sqlalchemy.Table
     """
-    if data.get(table_name,[])==[]:
-        return table_schema
     try:
         with Session(database=DB) as s:
             try:
