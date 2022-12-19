@@ -1201,8 +1201,7 @@ class VocabularyDataCluster(dict):
                 columns=['child'],
                 refcolumns=[f'{self.label.name}.uri'],
                 ondelete='CASCADE',
-                onupdate='CASCADE',
-                                initially=True
+                onupdate='CASCADE'
 
             )
         )
