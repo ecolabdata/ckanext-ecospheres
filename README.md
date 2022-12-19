@@ -237,7 +237,7 @@ Access to these APIs does not require a token
 
 1. Vocabulaires
         
-        POST /api/load-vocabs
+        POST /api/load-vocab
             --header 'Content-Type: application/json'
             --header 'Authorization: <token_admin>
             --data-raw '{
