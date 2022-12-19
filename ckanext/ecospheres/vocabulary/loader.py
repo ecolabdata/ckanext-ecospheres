@@ -168,7 +168,6 @@ def __create_table_and_load_data(table_name,table_schema,data):
                 logging.info(f"Insetion des données dans la table {table_name}")
                 s.execute(stm)
             except Exception as e:
-                print(e)    
                 logging.error(f"Erreur lors de la création du table {table_name}\t {str(e)}")
 
         return table_schema
