@@ -20,7 +20,7 @@ REGEX_PATTERN_ECOSPHERE_SPATIAL = r'.*ecospheres_territory_spatial.*'
 REGEX_PATTERN_ECOSPHERE_HIERARCHY = r'.*ecospheres_theme_hierarchy.*'
 REGEX_PATTERN_ECOSPHERE_REGEX = r'.*ecospheres_theme_regexp.*'
 
-from ckanext.ecospheres.vocabulary.parser.model import engine
+from ckanext.ecospheres.vocabulary.parser.model import SQL_SCHEMA
 
 SQL_SCHEMA = 'vocabulary'
 SQL_METADATA = sqlalchemy.MetaData(schema=SQL_SCHEMA)
