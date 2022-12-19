@@ -1,7 +1,6 @@
 
 import json, sqlalchemy
 from pathlib import Path
-import os
 from ckanext import __path__ as ckanext_path
 from sqlalchemy import create_engine
 
