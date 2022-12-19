@@ -192,10 +192,25 @@ def load_vocab(vocab_list=None):
     else:   
         vocab_to_load=list(VocabularyIndex.names())
 
-
     for name in vocab_to_load:
+        logger.debug(f'Loading vocabulary "{name}"')
+        result = VocabularyIndex.load(name)
+        if not result: # erreur critique
+            logger.critical(
+                'Failed to load vocabulary "{}". {}'.format(
+                    name, str(result.log[-1])
+                )
+            )
+            continue
+        if result.status_code !=0: # erreur non critique
+            for e in result.log:
+                logger.warning(
+                    'Anomaly while loading vocabulary "{}". {}'.format(
+                        name, str(e)
+                    )
+                )
+        vocab_data = result.data
 
-        vocab_data=VocabularyIndex.load(name).data
         for table_name, table in vocab_data.items():
             if  table.sql is None:
                 logging.info(
