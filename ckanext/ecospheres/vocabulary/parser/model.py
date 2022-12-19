@@ -1,9 +1,10 @@
 
 import json, sqlalchemy
 from pathlib import Path
+
 from ckanext import __path__ as ckanext_path
 
-SQL_SCHEMA = 'vocabulary'
+SQL_SCHEMA = 'public'
 SQL_METADATA = sqlalchemy.MetaData(schema=SQL_SCHEMA)
 
 class DataConstraint:
@@ -270,6 +271,9 @@ class VocabularyDataTable(list):
         This will be generated automatically for 
         subclasses, else it's ``None`` unless manually
         provided after initialization.
+    schema : str
+        The name of the PostgreSQL schema
+        (namespace) to be used the table.
 
     """
 
@@ -299,6 +303,8 @@ class VocabularyDataTable(list):
         table_key = f'{SQL_SCHEMA}.{self.name}'
         if table_key in SQL_METADATA.tables:
             SQL_METADATA.remove(SQL_METADATA.tables[table_key])
+        
+        self.schema = SQL_SCHEMA
 
     def set_not_null_constraint(self, field):
         """Declare a field that should not be empty.
