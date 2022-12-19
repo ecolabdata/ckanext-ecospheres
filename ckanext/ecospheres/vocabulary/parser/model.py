@@ -2,7 +2,6 @@
 import json, sqlalchemy
 from pathlib import Path
 from ckanext import __path__ as ckanext_path
-from sqlalchemy import create_engine
 
 SQL_SCHEMA = 'vocabulary'
 SQL_METADATA = sqlalchemy.MetaData(schema=SQL_SCHEMA)
