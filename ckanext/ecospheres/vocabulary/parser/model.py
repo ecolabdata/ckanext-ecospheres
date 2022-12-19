@@ -6,13 +6,6 @@ from ckanext import __path__ as ckanext_path
 SQL_SCHEMA = 'vocabulary'
 SQL_METADATA = sqlalchemy.MetaData(schema=SQL_SCHEMA)
 
-try:
-    DB=os.environ.get("CKAN_SQLALCHEMY_URL")
-except:
-    raise ValueError("CKAN_SQLALCHEMY_URL is missing")
-
-engine=create_engine(DB)
-SQL_METADATA.bind=engine
 
 class DataConstraint:
     """Constraint.
