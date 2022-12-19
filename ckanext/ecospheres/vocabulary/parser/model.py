@@ -1187,8 +1187,7 @@ class VocabularyDataCluster(dict):
                 columns=['parent'],
                 refcolumns=[f'{self.label.name}.uri'],
                 ondelete='CASCADE',
-                onupdate='CASCADE',
-                initially=True
+                onupdate='CASCADE'
             )
         )
         self.set_reference_constraint(
