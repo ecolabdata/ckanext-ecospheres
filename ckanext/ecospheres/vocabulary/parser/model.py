@@ -1285,7 +1285,6 @@ class VocabularyDataCluster(dict):
                 refcolumns=[f'{self.label.name}.uri'],
                 ondelete='CASCADE',
                 onupdate='CASCADE'
-
             )
         )
         return regexp_table.name
