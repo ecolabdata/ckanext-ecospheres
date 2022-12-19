@@ -6,7 +6,6 @@ from ckanext import __path__ as ckanext_path
 SQL_SCHEMA = 'vocabulary'
 SQL_METADATA = sqlalchemy.MetaData(schema=SQL_SCHEMA)
 
-
 class DataConstraint:
     """Constraint.
 
