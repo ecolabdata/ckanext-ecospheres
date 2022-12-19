@@ -14,7 +14,6 @@ except:
 engine=create_engine(DB)
 SQL_METADATA.bind=engine
 
-
 class DataConstraint:
     """Constraint.
 
