@@ -1243,8 +1243,7 @@ class VocabularyDataCluster(dict):
                 columns=['uri'],
                 refcolumns=[f'{self.label.name}.uri'],
                 ondelete='CASCADE',
-                onupdate='CASCADE',
-                                initially=True
+                onupdate='CASCADE'
 
             )
         )
