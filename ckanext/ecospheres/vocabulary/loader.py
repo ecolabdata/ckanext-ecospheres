@@ -22,8 +22,6 @@ REGEX_PATTERN_ECOSPHERE_REGEX = r'.*ecospheres_theme_regexp.*'
 
 from ckanext.ecospheres.vocabulary.parser.model import SQL_SCHEMA
 
-SQL_SCHEMA = 'vocabulary'
-SQL_METADATA = sqlalchemy.MetaData(schema=SQL_SCHEMA)
 
 
 logger = logging.getLogger(__name__)
