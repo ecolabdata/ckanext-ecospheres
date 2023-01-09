@@ -9,26 +9,29 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from ckanext.ecospheres.vocabulary.index import VocabularyIndex
 
 logger = logging.getLogger(__name__)
-
-try:
-    DB = os.environ.get("CKAN_SQLALCHEMY_URL")
-except:
-    raise ValueError("CKAN_SQLALCHEMY_URL is missing")
+DB = os.environ.get("CKAN_SQLALCHEMY_URL")
 
 @contextmanager
-def Session(database):
+def Session(database=DB):
     """Database session context manager.
         
     Parameters
     ----------
-    database : str
-        postgreSQL CKAN URI
+    database : str, optional
+        URL of the database the vocabulary should be loaded into,
+        ie ``dialect+driver://username:password@host:port/database``.
+        If not provided, the main CKAN PostgreSQL database will be used.
     
     Yields
     ------
     sqlalchemy.orm.Session
     
     """
+    if not database:
+        raise ValueError(
+            "Missing database URL. "
+            "The CKAN_SQLALCHEMY_URL environment variable doesn't exist."
+        )
     engine = create_engine(database)
     session_factory = sessionmaker(bind=engine)
     Session = scoped_session(session_factory)
@@ -39,9 +42,11 @@ def Session(database):
     except:
         session.rollback()
     finally:
-        session.remove()
+        session.close()
 
-def __create_table_and_load_data(table_name, schema_name, table_schema, data):
+def __create_table_and_load_data(
+    table_name, schema_name, table_schema, data, database=None
+):
     """Return territory spatial data theme SQL Table 
         
     Parameters
@@ -57,6 +62,10 @@ def __create_table_and_load_data(table_name, schema_name, table_schema, data):
         Table object.
     data : dict
         Vocabulary data.
+    database : str, optional
+        URL of the database the vocabulary should be loaded into,
+        ie ``dialect+driver://username:password@host:port/database``.
+        If not provided, the main CKAN PostgreSQL database will be used.
     
     Returns
     -------
@@ -65,7 +74,7 @@ def __create_table_and_load_data(table_name, schema_name, table_schema, data):
     
     """
     try:
-        with Session(database=DB) as s:
+        with Session(database=database) as s:
             try:
                 logger.debug(
                     'Drop table "{0}.{1}"'.format(
@@ -100,21 +109,31 @@ def __create_table_and_load_data(table_name, schema_name, table_schema, data):
                 raise # need to raise the exception for the rollback to happen
         return table_schema
     except Exception as e:
-        # something went wrong with the database session
         logger.error('Database session error. {0}'.format(str(e)))
 
 def intersection(lst1, lst2):
     return list(set(lst1) & set(lst2))
 
-def load_vocab(vocab_list=None):
-    """ Create table schema and load data for given vocabularies from vocabularies.yaml 
-    """
+def load_vocab(vocab_list=None, database=None):
+    """ Create table schema and load data for given vocabularies from vocabularies.yaml.
 
-    vocab_to_load=[]
-    if vocab_list != []:
-        vocab_to_load=intersection(vocab_list, VocabularyIndex.names())
+    Parameters
+    ----------
+    vocab_list : list(str), optional
+        A list of vocabulary names to load into the database,
+        ie their ``name`` property in ``vocabularies.yaml``.
+        If not provided, all available vocabularies are
+        loaded.
+    database : str, optional
+        URL of the database the vocabulary should be loaded into,
+        ie ``dialect+driver://username:password@host:port/database``.
+        If not provided, the main CKAN PostgreSQL database will be used.
+
+    """
+    if vocab_list:
+        vocab_to_load = intersection(vocab_list, VocabularyIndex.names())
     else:   
-        vocab_to_load=list(VocabularyIndex.names())
+        vocab_to_load = list(VocabularyIndex.names())
 
     for name in vocab_to_load:
         logger.debug(f'Loading vocabulary "{name}"')
@@ -144,7 +163,8 @@ def load_vocab(vocab_list=None):
                 table_name=table_name,
                 schema_name=table.schema,
                 table_schema=table.sql,
-                data=table
+                data=table,
+                database=database
             ) 
 
 
