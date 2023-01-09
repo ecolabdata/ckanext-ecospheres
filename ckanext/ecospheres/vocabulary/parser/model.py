@@ -1102,14 +1102,6 @@ class VocabularyDataCluster(dict):
             referencing_table='label',
             none_as_value=False
         )
-        self.altlabel.sql.append_constraint(
-            sqlalchemy.ForeignKeyConstraint(
-                columns=['uri'],
-                refcolumns=[f'{self.label.name}.uri'],
-                ondelete='CASCADE',
-                onupdate='CASCADE'
-            )
-        )
         self.hierarchy = None
         self.synonym = None
         self.regexp = None
@@ -1188,27 +1180,11 @@ class VocabularyDataCluster(dict):
             referencing_table='label',
             referencing_fields=('uri',)
         )
-        self.hierarchy.sql.append_constraint(
-            sqlalchemy.ForeignKeyConstraint(
-                columns=['parent'],
-                refcolumns=[f'{self.label.name}.uri'],
-                ondelete='CASCADE',
-                onupdate='CASCADE'
-            )
-        )
         self.set_reference_constraint(
             referenced_table=hierarchy_table.name,
             referenced_fields=('child',),
             referencing_table='label',
             referencing_fields=('uri',)
-        )
-        self.hierarchy.sql.append_constraint(
-            sqlalchemy.ForeignKeyConstraint(
-                columns=['child'],
-                refcolumns=[f'{self.label.name}.uri'],
-                ondelete='CASCADE',
-                onupdate='CASCADE'
-            )
         )
         return hierarchy_table.name
 
@@ -1244,14 +1220,6 @@ class VocabularyDataCluster(dict):
             referenced_fields=('uri',),
             referencing_table='label'
         )
-        self.synonym.sql.append_constraint(
-            sqlalchemy.ForeignKeyConstraint(
-                columns=['uri'],
-                refcolumns=[f'{self.label.name}.uri'],
-                ondelete='CASCADE',
-                onupdate='CASCADE'
-            )
-        )
         return synonym_table.name
 
     def regexp_table(self):
@@ -1285,14 +1253,6 @@ class VocabularyDataCluster(dict):
             referenced_fields=('uri',),
             referencing_table='label'
         )
-        self.regexp.sql.append_constraint(
-            sqlalchemy.ForeignKeyConstraint(
-                columns=['uri'],
-                refcolumns=[f'{self.label.name}.uri'],
-                ondelete='CASCADE',
-                onupdate='CASCADE'
-            )
-        )
         return regexp_table.name
 
     def spatial_table(self):
@@ -1325,14 +1285,6 @@ class VocabularyDataCluster(dict):
             referenced_table=spatial_table.name,
             referenced_fields=('uri',),
             referencing_table='label'
-        )
-        self.spatial.sql.append_constraint(
-            sqlalchemy.ForeignKeyConstraint(
-                columns=['uri'],
-                refcolumns=[f'{self.label.name}.uri'],
-                ondelete='CASCADE',
-                onupdate='CASCADE'
-            )
         )
         return spatial_table.name
 
