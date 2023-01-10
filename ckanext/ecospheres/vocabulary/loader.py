@@ -93,13 +93,14 @@ def __create_table_and_load_data(
                 )
                 table_creation_sql = CreateTable(table_schema)
                 s.execute(table_creation_sql)
-                stm = table_schema.insert().values(data)
-                logger.debug(
-                    'Insert vocabulary data into "{0}.{1}"'.format(
-                        schema_name, table_name
+                if data:
+                    stm = table_schema.insert().values(data)
+                    logger.debug(
+                        'Insert vocabulary data into "{0}.{1}"'.format(
+                            schema_name, table_name
+                        )
                     )
-                )
-                s.execute(stm)
+                    s.execute(stm)
             except Exception as e:
                 logger.error(
                     'Failed to store table "{0}.{1}" into the database. {2}'.format(
