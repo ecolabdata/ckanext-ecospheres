@@ -1,377 +1,66 @@
 """
-
-This module should be entirely rewritten to fetch vocabulary
-data from the database rather than from JSON files.
+Read vocabulary data from the database.
 
 """
-from ckan.model import GroupExtra, Group,Session as Session_CKAN
-
-from ckan.logic.action.get import organization_list
-
-from sqlalchemy import Table, Column, Integer, String, MetaData,select,and_,func,join
-import ckan.plugins as p
-
-import json
-from pathlib import Path
-from ckanext import __path__ as ckanext_path
+import json, re
 import logging
-from ckanext.ecospheres.vocabulary.loader import (
-                                            _get_generic_schema
-                                            ,_get_hierarchy_schema_table
-                                            ,_get_spatial_schema_table
-                                            ,Session,DB,_get_regex_schema_table
-                                    )
+from pathlib import Path
+from sqlalchemy import select, exists, and_, func, literal
 
+from ckanext import __path__ as ckanext_path
+from ckanext.ecospheres.vocabulary.loader import Session
+from ckanext.ecospheres.vocabulary.parser.model import (
+    VocabularyLabelTable, VocabularyAltLabelTable, VocabularyRegexpTable,
+    VocabularyHierarchyTable, VocabularySpatialTable, VocabularySynonymTable
+)
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_LANGUAGE = 'en'
 
+def get_table_name(vocabulary, modelclass):
+    """Return the name of the database table for given type and vocabulary.
+
+    Parameters
+    ----------
+    vocabulary : str
+        Name of the vocabulary, ie its ``name``
+        property in ``vocabularies.yaml``.
+    modelclass : type
+        A subclass of :py:class:`VocabularyDataTable`.
+
+    Returns
+    -------
+    str
+
+    """
+    table = modelclass.__call__(vocabulary)
+    return f'{table.schema}.{table.name}'
+
+def get_table_sql(vocabulary, modelclass):
+    """Return the sqlalchemy table definition for given type and vocabulary.
+
+    Parameters
+    ----------
+    vocabulary : str
+        Name of the vocabulary, ie its ``name``
+        property in ``vocabularies.yaml``.
+    modelclass : type
+        A subclass of :py:class:`VocabularyDataTable`.
+
+    Returns
+    -------
+    sqlalchemy.sql.schema.Table
+
+    """
+    table = modelclass.__call__(vocabulary)
+    return table.sql
 
 class VocabularyReader:
-    TYPE_ADMINISTRATION={
-                            "AC" : "Administration centrale",
-                            "DR" : "Directions régionales",
-                            "DIRID" : "Directions interrégionales et interdépartementales",
-                            "DD" : "Directions départementales",
-                            "SOM" : "Services d'OutreMer",
-                            "Op" : "Opérateurs"
-                        }
-
-
+    """Read vocabulary data from the database."""
 
     @classmethod
-    def _resultset_to_dict(cls, resultset):
-        return {
-            "uri": resultset[0], 
-            "label": resultset[1],
-            "language": resultset[2]
-        }
-    
-
-
-    @classmethod 
-    def _select_labels_from_database(cls,_table):
-        """Return labels' table for the given table
-        
-        Parameters
-        ----------
-        _table : Table
-            sqlalchemy.Table object
-        
-        Returns
-        -------
-        list
-                    [
-                        {
-                        "uri": "uri_", 
-                        "label":"label_",
-                        "language": "language_"
-                         },
-                    ...
-                    ...
-                    ]
-
-        """
-
-
-        with Session(database=DB) as s:
-            try:    
-                
-                statement=select([_table.c.uri, _table.c.label,_table.c.language])
-                return [cls._resultset_to_dict(resultset) for resultset in s.execute(statement).fetchall()]
-            except Exception as e:
-                logging.error("Erreur lors de la création du table")
-                return {}
-
-
-
-    @classmethod 
-    def _select_labels_from_database_theme_regex(cls,_table):
-
-        """Return regex' table for the given table
-        
-        Parameters
-        ----------
-        _table : Table
-            sqlalchemy.Table object
-        
-        Returns
-        -------
-        list
-            [
-                {
-                    "uri":"uri_",
-                    "regex":"regex_"
-                },
-                ...
-                ...
-            ]
-
-        """
-
-        with Session(database=DB) as s:
-            try:    
-                statement=select([_table.c.uri, _table.c.regexp])
-                return  s.execute(statement).fetchall()
-            except Exception as e:
-                logging.error(f"Erreur lors de la récuperation des regex thèmes de la table {_table}")
-                return {}
-
-    @classmethod
-    def labels(cls, vocabulary):
-        """Return labels' table for the given vocabulary
-        
-        Parameters
-        ----------
-        vocabulary : str
-            Name of the vocabulary, ie its ``name``
-            property in ``vocabularies.yaml``.
-        
-        Returns
-        -------
-        list
-                    [
-                        {
-                        "uri": "uri_", 
-                        "label":"label_",
-                        "language": "language_"
-                         },
-                    ...
-                    ...
-                    ]
-
-        """
-        if vocabulary == "ecospheres_theme": 
-            return cls.themes()
-        _table=_get_generic_schema(f"{vocabulary}_label")
-        return cls._select_labels_from_database(_table)
-
-    @classmethod
-    def __get_themes_hierarchy_as_dict(cls):
-        """Return themes hierarchy
-        
-        
-        Returns
-        -------
-        dict
-            {
-            "uri_parent" : [
-                            "uri_child_1",
-                            "uri_child_2",
-                            ],
-            ...
-            ...
-
-            },
-
-        """
-        _table=_get_hierarchy_schema_table("ecospheres_theme_hierarchy")
-        uri_themes_with_hierarchy={}
-        with Session(database=DB) as s:
-            try:
-                statement=select([_table.c.parent, _table.c.child])
-                for uri_parent, uri_child in s.execute(statement).fetchall():
-                    uri_themes_with_hierarchy.setdefault(uri_parent, [])
-                    uri_themes_with_hierarchy[uri_parent].append(uri_child)
-                return uri_themes_with_hierarchy
-            except Exception as e:
-                logging.error(f"Erreur lors de la création du table {_table}")
-                return {}
-        
-    @classmethod
-    def __get_themes_from_db(cls,_table,uri:str):
-        """Return label from theme table for the given uri
-        
-            Parameters
-            ----------
-            _table : str
-            uri: str
-            
-            Returns
-            -------
-            dict
-                {
-                    "uri":"uri",
-                    "label":"label",
-                    "language":"language"
-                }
-
-        """
-        with Session(database=DB) as s:
-            try:
-                statement=select([_table.c.uri, _table.c.label,_table.c.language]).\
-                                    where(_table.c.uri==uri)
-                res=s.execute(statement).fetchone()
-                if res:
-                    return cls._resultset_to_dict(res)
-                return None
-            except Exception as e:
-                logging.error(f"Erreur lors de la création du table {_table}")
-                return {}
-
-
-    @classmethod
-    def __get_theme_labels_by_uri(cls,uri:str):
-        """Return label theme  for the given uri
-        
-        Parameters
-        ----------
-        uri: str
-
-        Returns
-        -------
-        dict
-                {
-                    "uri":"uri",
-                    "label":"label",
-                    "language":"language"
-                }
-
-        """
-
-        return cls.__get_themes_from_db(
-                                    _get_generic_schema("ecospheres_theme_label"),
-                                        uri)
-
-
-    @classmethod
-    def __get_theme_altlabels_by_uri(cls,uri:str):
-        """Return altlabel theme  for the given uri
-        
-        Parameters
-        ----------
-        uri: str
-
-        Returns
-        -------
-        dict
-                {
-                    "uri":"uri",
-                    "label":"label",
-                    "language":"language"
-                }
-
-        """
-        return cls.__get_themes_from_db(
-                                        _get_generic_schema("ecospheres_theme_altlabel"),
-                                        uri)
-
-
-
-    @classmethod
-    def themes(cls):
-        """Return theme labels with hierarchy
-        
-
-        Returns
-        -------
-        dict
-                { 
-
-                "theme_uri": {
-
-                            "altlabel": [
-                                            "alt_label_1", 
-                                            "alt_label_2", 
-                                        ], 
-
-                            "child": [
-                                        "altlabel": [
-                                                    "alt_label_1", 
-                                                    "alt_label_2",
-                                                ], 
-                                        "count": -1, 
-                                        "label": "label", 
-                                        "language": "fr", 
-                                        "regexp": [
-                                                    "regex_1", 
-                                                    "regex_2", 
-                                                    ], 
-                                        "uri": "uri_subtheme"
-                                    ],
-
-                            "count": -1, 
-                            "label": "label", 
-                            "language": "fr", 
-                        }
-
-        """
-        try:
-            all_themes={}   
-            #Récuperation des labels
-            labels=cls._select_labels_from_database(_get_generic_schema("ecospheres_theme_label"))
-            #Récuperation des altlabels
-            labels_dict=dict()
-            for label in labels:
-                labels_dict[label["uri"]] =label
-
-            alt_label_map={}
-            altlabels=cls._select_labels_from_database(_get_generic_schema("ecospheres_theme_altlabel"))
-            for alt_label in altlabels:
-                alt_label_map.setdefault(alt_label["uri"], [])
-                alt_label_map[alt_label['uri']].append(alt_label["label"])
-
-            _table_regex=cls._select_labels_from_database_theme_regex(_get_regex_schema_table("ecospheres_theme_regexp"))
-            regexp_map={}
-            for regexp in _table_regex:
-                regexp_map.setdefault(regexp[0],[])
-                regexp_map[regexp[0]].append(regexp[1])
-                
-            #Récuperation des infos sur la hierarchie des themes
-            hierarchy_table=cls.__get_themes_hierarchy_as_dict()
-            for parent_theme in hierarchy_table:
-                
-                #themes parents
-                temp_theme=labels_dict[parent_theme].copy()
-                temp_theme["child"]=list()
-                temp_theme["count"]=-1
-                temp_theme["altlabel"]=alt_label_map.get(parent_theme,[])
-                all_themes[parent_theme]=temp_theme
-
-                #sous-themes
-                for sous_theme in hierarchy_table[parent_theme]:
-                    temp_sous_theme=labels_dict[sous_theme].copy()
-                    temp_sous_theme["count"]=-1
-                    temp_sous_theme["regexp"]=regexp_map.get(sous_theme,None)
-                    temp_sous_theme["altlabel"]=alt_label_map.get(sous_theme,[])
-                    all_themes[parent_theme]["child"].append(temp_sous_theme)
-
-            return all_themes
-        except Exception as e:
-            logging.error(f"Erreur lors du chargement des données {_table}")
-            return {}
-
-    @classmethod
-    def altlabels(cls, vocabulary:str):
-        """Return alternative labels' table for the given vocabulary.
-        
-        Parameters
-        ----------
-        vocabulary : str
-            Name of the vocabulary, ie its ``name``
-            property in ``vocabularies.yaml``.
-        
-        Returns
-        -------
-        list
-                    [
-                        {
-                        "uri": "uri_", 
-                        "label":"label_",
-                        "language": "language_"
-                         },
-                    ...
-                    ...
-                    ]
-        """
-        if vocabulary == "ecospheres_theme": 
-            return cls.themes()
-        _table=_get_generic_schema(f"{vocabulary}_altlabel")
-        return cls._select_labels_from_database(_table)
-
-
-    @classmethod
-    def is_known_uri(cls, vocabulary:str, uri:str,language:str=None):
+    def is_known_uri(cls, vocabulary, uri, database=None):
         """Is the URI registered in given vocabulary ?
 
         Parameters
@@ -379,43 +68,125 @@ class VocabularyReader:
         vocabulary : str
             Name of the vocabulary, ie its ``name``
             property in ``vocabularies.yaml``.
-        uri : rdflib.term.URIRef or stris_known_uri
+        uri : str
             Some URI to test.
+        database : str, optional
+            URL of the database where the vocabulary is stored,
+            ie ``dialect+driver://username:password@host:port/database``.
+            If not provided, the main CKAN PostgreSQL database will be used.
         
         Returns
         -------
-        dict : if the vocabulary exists
-                    {
-                        "uri": "uri_", 
-                        "label":"label_",
-                        "language": "language_"
-                    }
-            
-        None:  if the vocabulary do not exists  
+        bool
+            ``True`` if the vocabulary exists, is available and
+            contains the URI, else ``False``.
         
         """
-        _table=_get_generic_schema(f"{vocabulary}_label")
-    
-        clause=( _table.c.uri==uri)
-
-        if language:
-            clause=and_(clause,_table.c.language == language)
-
-        with Session(database=DB) as s:
+        if not vocabulary or not uri:
+            return False
+        with Session(database=database) as s:
             try:
-                statement=select([_table.c.uri, _table.c.label,_table.c.language]).\
-                                    where(clause)
-                res=  s.execute(statement).fetchone()
-                if res:
-                    return cls._resultset_to_dict(res)
-                return None
+                table_sql = get_table_sql(vocabulary, VocabularyLabelTable)
+                stmt = exists(table_sql.c.uri).where(table_sql.c.uri == uri).select()
+                res = s.execute(stmt)
+                return res.scalar()
             except Exception as e:
-                logging.error(f"Erreur lors du chargement de la table {_table}")
-                return list()
-
+                logger.error(
+                    'Failed to look up URI "{0}" in vocabulary "{1}". {2}'.format(
+                        uri, vocabulary, str(e)
+                    )
+                )
+                return False
 
     @classmethod
-    def get_uri_from_label(cls, vocabulary, label, language=None,case_sensitive=False):
+    def get_label(cls, vocabulary, uri, language=None, database=None):
+        """Get the label of the given URI.
+
+        Parameters
+        ----------
+        vocabulary : str
+            Name of the vocabulary, ie its ``name``
+            property in ``vocabularies.yaml``.
+        uri : str
+            URI of a vocabulary item.
+        language : str, optional
+            The language the label should be written in. If not
+            provided, the methop will look up a label in the language
+            :py:data:`DEFAULT_LANGUAGE`. If there is none, one of the
+            label of the URI is arbitrarily returned, if any.
+            Likewise, the method will try to find a label in 
+            :py:data:`DEFAULT_LANGUAGE` if `language` has no match.
+            If it doesn't work, any label of the URI may be returned.
+        case_sensitive : bool, default False
+            If ``True``, the case will be considered when
+            testing the labels.
+        database : str, optional
+            URL of the database where the vocabulary is stored,
+            ie ``dialect+driver://username:password@host:port/database``.
+            If not provided, the main CKAN PostgreSQL database will be used.
+        
+        Returns
+        -------
+        str or None
+            The first matching URI. ``None`` if the vocabulary
+            doesn't exist, is not available or there was
+            no match for the URI.
+
+        """
+        if not vocabulary or not uri:
+            return
+        
+        with Session(database=database) as s:
+            try:
+                table_sql = get_table_sql(vocabulary, VocabularyLabelTable)
+
+                # with the provided language
+                if language:
+                    stmt = select(table_sql.c.label).where(
+                        and_(
+                            table_sql.c.uri == uri,
+                            table_sql.c.language == language
+                        )
+                    )
+                    res = s.execute(stmt)
+                    val = res.scalar()
+                    if val:
+                        return val
+                
+                # with the default language
+                stmt = select(table_sql.c.label).where(
+                    and_(
+                        table_sql.c.uri == uri,
+                        table_sql.c.language == DEFAULT_LANGUAGE
+                    )
+                )
+                res = s.execute(stmt)
+                val = res.scalar()
+                if val:
+                    return val
+                
+                # without any language
+                stmt = select(table_sql.c.label).where(
+                    table_sql.c.uri == uri
+                )
+                res = s.execute(stmt)
+                val = res.scalar()
+                if val:
+                    return val
+                
+            except Exception as e:
+                logger.error(
+                    'Failed to look up a label for URI'
+                    ' "{0}" and language "{1}" in vocabulary "{2}". {3}'.format(
+                        uri, language, vocabulary, str(e)
+                    )
+                )
+
+    @classmethod
+    def get_uri_from_label(
+        cls, vocabulary, label, language=None, case_sensitive=False,
+        database=None
+    ):
         """Get one URI with matching label in given vocabulary, if any.
 
         This function will consider most RDF properties used for labels, 
@@ -434,7 +205,11 @@ class VocabularyReader:
         case_sensitive : bool, default False
             If ``True``, the case will be considered when
             testing the labels.
-
+        database : str, optional
+            URL of the database where the vocabulary is stored,
+            ie ``dialect+driver://username:password@host:port/database``.
+            If not provided, the main CKAN PostgreSQL database will be used.
+        
         Returns
         -------
         str or None
@@ -443,256 +218,291 @@ class VocabularyReader:
             no match for the label.
         
         """
-        _table=_get_generic_schema(f"{vocabulary}_label")
-        logger.info(f"fetching results from {_table} table")
-        if res:=  cls._get_result_from_db(label, language,
-                                         case_sensitive,_table):
-            logger.info(f"Result found in {_table} table")
-            return res
-        logger.info(f"Not Result found in {_table} table")
-
-        _table=_get_generic_schema(f"{vocabulary}_altlabel")
-        logger.info(f"fetching results from {_table} table")
-        return cls._get_result_from_db(label, language,
-                                         case_sensitive,_table)
-
-    @classmethod
-    def _get_result_from_db(cls,label, language,case_sensitive,_table):
-        if case_sensitive:
-            clause=( func.lower(_table.c.label) ==  func.lower(label))
-        else:
-            clause=(_table.c.label == label)
-
-        if language:
-            clause=and_(clause,_table.c.language == language)
-        with Session(database=DB) as s:
+        if not vocabulary or not label:
+            return
+        
+        with Session(database=database) as s:
             try:
-                statement=select([_table.c.uri, _table.c.label,_table.c.language]).\
-                                    where(clause)
-                res=  s.execute(statement).fetchone()
-                if res:
-                    return res[0]
-                return None
+                for table in (VocabularyLabelTable, VocabularyAltLabelTable):
+                    table_sql = get_table_sql(vocabulary, table)
+                    if case_sensitive:
+                        where_stmt = (table_sql.c.label == label)
+                    else:
+                        where_stmt = (func.lower(table_sql.c.label) == label.lower())
+                    if language:
+                        where_stmt = and_(where_stmt, (table_sql.c.language == language))
+                    stmt = select(table_sql.c.uri).where(where_stmt)
+                    res = s.execute(stmt)
+                    uri = res.scalar()
+                    if uri:
+                        return uri
             except Exception as e:
-                logging.error(f"Erreur lors de la création du table {_table}")
-                return list()
-
-
-
-
-
-    @classmethod
-    def get_organization_by_admin(cls):
-        """Return organization by administration type
-
-        Returns
-        -------
-        dict :
-        {
-            "administration_type_label":{
-                                        "count": -1, 
-                                        "orgs":[
-                                                {
-                                                    "Courriel": "ddtm@gard.gouv.fr", 
-                                                    "Site internet": "homepage"
-                                                    "Territoire": "Territory", 
-                                                    "Type": "admin_type", 
-                                                    "Téléphone": "04 66 62 62 00", 
-                                                    "count": -1, 
-                                                    "created": "Thu, 22 Sep 2022 13:34:17 GMT", 
-                                                    "description": "description",
-                                                    "image_url": "image_url", 
-                                                    "name": "organisation_name", 
-                                                    "title": "organisation_title"
-                                                },
-                                                ...
-                                                ...                                           
-                                               ]
-                                        },
-                                        ......
-                                        ......
-        }
-        """
-
-        try:
-            list_of_organizations_as_dict=dict()
-            organizations_as_dict=dict()
-        
-
-            groups=Session_CKAN.query(Group).filter_by(state='active').all()
-            if not groups:
-                return {"message":"Liste des organisations vide"} 
-            for group in groups:
-                organizations_as_dict.setdefault(group.id,{})
-                organizations_as_dict[group.id]["name"] = group.name
-                organizations_as_dict[group.id]["title"]=group.title
-                organizations_as_dict[group.id]["description"]=group.description
-                organizations_as_dict[group.id]["created"]=group.created
-                organizations_as_dict[group.id]["image_url"]=group.image_url
-                organizations_as_dict[group.id]["count"]=-1
-
-            groups_details=Session_CKAN.query(GroupExtra).all()
-            for group_details in groups_details:
-                #verfier si l'organisation est bien présente dans les organisations actives
-                # Quand on supprime une orgonisation, elle sera juste marquée comme inactive, elle reste toujours en base de données
-                if group_details.group_id not in organizations_as_dict:
-                    continue
-                organizations_as_dict[group_details.group_id][group_details.key] = group_details.value
-
-
-            for org in organizations_as_dict:
-                list_of_organizations_as_dict.setdefault(cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']],{})
-                list_of_organizations_as_dict[cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]].setdefault("orgs",[])
-                list_of_organizations_as_dict[cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]]["orgs"].append(organizations_as_dict[org])
-                list_of_organizations_as_dict[cls.TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]]["count"]=-1
-
-
-            return list_of_organizations_as_dict
-        except Exception as e:
-            logging.error(f"Erreur lors du chargement de la liste des territoires")
-            return {}
-
-
-
-
+                logger.error(
+                    'Failed to look up label "{0}" in vocabulary "{1}". {2}'.format(
+                        label, vocabulary, str(e)
+                    )
+                )
 
     @classmethod
-    def get_territory_by_code_region(cls,code_region):
-        """Return territory label for given code_region.
-        
+    def get_uris_from_regexp(cls, vocabulary, terms, database=None):
+        """Get all URIs whose regular expression matches any of the given terms.
+
         Parameters
         ----------
-        code_region : str
+        vocabulary : str
+            Name of the vocabulary, ie its ``name``
+            property in ``vocabularies.yaml``.
+        terms : list or tuple
+            Metadata values to test against the regular
+            expressions associated with the concepts.
+        database : str, optional
+            URL of the database where the vocabulary is stored,
+            ie ``dialect+driver://username:password@host:port/database``.
+            If not provided, the main CKAN PostgreSQL database will be used.
         
         Returns
         -------
-        tuple : (uri,label,language)
-                
-        """
-        _table=_get_generic_schema("ecospheres_territory_label")
-        with Session(database=DB) as s:
-            try:
-                statement=select([_table.c.uri, _table.c.label,_table.c.language]).\
-                                    where(_table.c.uri==code_region)
-                res=  s.execute(statement).fetchone()
-                if res:
-                    return res
-                return None
-            except Exception as e:
-                logging.error(f"Erreur lors du chargement de la table: {_table}")
-                return {}
-
-
-    @classmethod
-    def get_territory_spatial_by_code_region(cls,code_region):
-        """Return territory spatial data for  given code_region.
+        list(str)
+            List of matching URIs. Result will be an empty list if the
+            vocabulary doesn't exist, is not available, doesn't have
+            a ``regexp`` table or there was no match for any term.
         
+        """
+        reslist = []
+
+        if not vocabulary or not terms:
+            return reslist
+
+        with Session(database=database) as s:
+            for term in terms:
+                try:
+                    table_sql = get_table_sql(vocabulary, VocabularyRegexpTable)
+                    stmt = select(func.array_agg(table_sql.c.uri.distinct())).where(
+                        literal(term).regexp_match(table_sql.c.regexp)
+                    )
+                    res = s.execute(stmt)
+                    reslist += res.scalar()
+                except Exception as e:
+                    logger.error(
+                        'Failed to look up regular expression matches of '
+                        'term "{0}" in vocabulary "{1}". {2}'.format(
+                            term, vocabulary, str(e)
+                        )
+                    )
+        
+        return reslist
+    
+    @classmethod
+    def get_parents(cls, vocabulary, uri, database=None):
+        """Get the URIs of the parent items.
+
         Parameters
         ----------
-        code_region : str
+        vocabulary : str
+            Name of the vocabulary, ie its ``name``
+            property in ``vocabularies.yaml``.
+        uri : str
+            URI of a vocabulary item.
+        database : str, optional
+            URL of the database where the vocabulary is stored,
+            ie ``dialect+driver://username:password@host:port/database``.
+            If not provided, the main CKAN PostgreSQL database will be used.
         
         Returns
         -------
-        dict :  {
-                    "uri": "_uri_",
-                    "westlimit": "_westlimit_",
-                    "southlimit": "_southlimit_",
-                    "eastlimit": "_eastlimit_",
-                    "northlimit": "_northlimit_"
-                }
-                
+        list(str)
+            list of the URIs of the parent items. Result will be an
+            empty list if the vocabulary doesn't exist, is not available,
+            doesn't have a ``hierarchy`` table, if the URI didn't exist
+            in the vocabulary or if the item didn't have any parent.
+        
         """
-
-        _table=_get_spatial_schema_table("ecospheres_territory_spatial")
-        with Session(database=DB) as s:
+        if not vocabulary or not uri:
+            return []
+        
+        with Session(database=database) as s:
             try:
-                statement=select([_table.c.uri, _table.c.westlimit,_table.c.southlimit,_table.c.eastlimit,_table.c.northlimit]).\
-                                    where(_table.c.uri==code_region)
-                res=  s.execute(statement).fetchone()
-                if res:
-                    return {
-                        "uri": res[0],
-                        "westlimit": res[1],
-                        "southlimit": res[2],
-                        "eastlimit": res[3],
-                        "northlimit": res[4]
-                    }
-                return None
+                table_sql = get_table_sql(vocabulary, VocabularyHierarchyTable)
+                stmt = select(func.array_agg(table_sql.c.parent.distinct())).where(
+                    table_sql.c.child == uri
+                )
+                res = s.execute(stmt)
+                return res.scalar() or []
             except Exception as e:
-                logging.error(f"Erreur lors du chargement de la table: {_table}")
-                return {}
-
+                logger.error(
+                    'Failed to look up parent items of the URI'
+                    ' "{0}" in vocabulary "{1}". {2}'.format(
+                        uri, vocabulary, str(e)
+                    )
+                )
+        
+        return []
+    
     @classmethod
-    def _get_territories_by_hierarchy(cls):
-        
-        """Return theme labels with hierarchy
-        
+    def get_synonyms(cls, vocabulary, uri, database=None):
+        """Get the synonyms for the given URI.
 
+        Parameters
+        ----------
+        vocabulary : str
+            Name of the vocabulary, ie its ``name``
+            property in ``vocabularies.yaml``.
+        uri : str
+            URI of a vocabulary item.
+        database : str, optional
+            URL of the database where the vocabulary is stored,
+            ie ``dialect+driver://username:password@host:port/database``.
+            If not provided, the main CKAN PostgreSQL database will be used.
+        
         Returns
         -------
-        dict
-            {
-                "départements-métropole":[
-                    {
-                        ......
-                    },
-                    ...
-                ],
-                "depts_by_region":[
-                     {
-                        ......
-                    },
-                    ...
-                ],
-                "outre-mer":[
-                     {
-                        ......
-                    },
-                    ...
-                ],
-                "régions-métrople":[],
-                "zones-maritimes":[],
-            }
+        list(str)
+            list of synonyms. Result will be an empty list if the vocabulary
+            doesn't exist, is not available, doesn't have a ``synonym`` table,
+            if the URI didn't exist in the vocabulary or if the item didn't have
+            any synonym.
+        
         """
+        if not vocabulary or not uri:
+            return []
         
-        try:
-            vocabulary="territoires"
-            import re
-            for ckanext in ckanext_path:
-                if re.match(r'.*ckanext-ecospheres.*', ckanext):
-                    ckan_ecosphere_index=ckanext_path.index(ckanext)
-
-            path = Path(ckanext_path[ckan_ecosphere_index]).parent / f'vocabularies/{vocabulary}.json'
-            if not path.exists() or not path.is_file():
-                raise FileNotFoundError(f"could not find vocabulary data for '{vocabulary}'")
-            with open(path, 'r', encoding='utf-8') as src:
-                data = json.load(src)
-
-            res_territoires_dict=dict()
+        with Session(database=database) as s:
+            try:
+                table_sql = get_table_sql(vocabulary, VocabularySynonymTable)
+                stmt = select(func.array_agg(table_sql.c.synonym.distinct())).where(
+                    table_sql.c.uri == uri
+                )
+                res = s.execute(stmt)
+                return res.scalar() or []
+            except Exception as e:
+                logger.error(
+                    'Failed to look up synonyms of the URI'
+                    ' "{0}" in vocabulary "{1}". {2}'.format(
+                        uri, vocabulary, str(e)
+                    )
+                )
         
-            type_region_keys=['régions-métrople', 'départements-métropole', 'outre-mer', 'zones-maritimes']
-            depts_by_region=dict()
-            for type_region_key in type_region_keys:
-                res_territoires_dict.setdefault(type_region_key,{})
-                if region_data:=data.get(type_region_key,None):
-                    for key in region_data:
-                        res_territoires_dict[type_region_key].setdefault(key,{})
-                        if name:=region_data[key].get('name',None):
-                            res_territoires_dict[type_region_key][key]['name']=name
-                        if code_region:=region_data[key].get('codeRégion',None):
-                            res_territoires_dict[type_region_key][key]['code_region']=code_region
-            for dep in res_territoires_dict['départements-métropole']:
-                depts_by_region.setdefault(res_territoires_dict['départements-métropole'][dep].get('code_region'),[])
-                dept_info_as_dict=res_territoires_dict['départements-métropole'][dep].copy()
-                dept_info_as_dict["code_dept"]=dep
-                depts_by_region[res_territoires_dict['départements-métropole'][dep].get('code_region')].append(dept_info_as_dict)
+        return []
+    
+    @classmethod
+    def get_uri_from_synonym(cls, vocabulary, synonym, database=None):
+        """Get one URI with matching synonym in given vocabulary, if any.
 
-            res_territoires_dict["depts_by_region"]=depts_by_region
-            return res_territoires_dict
-        except Exception as e:
-            logger.error(f"erreur lors de la récuperation des territoires par hierarchy: {_table}")
+        Parameters
+        ----------
+        vocabulary : str
+            Name of the vocabulary, ie its ``name``
+            property in ``vocabularies.yaml``.
+        synonym : str
+            Synonym URI.
+        database : str, optional
+            URL of the database where the vocabulary is stored,
+            ie ``dialect+driver://username:password@host:port/database``.
+            If not provided, the main CKAN PostgreSQL database will be used.
+        
+        Returns
+        -------
+        str or None
+            The first matching URI. ``None`` if the vocabulary
+            doesn't exist, is not available, doesn't have a synonym table,
+            or there was no match for the synonym URI.
+        
+        """
+        if not vocabulary or not synonym:
+            return
+        
+        with Session(database=database) as s:
+            try:
+                table_sql = get_table_sql(vocabulary, VocabularySynonymTable)
+                stmt = select(table_sql.c.uri).where(
+                    table_sql.c.synonym == synonym
+                )
+                res = s.execute(stmt)
+                return res.scalar()
+            except Exception as e:
+                logger.error(
+                    'Failed to look up an URI with synonym'
+                    ' "{0}" in vocabulary "{1}". {2}'.format(
+                        synonym, vocabulary, str(e)
+                    )
+                )
+    
+    @classmethod
+    def get_ecospheres_territory(cls, vocabulary, uri, database=None):
+        """Return the territory from the ecospheres_territory vocabulary best suited to represent the given URI.
+
+        Parameters
+        ----------
+        vocabulary : {'eu_administrative_territory_unit', 'insee_official_geographic_code'}
+            Name of the spatial vocabulary the URI is coming
+            from.
+        uri : str
+            URI of some kind of spatial area.
+        database : str, optional
+            URL of the database where the vocabulary is stored,
+            ie ``dialect+driver://username:password@host:port/database``.
+            If not provided, the main CKAN PostgreSQL database will be used.
+        
+        Returns
+        -------
+        str
+            The identifier of a territory from the ecospheres_territory
+            vocabulary.
+        
+        """
+        if not uri or not vocabulary in (
+            'eu_administrative_territory_unit', 'insee_official_geographic_code'
+        ):
+            return
+        
+        territory = cls.get_uri_from_synonym(
+            vocabulary='ecospheres_territory', synonym=uri, database=database
+        )
+        if territory:
+            return territory
+        
+        if vocabulary == 'insee_official_geographic_code':
+
+            # using synonyms
+            synonyms = cls.get_synonyms(
+                vocabulary=vocabulary, uri=uri, database=database
+            )
+            for synonym in synonyms:
+                territory = cls.get_uri_from_synonym(
+                    vocabulary='ecospheres_territory', synonym=synonym, database=database
+                )
+                if territory:
+                    return territory
             
-            return {}
+            synonyms.append(uri)
+
+            # using supra territories
+            parents = []
+            for synonym in synonyms:
+                parents += cls.get_parents(
+                    vocabulary=vocabulary, uri=synonym, database=database
+                )
+
+            for parent in parents:
+                territory = cls.get_uri_from_synonym(
+                    vocabulary='ecospheres_territory', synonym=parent, database=database
+                )
+                if territory:
+                    return territory
+
+            # using supra territories synonyms
+            parent_synonyms = []
+            for parent in parents:
+                parent_synonyms += cls.get_synonyms(
+                    vocabulary=vocabulary, uri=parent, database=database
+                )
+            
+            for parent_synonym in parent_synonyms:
+                territory = cls.get_uri_from_synonym(
+                    vocabulary='ecospheres_territory', synonym=parent_synonym, database=database
+                )
+                if territory:
+                    return territory
 
 
 class VocabularyJSONReader:
@@ -722,7 +532,7 @@ class VocabularyJSONReader:
         -------
         list
         """
-        VocabularyReader(vocabulary)
+        VocabularyJSONReader(vocabulary)
         label_table = f'{vocabulary}_label'
         return cls.VOCABULARY_DATABASE[label_table]
 
@@ -740,13 +550,14 @@ class VocabularyJSONReader:
         -------
         list
         """
-        VocabularyReader(vocabulary)
+        VocabularyJSONReader(vocabulary)
         altlabel_table = f'{vocabulary}_altlabel'
         return cls.VOCABULARY_DATABASE[altlabel_table]
 
     @classmethod
     def table(cls, vocabulary, table_name):
         """Return the table with given name for the vocabulary, if any.
+
         Parameters
         ----------
         vocabulary : str
@@ -762,7 +573,7 @@ class VocabularyJSONReader:
             The table or ``None`` if the vocabulary doesn't
             have a table with the given name.
         """
-        VocabularyReader(vocabulary)
+        VocabularyJSONReader(vocabulary)
         if not table_name.startswith(f'{vocabulary}_'):
             table_name = f'{vocabulary}_{table_name}'
         return cls.VOCABULARY_DATABASE.get(table_name)
@@ -770,6 +581,7 @@ class VocabularyJSONReader:
     @classmethod
     def is_known_uri(cls, vocabulary, uri):
         """Is the URI registered in given vocabulary ?
+
         Parameters
         ----------
         vocabulary : str
@@ -793,8 +605,10 @@ class VocabularyJSONReader:
     def get_uri_from_label(cls, vocabulary, label, language=None,
         case_sensitive=False):
         """Get one URI with matching label in given vocabulary, if any.
+
         This function will consider most RDF properties used for labels, 
         names, titles, notations, etc.
+
         Parameters
         ----------
         vocabulary : str
@@ -808,6 +622,7 @@ class VocabularyJSONReader:
         case_sensitive : bool, default False
             If ``True``, the case will be considered when
             testing the labels.
+        
         Returns
         -------
         str or None
@@ -842,6 +657,7 @@ class VocabularyJSONReader:
     @classmethod
     def get_uris_from_regexp(cls, vocabulary, terms):
         """Get all URIs whose regular expression matches any of the given terms.
+
         Parameters
         ----------
         vocabulary : str
@@ -877,6 +693,7 @@ class VocabularyJSONReader:
     @classmethod
     def get_parents(cls, vocabulary, uri):
         """Get the URIs of the parent items.
+
         Parameters
         ----------
         vocabulary : str
@@ -892,6 +709,7 @@ class VocabularyJSONReader:
             empty list if the vocabulary doesn't exist, is not available,
             doesn't have a ``hierarchy`` table, if the URI didn't exist
             in the vocabulary or if the item didn't have any parent.
+        
         """
         res = []
 
@@ -911,6 +729,7 @@ class VocabularyJSONReader:
     @classmethod
     def get_synonyms(cls, vocabulary, uri):
         """Get the synonyms for the given URI.
+
         Parameters
         ----------
         vocabulary : str
@@ -926,6 +745,7 @@ class VocabularyJSONReader:
             doesn't exist, is not available, doesn't have a ``synonym`` table,
             if the URI didn't exist in the vocabulary or if the item didn't have
             any synonym.
+        
         """
         res = []
 
@@ -945,6 +765,7 @@ class VocabularyJSONReader:
     @classmethod
     def get_ecospheres_territory(cls, vocabulary, uri):
         """Return the territory from the ecospheres_territory vocabulary best suited to represent the given URI.
+
         Parameters
         ----------
         vocabulary : str
@@ -958,6 +779,7 @@ class VocabularyJSONReader:
         str
             The identifier of a territory from the ecospheres_territory
             vocabulary.
+        
         """
         if not uri or not vocabulary in (
             'eu_administrative_territory_unit', 'insee_official_geographic_code'
