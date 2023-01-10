@@ -91,6 +91,8 @@ class DCATfrRDFHarvester(DCATRDFHarvester):
             if not spatial:
                 org=self.__get_organization_infos(harvest_object)
                 territories_codes=self._get_territory(org)
+                # TODO: there should be a safer way to parser this!
+                # same as helpers.get_territories_label [LL-2023.01.10]
                 res=re.match(r'{(.*)}',territories_codes)
                 resultats=res.group(1)
                 #liste des territoires de competence de l'organisation
@@ -98,19 +100,13 @@ class DCATfrRDFHarvester(DCATRDFHarvester):
                 territories=[]
                 if departements:
                     for code_dep in departements:
-                        uri,label_territory,_= VocabularyReader.get_territory_by_code_region(code_region=code_dep)
-                        if uri:
-
-                            territories.append({
-                                                "label":label_territory.strip(), 
-                                                "uri": uri})
+                        if VocabularyReader.is_known_uri('ecospheres_territory', code_dep):
+                            territories.append({'uri': code_dep})
                             #TODO: ajouter algo calculate GeoJSON
                             # spatial=VocabularyReader.get_territory_spatial_by_code_region(code_region=code_dep)
-                print(territories)
-                dataset_dict["territory"]=territories
+                dataset_dict["territory"] = territories
         except Exception as e:
-            logger.error("Erreur lors du traitement du champ territory: {}".format(str(e)))
-
+            logger.error("Erreur lors du traitement du champ territory. {}".format(str(e)))
         self.__before_create(harvest_object,dataset_dict)
         
     
