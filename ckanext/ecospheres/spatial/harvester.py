@@ -16,7 +16,7 @@ from ckanext.ecospheres.spatial.utils import (
     bbox_wkt_from_coordinates, build_attributes_page_url,
     build_catalog_page_url, extract_scheme_and_identifier
 )
-from ckanext.ecospheres.spatial.maps import ISO_639_2
+from ckanext.ecospheres.maps import ISO_639_2
 
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 
