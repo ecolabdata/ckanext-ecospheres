@@ -1,19 +1,16 @@
-import ckan.plugins as plugins
-import ckan.plugins.toolkit as toolkit
-import ckanext.ecospheres.validators as v
-import ckanext.ecospheres.helpers as helpers
 import collections
 import json
-import logging
+
 from flask import Blueprint
-from ckan.model import Session, meta
-from sqlalchemy import Column, Date, Integer, Text, create_engine, inspect
-from ckanext.ecospheres.vocabulary.reader import VocabularyReader
-import re
-import logging
+
+import ckan.plugins as plugins
+from ckan.lib.helpers import lang
+
+import ckanext.ecospheres.validators as v
+import ckanext.ecospheres.helpers as helpers
 from ckanext.ecospheres.commands import ecospheres_commands as ecospherefr_cli
 from ckanext.ecospheres.scheming.tab import get_fields_by_tab
-from ckan.lib.helpers import lang
+from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 from ckanext.ecospheres.vocabulary.loader import load_vocab as load_all_vocab
 
     
@@ -154,18 +151,27 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         
         
         """
-        Cette fonction permet d'intercepter la reqûete avant de faire une recherche pour ajouter/modifier/enrichir des paramètres de recherche,
-        A noter, pour ajouter des paramtres extra à une requetes dans CKAN et les recuperer avec la clé "extras", il faut préfixer le nom du paramtres par "ext_"
+        Cette fonction permet d'intercepter la reqûete avant de faire une
+        recherche pour ajouter/modifier/enrichir des paramètres de recherche,
+        A noter, pour ajouter des paramtres extra à une requetes dans CKAN et
+        les recuperer avec la clé "extras", il faut préfixer le nom du paramtres
+        par "ext_"
         """
 
         """ Filtre par organistion 
 
 
-        Par défaut, lorsqu'on veut filter les jeux de données par plus d'une organisation, CKAN utilise l'opération AND.
-        Par consequent, comme dans notre cas Ecosphere, un jeu de données n'appartient qu'à une seule organisation, le moteur d'indexation ne remontera aucun résultat
-        Donc pour récuperer les jeux de données appartenant aux organisations présentes dans le reqûete, il faut modifier cette reqûete qui envoyée au moteur Solr pour qu'il applique l'opérateur OR. 
+        Par défaut, lorsqu'on veut filter les jeux de données par plus d'une
+        organisation, CKAN utilise l'opération AND.
+        Par consequent, comme dans notre cas Ecosphere, un jeu de données
+        n'appartient qu'à une seule organisation, le moteur d'indexation
+        ne remontera aucun résultat
+        Donc pour récuperer les jeux de données appartenant aux organisations
+        présentes dans le reqûete, il faut modifier cette reqûete qui envoyée
+        au moteur Solr pour qu'il applique l'opérateur OR. 
 
-        q=organization:"organisation_1"+organization:"organisation_2" deviendra: q=organization:"organisation_1" OR organization:"organisation_2" 
+        q=organization:"organisation_1"+organization:"organisation_2" 
+        deviendra: q=organization:"organisation_1" OR organization:"organisation_2" 
 
         """
         fq = search_params.get('fq',None)
@@ -203,10 +209,16 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
             for _, match in enumerate(matches, start=1):
                 territoires.append(match.group(2))
 
+            # TODO: à réécrire entièrement !!!! 
+            # VocabularyReader._get_territories_by_hierarchy n'existe plus,
+            # notamment [LL-2023.01.10]
             fq = re.sub(regex_territory, "", fq, 0, re.MULTILINE)
             if territoires:
                 territoires_hierarchy=VocabularyReader._get_territories_by_hierarchy()
-                regions={value['name'] : key_region  for key_region,value in territoires_hierarchy['régions-métrople'].items()}
+                regions={
+                    value['name'] : key_region  for key_region,value
+                    in territoires_hierarchy['régions-métrople'].items()
+                }
                 regions_names_set=set(regions.keys())
                 regions_sub_to_add=regions_names_set.intersection(set(territoires))
                 if regions_sub_to_add:
@@ -214,8 +226,11 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
                     """ include_subdivision 
 
-                    Si la valeur du paramètre 'ext_include_subdivision' est à 'true', on va alors inclure les subdivisions des territoires inclus dans la reqûete, plui concretement si
-                    le filtre territoire inclue une region et ext_include_subdivision=true alors on va rechercher tous les jeux de données appartenant aux départements de la région.
+                    Si la valeur du paramètre 'ext_include_subdivision' est à 'true',
+                    on va alors inclure les subdivisions des territoires inclus dans la
+                    reqûete, plus concretement si le filtre territoire inclue une region
+                    et ext_include_subdivision=true alors on va rechercher tous les jeux
+                    de données appartenant aux départements de la région.
 
                     /dataset/?q=&ext_include_subdivision=true&territory=Nouvelle-Aquitaine
 
@@ -356,20 +371,19 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
     # ------------- IBlueprint ---------------#
     
-    def _get_territoires(self):
-        return {
-                "territoires": VocabularyReader.labels(vocabulary="ecospheres_territory")
-               }
+    # def _get_territoires(self):
+    #     return {
+    #             "territoires": VocabularyReader.labels(vocabulary="ecospheres_territory")
+    #            }
                
-    def _get_themes(self):
-        return VocabularyReader.themes()
+    # def _get_themes(self):
+    #     return VocabularyReader.themes()
     
-    def _get_organizations(self):
-        return VocabularyReader.get_organization_by_admin()
+    # def _get_organizations(self):
+    #     return VocabularyReader.get_organization_by_admin()
     
-
-    def _get_territoires_hierarchy(self):
-        return VocabularyReader._get_territories_by_hierarchy()
+    # def _get_territoires_hierarchy(self):
+    #     return VocabularyReader._get_territories_by_hierarchy()
 
         
     def get_blueprint(self):
@@ -378,15 +392,15 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
         """
         blueprint = Blueprint('dcatapfrench_custom_api', self.__module__)
-        rules = [ 
-            ('/api/territoires', 'get_territoires', self._get_territoires),
-            ('/api/territoires_hierarchy', 'get_territoires_hierarchy', self._get_territoires_hierarchy),
-            ('/api/themes', 'get_themes', self._get_themes),
-            ('/api/organizations', 'get_organizations', self._get_organizations),
-            ]
-        for rule in rules:
-            blueprint.add_url_rule(*rule)
-
+        # TODO: see if this was useful in any way... [LL-2023.01.10]
+        # rules = [ 
+        #     ('/api/territoires', 'get_territoires', self._get_territoires),
+        #     ('/api/territoires_hierarchy', 'get_territoires_hierarchy', self._get_territoires_hierarchy),
+        #     ('/api/themes', 'get_themes', self._get_themes),
+        #     ('/api/organizations', 'get_organizations', self._get_organizations),
+        #     ]
+        # for rule in rules:
+        #     blueprint.add_url_rule(*rule)
 
         from flask import request
         @blueprint.route('/api/load-vocab', methods=["POST"])
