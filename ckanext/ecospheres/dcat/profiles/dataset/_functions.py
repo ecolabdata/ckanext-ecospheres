@@ -71,31 +71,6 @@ def _strip_uri( value, base_uri):
 def get_langs():
     language_priorities = ['en','fr']
     return language_priorities
-    
-def _check_sous_theme(theme_ecosphere,list_keywords,title) -> (str,str):
-
-    for th_child in theme_ecosphere:
-        alt_labels_sous_theme=th_child.get("altlabel",None)
-        pref_label_sous_theme=th_child.get("label",None)
-        uri_sous_theme=th_child.get("uri",None)
-        #on verifie si le pref_label_sous_theme correspend à un mot clé
-        for kw in list_keywords:
-            if kw.lower() == unidecode.unidecode(pref_label_sous_theme.lower()):
-                return  pref_label_sous_theme, uri_sous_theme
-
-        #on verifie si le alt_labels_sous_theme correspend à un mot clé 
-        if alt_labels_sous_theme:
-            for kw in list_keywords:
-                for alt_lab in alt_labels_sous_theme:
-                    if kw.lower() == unidecode.unidecode(alt_lab.lower()):
-                        return   pref_label_sous_theme, uri_sous_theme  
-        #on essaye de faire matcher les regex avec le titre du dataset 
-        if regexp:=th_child.get("regexp",None):
-            for _regexp_ in regexp:
-                if re.search(_regexp_,title):
-                    return pref_label_sous_theme, uri_sous_theme  
-
-    return None,None
 
 
 def _tags_keywords(self, subject, predicate,dataset_dict):
