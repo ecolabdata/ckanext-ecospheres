@@ -52,7 +52,6 @@ try:
                                     _provenance,
                                     _version_notes,
                                     _tags_keywords,
-                                    _check_sous_theme,
                                     _crs_list
                             )
 except Exception as e: 
@@ -222,35 +221,42 @@ def parse_dataset(self, dataset_dict, dataset_ref):
 
 
 
-    ############################################   Thèmes et mots clés  ############################################
-    themes=VocabularyReader.themes()
-
-    list_keywords=list(self._object_value_list(dataset_ref,DCAT.keyword))
-    title = self._object_value(dataset_ref, DCT.title)
-    categories=dict()
-    
-    for theme in themes:
-        sous_theme,uri_sous_theme=_check_sous_theme(themes[theme]["child"],list_keywords,title)
-        if sous_theme:
-            theme_label=themes[theme].get("label")
-            if not categories.get(theme_label,None):
-                categories[theme_label]={
-                                        "theme":theme_label,
-                                        "uri": themes[theme].get("uri")
-                                    }
-
-
-            if not categories.get(sous_theme,None):
-                categories[sous_theme]={
-                                        "theme":sous_theme,
-                                        "uri": uri_sous_theme
-                                        }
+    ############################################   Thèmes et mots clés  ############################################   
 
     """-------------------------------------------<category>-------------------------------------------"""        
+    list_keywords=list(self._object_value_list(dataset_ref,DCAT.keyword))
+    title = self._object_value(dataset_ref, DCT.title)
+    if title:
+        list_keywords.append(title)
+    categories = []
 
+    # correspondance exacte du mot-clé avec le libellé de la catégorie
+    for keyword in list_keywords.copy():
+        uri = VocabularyReader.get_uri_from_label('ecospheres_theme', keyword)
+        if uri:
+            if not uri in categories:
+                categories.append(uri)
+            list_keywords.remove(keyword)
+    
+    # correspondance par expression régulière
+    if list_keywords:
+        uri_list = VocabularyReader.get_uris_from_regexp(
+            'ecospheres_theme', list_keywords
+        )
+        for uri in uri_list:
+            if not uri in categories:
+                categories.append(uri)
+    
+    # ajout des thèmes associés aux sous-thèmes
+    for categorie in categories.copy():
+        parents = VocabularyReader.get_parents('ecospheres_theme', categorie)
+        for parent in parents:
+            if not parent in categories:
+                categories.append(parent)
+    
     # CATEGORY []
     if categories:
-        dataset_dict["category"]=list(categories.values())
+        dataset_dict["category"] = [{'uri': uri} for uri in categories]
 
 
 
