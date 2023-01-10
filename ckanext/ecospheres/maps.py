@@ -21,6 +21,16 @@ sinon elle vaut ``False``.
 
 """
 
+TYPE_ADMINISTRATION = {
+    "AC": "Administration centrale",
+    "DR": "Directions régionales",
+    "DIRID": "Directions interrégionales et interdépartementales",
+    "DD": "Directions départementales",
+    "SOM": "Services d'outre-mer",
+    "Op": "Opérateurs"
+}
+"""Labels des types d'administration."""
+
 ISO_639_2 = {
     'aar': 'aa',
     'abk': 'ab',
