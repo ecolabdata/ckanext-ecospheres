@@ -1,14 +1,18 @@
 import datetime
 import logging
-from ckan.lib.helpers import lang
+import json
+import re
+
+from dateutil.parser import parse, ParserError
+
 import ckan.model as model
-import json 
+from ckan.lib.helpers import lang
 from ckan.lib.helpers import *
 from ckan.lib.formatters import localised_nice_date
-from dateutil.parser import parse, ParserError
+
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
-import sys
-import logging
+from ckanext.ecospheres.maps import TYPE_ADMINISTRATION
+
 logger = logging.getLogger(__name__)
 
 LANGUAGES = {'fr', 'en'}
@@ -18,8 +22,9 @@ def validate_dateformat(date_string, date_format):
         date = datetime.datetime.strptime(date_string, date_format)
         return date
     except ValueError:
-        log.debug('Incorrect date format {0} for date string {1}'.format(date_format, date_string))
+        logger.debug('Incorrect date format {0} for date string {1}'.format(date_format, date_string))
         return None
+
 def json_string_to_object_aggregated_ressources(json_string): 
     try:
         data= json.loads(json_string)
@@ -27,7 +32,6 @@ def json_string_to_object_aggregated_ressources(json_string):
     except:
         print('Unrecognized JSON')
         return None
-
 
 def aggregated_package_name_to_title(row_data):
     name=row_data["identifier"]
@@ -37,10 +41,6 @@ def aggregated_package_name_to_title(row_data):
             return package.title
         return name
     return None
-
-
-
-
 
 def get_localized_value_from_dict(value, lang_code, default=''):
     """localizes language dict and
@@ -72,9 +72,6 @@ def localize_by_language_order(multi_language_field, default=''):
         return multi_language_field['en']
     else:
         return default
-    
-    
-
 
 def get_localized_date(date_string):
     """
@@ -91,40 +88,38 @@ def get_localized_date(date_string):
     except (TypeError, ParserError):
         return ''
 
-
-
-def get_territories_label(territories):
-    import re
-    res=re.match(r'{(.*)}',territories)
-    resultats=res.group(1)
+def get_territories_label(territories, lang=None):
+    # TODO: there should be a safer way to parser this! [LL-2023.01.10]
+    res = re.match(r'{(.*)}',territories)
+    resultats = res.group(1)
     #liste des territoires de competence de l'organisation
-    departements=resultats.split(',')
-    depts_labels=list()
+    departements = resultats.split(',')
+    depts_labels = []
     for code_dep in departements:
-        values=VocabularyReader.get_territory_by_code_region(code_region=code_dep)
-        if values:
-            _,label_territory,_= VocabularyReader.get_territory_by_code_region(code_region=code_dep)
-            if label_territory:
-                depts_labels.append(label_territory)
-
+        label = VocabularyReader.get_label(
+            'ecospheres_territory', uri=code_dep, language=lang
+        )
+        if label:
+            depts_labels.append(label)
     return depts_labels
 
-
 def get_type_adminstration_label_by_acronym(acronym):
-    try:
-        return VocabularyReader.TYPE_ADMINISTRATION[acronym]
-    except:
-        return ""
-
+    label = TYPE_ADMINISTRATION.get(acronym, '')
+    if not label:
+        logger.warning(f'Unknown organization code "{acronym}"')
+    return label
 
 def get_vocabulary_label_by_uri(vocabulary,uri,lang=None):
     try:
-        label_dict=VocabularyReader.is_known_uri(vocabulary=vocabulary,uri=uri,language=lang)
-        return label_dict.get("label")
+        label = VocabularyReader.get_label(
+            vocabulary=vocabulary, uri=uri, language=lang
+        )
+        if label:
+            return label
+        raise ValueError(f'no label available for URI "{uri}"')
     except Exception as e:
         logger.error(f"erreur lors de la recuperation du label du vocabulaire: {vocabulary} -> {str(e)}")
         return None
-
 
 def get_vocabulairies_for_given_repeating_subfields(data,subfield):
 
@@ -143,8 +138,6 @@ def get_vocabulairies_for_given_fields(data):
 
     if vocabularies:=data.get("vocabularies",None):
         return vocabularies
-
-
 
 def get_vocab_label_by_uri_from_list_of_vocabularies(vocabs,uri,lang=None):
     for voc in vocabs:
