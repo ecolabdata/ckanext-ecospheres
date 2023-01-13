@@ -185,7 +185,7 @@ class VocabularyReader:
     @classmethod
     def get_uri_from_label(
         cls, vocabulary, label, language=None, case_sensitive=False,
-        database=None
+        use_altlabel=True, database=None
     ):
         """Get one URI with matching label in given vocabulary, if any.
 
@@ -205,6 +205,9 @@ class VocabularyReader:
         case_sensitive : bool, default False
             If ``True``, the case will be considered when
             testing the labels.
+        use_altlabel : bool, default True
+            Should the method search for a matching alternative
+            label if there's no match with the preferred labels?
         database : str, optional
             URL of the database where the vocabulary is stored,
             ie ``dialect+driver://username:password@host:port/database``.
@@ -221,9 +224,14 @@ class VocabularyReader:
         if not vocabulary or not label:
             return
         
+        if use_altlabel:
+            tables = (VocabularyLabelTable, VocabularyAltLabelTable)
+        else:
+            tables = (VocabularyLabelTable,)
+
         with Session(database=database) as s:
             try:
-                for table in (VocabularyLabelTable, VocabularyAltLabelTable):
+                for table in tables:
                     table_sql = get_table_sql(vocabulary, table)
                     if case_sensitive:
                         where_stmt = (table_sql.c.label == label)
@@ -338,6 +346,117 @@ class VocabularyReader:
         
         return []
     
+    @classmethod
+    def get_children(cls, vocabulary, uri, database=None):
+        """Get the URIs of the children items.
+
+        Parameters
+        ----------
+        vocabulary : str
+            Name of the vocabulary, ie its ``name``
+            property in ``vocabularies.yaml``.
+        uri : str
+            URI of a vocabulary item.
+        database : str, optional
+            URL of the database where the vocabulary is stored,
+            ie ``dialect+driver://username:password@host:port/database``.
+            If not provided, the main CKAN PostgreSQL database will be used.
+        
+        Returns
+        -------
+        list(str)
+            List of the URIs of the children items. Result will be an
+            empty list if the vocabulary doesn't exist, is not available,
+            doesn't have a ``hierarchy`` table, if the URI didn't exist
+            in the vocabulary or if the item didn't have any children.
+        
+        """
+        if not vocabulary or not uri:
+            return []
+        
+        with Session(database=database) as s:
+            try:
+                table_sql = get_table_sql(vocabulary, VocabularyHierarchyTable)
+                stmt = select(func.array_agg(table_sql.c.child.distinct())).where(
+                    table_sql.c.parent == uri
+                )
+                res = s.execute(stmt)
+                return res.scalar() or []
+            except Exception as e:
+                logger.error(
+                    'Failed to look up children items of the URI'
+                    ' "{0}" in vocabulary "{1}". {2}'.format(
+                        uri, vocabulary, str(e)
+                    )
+                )
+        
+        return []
+
+    @classmethod
+    def get_children_labels_from_label(
+        cls, vocabulary, label, language=None, database=None
+    ):
+        """Get the labels of the children items.
+
+        Labels may not be unique in some vocabularies. In that case, the
+        method will return all the children from the multiple vocabulary
+        items sharing the same label.
+
+        Alternative labels are not considered.
+
+        Parameters
+        ----------
+        vocabulary : str
+            Name of the vocabulary, ie its ``name``
+            property in ``vocabularies.yaml``.
+        label : str
+            Label of a vocabulary item.
+        language : str, optional
+            If provided, a label will only be seen as
+            matching if its language is `language`.
+        database : str, optional
+            URL of the database where the vocabulary is stored,
+            ie ``dialect+driver://username:password@host:port/database``.
+            If not provided, the main CKAN PostgreSQL database will be used.
+        
+        Returns
+        -------
+        list(str)
+            List of the labels of the children items. Result will be an
+            empty list if the vocabulary doesn't exist, is not available,
+            doesn't have a ``hierarchy`` table, if the label didn't exist
+            in the vocabulary or if the item didn't have any children.
+        
+        """
+        if not vocabulary or not label:
+            return []
+        
+        uri = cls.get_uri_from_label(
+            vocabulary=vocabulary, label=label, language=language,
+            use_altlabel=False, database=database
+        )
+
+        with Session(database=database) as s:
+            try:
+                hierarchy_table_sql = get_table_sql(vocabulary, VocabularyHierarchyTable)
+                label_table_sql = get_table_sql(vocabulary, VocabularyLabelTable)
+                stmt = select(func.array_agg(label_table_sql.c.label.distinct())).select_from(
+                    hierarchy_table_sql
+                ).join(label_table_sql, hierarchy_table_sql.c.child == label_table_sql.c.uri).where(
+                    hierarchy_table_sql.c.parent == uri
+                )
+                res = s.execute(stmt)
+                return res.scalar() or []
+            except Exception as e:
+                logger.error(
+                    'Failed to look up children items of the URI'
+                    ' "{0}" in vocabulary "{1}". {2}'.format(
+                        uri, vocabulary, str(e)
+                    )
+                )
+        
+        return []
+
     @classmethod
     def get_synonyms(cls, vocabulary, uri, database=None):
         """Get the synonyms for the given URI.
