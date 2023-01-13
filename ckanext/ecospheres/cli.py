@@ -20,7 +20,7 @@ def load(name=None):
     
     To load one vocabulary:
 
-        >>> ckan -c ckan.ini vocabulary load name=ecospheres_theme
+        >>> ckan -c ckan.ini vocabulary load ecospheres_theme
     
     Parameters
     ----------
