@@ -12,15 +12,17 @@ logger = logging.getLogger(__name__)
 
 try:
     from ckan.plugins.toolkit import config
-    DB = config.get_value(
-        'sqlalchemy.url'
+    DB = config.get('sqlalchemy.url')
+    if not DB:
+        raise ValueError('Missing configuration option "sqlalchemy.url"')
+except Exception as e:
+    logger.error(
+        "Couldn't get SQLAlchemy database URL from ckan.ini. {0}".format(str(e))
     )
-    logger.warning(f"Couldn't get sqlalchemy.url from ckan.ini")
-except:
-    DB = os.environ.get("CKAN_SQLALCHEMY_URL")
+    DB = os.environ.get('CKAN_SQLALCHEMY_URL')
 
 @contextmanager
-def Session(database=DB):
+def Session(database=None):
     """Database session context manager.
         
     Parameters
@@ -35,11 +37,9 @@ def Session(database=DB):
     sqlalchemy.orm.Session
     
     """
+    database = database or DB
     if not database:
-        raise ValueError(
-            "Missing database URL. "
-            "The CKAN_SQLALCHEMY_URL environment variable doesn't exist."
-        )
+        raise ValueError('Missing database URL')
     engine = create_engine(database)
     session_factory = sessionmaker(bind=engine)
     Session = scoped_session(session_factory)
