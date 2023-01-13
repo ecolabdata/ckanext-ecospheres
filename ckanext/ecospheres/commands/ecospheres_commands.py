@@ -10,7 +10,7 @@ def get_commands():
     return [vocabulary]
 
 @vocabulary.command()
-@click.option('name', required=False)
+@click.argument('name', required=False)
 def load(name):
     '''Load vocabularies into CKAN database.
 
