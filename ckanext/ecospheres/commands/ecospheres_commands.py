@@ -1,35 +1,29 @@
 #!/usr/bin/env python3
 import click
-from ckanext.ecospheres.vocabulary.loader import load_vocab as load_all_vocab
+from ckanext.ecospheres.vocabulary.loader import load_vocab
 
-
-@click.group()
-def ecospherefr():
-    """
-        empty
-    """
+@click.group(short_help=u"ckanext-ecospheres commands")
+def ecospheres():
     pass
 
 def get_commands():
-    return [ecospherefr]
+    return [ecospheres]
 
-'''
-Chargement des vocabulaires en base de données:
+@ecospheres.command()
+@click.option('name', required=False)
+def load_vocab(name):
+    '''Load vocabularies into CKAN database.
 
-`ckan -c ckan.ini ecospherefr load-vocab`
+        >>> ckan -c ckan.ini ecospherefr load-vocab
+    
+    Parameters
+    ----------
+    name : str, optional
+        Name of one vocabulary to load into the database, ie its
+        ``name`` property in ``vocabularies.yaml``.
+        If not provided, all available vocabularies are loaded.
 
-'''
-
-
-@ecospherefr.command()
-@click.option('--name_vocab', required=False, help=f'Retained for backward compatibility')
-
-def load_vocab(name_vocab):
+    '''
     click.secho('Loading vocabularies...', fg=u"green")
-    click.secho(name_vocab, fg=u"green")
-    load_all_vocab(vocab_list=[])
+    load_vocab(vocab_list=name)
     click.secho('Vocabularies loaded', fg=u"green")
-    
-
-
-    
