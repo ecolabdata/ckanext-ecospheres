@@ -11,7 +11,7 @@ def get_commands():
 
 @vocabulary.command()
 @click.argument('name', required=False)
-def load(name):
+def load(name=None):
     '''Load vocabularies into CKAN database.
 
     To load all vocabularies:
