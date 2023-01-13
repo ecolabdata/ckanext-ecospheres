@@ -55,7 +55,7 @@ def Session(database=DB):
 def __create_table_and_load_data(
     table_name, schema_name, table_schema, data, database=None
 ):
-    """Return territory spatial data theme SQL Table 
+    """Create a table in the database and load its data.
         
     Parameters
     ----------
@@ -77,8 +77,8 @@ def __create_table_and_load_data(
     
     Returns
     -------
-    sqlalchemy.sql.schema.Table
-        The `table_schema` parameter is returned.
+    bool
+        ``True`` if the operation was successful.
     
     """
     try:
@@ -109,6 +109,7 @@ def __create_table_and_load_data(
                         )
                     )
                     s.execute(stm)
+                return True
             except Exception as e:
                 logger.error(
                     'Failed to store table "{0}.{1}" into the database. {2}'.format(
@@ -116,14 +117,14 @@ def __create_table_and_load_data(
                     )
                 )
                 raise # need to raise the exception for the rollback to happen
-        return table_schema
     except Exception as e:
         logger.error('Database session error. {0}'.format(str(e)))
+    return False
 
 def intersection(lst1, lst2):
     return list(set(lst1) & set(lst2))
 
-def load_vocab(vocab_list=None, database=None):
+def load_vocab(vocab_list=None, database=None, **kwargs):
     """ Create table schema and load data for given vocabularies from vocabularies.yaml.
 
     Parameters
@@ -136,6 +137,14 @@ def load_vocab(vocab_list=None, database=None):
         URL of the database the vocabulary should be loaded into,
         ie ``dialect+driver://username:password@host:port/database``.
         If not provided, the main CKAN PostgreSQL database will be used.
+    **kwargs : str
+        Keyword parameters passed down to :py:func:`requests.get`,
+        such as authentification info, proxy mapping, etc.
+
+    Returns
+    -------
+    list(str)
+        List of the 
 
     """
     if vocab_list:
@@ -145,9 +154,11 @@ def load_vocab(vocab_list=None, database=None):
     else:   
         vocab_to_load = list(VocabularyIndex.names())
 
+    report = []
+
     for name in vocab_to_load:
         logger.debug(f'Loading vocabulary "{name}"')
-        result = VocabularyIndex.load(name)
+        result = VocabularyIndex.load(name, **kwargs)
         if not result: # erreur critique
             logger.critical(
                 'Failed to load vocabulary "{0}". {1}'.format(
@@ -164,20 +175,25 @@ def load_vocab(vocab_list=None, database=None):
                 )
         vocab_data = result.data
 
+        success = False
         for table_name, table in vocab_data.items():
             if  table.sql is None:
                 logging.info(
                     'No SQL definition available for ' f'table "{table_name}" .')
                 continue
-            __create_table_and_load_data(
+            success = __create_table_and_load_data(
                 table_name=table_name,
                 schema_name=table.schema,
                 table_schema=table.sql,
                 data=table,
                 database=database
-            ) 
-
-
-
-
-
+            )
+            if not success:
+                # do not try to load other tables when one
+                # of them failed
+                break
+        
+        if success:
+            report.append(name)
+    
+    return report
