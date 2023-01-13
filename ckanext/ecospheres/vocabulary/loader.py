@@ -15,6 +15,7 @@ try:
     DB = config.get_value(
         'sqlalchemy.url'
     )
+    logger.warning(f"Couldn't get sqlalchemy.url from ckan.ini")
 except:
     DB = os.environ.get("CKAN_SQLALCHEMY_URL")
 
