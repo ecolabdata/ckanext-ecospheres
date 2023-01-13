@@ -125,7 +125,10 @@ def intersection(lst1, lst2):
     return list(set(lst1) & set(lst2))
 
 def load_vocab(vocab_list=None, database=None, **kwargs):
-    """ Create table schema and load data for given vocabularies from vocabularies.yaml.
+    """Load vocabularies into the database.
+
+    This function can also be used to update a vocabulary
+    that was previously loaded into the database.
 
     Parameters
     ----------
