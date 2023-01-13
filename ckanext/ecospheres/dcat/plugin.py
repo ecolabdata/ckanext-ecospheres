@@ -8,7 +8,7 @@ from ckan.lib.helpers import lang
 
 import ckanext.ecospheres.validators as v
 import ckanext.ecospheres.helpers as helpers
-from ckanext.ecospheres.commands import ecospheres_commands as ecospherefr_cli
+from ckanext.ecospheres import cli
 from ckanext.ecospheres.scheming.tab import get_fields_by_tab
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 from ckanext.ecospheres.vocabulary.loader import load_vocab as load_all_vocab
@@ -27,9 +27,8 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
     
     
     # ------------- IClick ---------------#
-
     def get_commands(self):
-        return ecospherefr_cli.get_commands()
+        return cli.get_commands()
     
     
     # ------------- IConfigurer ---------------#
