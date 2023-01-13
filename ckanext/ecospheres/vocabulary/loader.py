@@ -9,7 +9,14 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from ckanext.ecospheres.vocabulary.index import VocabularyIndex
 
 logger = logging.getLogger(__name__)
-DB = os.environ.get("CKAN_SQLALCHEMY_URL")
+
+try:
+    from ckan.plugins.toolkit import config
+    DB = config.get_value(
+        'sqlalchemy.url'
+    )
+except:
+    DB = os.environ.get("CKAN_SQLALCHEMY_URL")
 
 @contextmanager
 def Session(database=DB):
@@ -120,11 +127,10 @@ def load_vocab(vocab_list=None, database=None):
 
     Parameters
     ----------
-    vocab_list : list(str), optional
-        A list of vocabulary names to load into the database,
-        ie their ``name`` property in ``vocabularies.yaml``.
-        If not provided, all available vocabularies are
-        loaded.
+    vocab_list : list(str) or str, optional
+        A vocabulary name or list of vocabulary names to load into
+        the database, ie their ``name`` property in ``vocabularies.yaml``.
+        If not provided, all available vocabularies are loaded.
     database : str, optional
         URL of the database the vocabulary should be loaded into,
         ie ``dialect+driver://username:password@host:port/database``.
@@ -132,6 +138,8 @@ def load_vocab(vocab_list=None, database=None):
 
     """
     if vocab_list:
+        if isinstance(vocab_list, str):
+            vocab_list = [vocab_list]
         vocab_to_load = intersection(vocab_list, VocabularyIndex.names())
     else:   
         vocab_to_load = list(VocabularyIndex.names())
