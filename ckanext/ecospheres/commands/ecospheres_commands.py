@@ -2,19 +2,25 @@
 import click
 from ckanext.ecospheres.vocabulary.loader import load_vocab
 
-@click.group(short_help=u"ckanext-ecospheres commands")
-def ecospheres():
+@click.group(short_help=u"Vocabulary administration commands")
+def vocabulary():
     pass
 
 def get_commands():
-    return [ecospheres]
+    return [vocabulary]
 
-@ecospheres.command()
+@vocabulary.command()
 @click.option('name', required=False)
-def load_vocab(name):
+def load(name):
     '''Load vocabularies into CKAN database.
 
-        >>> ckan -c ckan.ini ecospherefr load-vocab
+    To load all vocabularies:
+
+        >>> ckan -c ckan.ini vocabulary load
+    
+    To load one vocabulary:
+
+        >>> ckan -c ckan.ini vocabulary load name=ecospheres_theme
     
     Parameters
     ----------
