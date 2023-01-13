@@ -30,6 +30,15 @@ def load(name=None):
         If not provided, all available vocabularies are loaded.
 
     '''
-    click.secho('Loading vocabularies...', fg=u"green")
-    load_vocab(vocab_list=name)
-    click.secho('Vocabularies loaded', fg=u"green")
+    click.secho('Loading vocabularies...', fg=u'green')
+    report = load_vocab(vocab_list=name)
+    if not report:
+        click.secho('No vocabulary has been loaded', fg=u'green')
+    else:
+        click.secho('{} vocabular{} been loaded: {}'.format(
+                len(report),
+                'ies have' if len(report) > 1 else 'y has',
+                ', '.join(report)
+            ),
+            fg=u'green'
+        )
