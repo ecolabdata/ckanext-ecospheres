@@ -1,5 +1,7 @@
 import collections
 import json
+import re
+from urllib import parse
 
 from flask import Blueprint
 
@@ -114,7 +116,6 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         return facets_dict
 
     def before_index(self, search_data):
-
         """
         Cette fonction est appelée avant qu'un jeux de données ne soit indexé.
         Elle permet de modifier les données indexées par le moteur de recherche Solr.
@@ -128,7 +129,6 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
     
         if territory:=validated_dict.get("territory",None):
             search_data["territory"]=[ter['uri'] for ter in territory]
-
 
         if modified:=validated_dict.get("modified",None):
             search_data["modified"]=modified.replace("+00:00",'')
@@ -147,8 +147,6 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
     
     def before_search(self, search_params):
-        
-        
         """
         Cette fonction permet d'intercepter la reqûete avant de faire une
         recherche pour ajouter/modifier/enrichir des paramètres de recherche,
@@ -177,8 +175,6 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         extras=search_params.get("extras",None)
         if fq or extras:
 
-
-            import re
             regex_orgs = r"([+]*organization\s*:\s*\"([^\"]*)\")"
             matches = re.finditer(regex_orgs, fq, re.MULTILINE)
             list_organizations=[]
@@ -196,68 +192,76 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
                     query=f'{query} OR'
                 fq=f'{fq.strip()} {query.strip()}'
 
+            """ Filtre par territoires :
 
+            * Les labels sont remplacés par les URI correspondants.
+            * On veut une union, pas une intersection.
+            * Ajout des subdivisions, si ``include_subdivision`` vaut
+              ``True``.
 
+            TODO: Voir s'il est possible d'utiliser un output validator
+            pour avoir dès le départ les URI dans l'URL ? [LL-2023.01.16]
 
-            """ Filtre par territoires """ 
+            /dataset/?q=&ext_include_subdivision=true&territory=Nouvelle-Aquitaine
 
-            territoires=[]
-            import re
-            regex_territory=  r"([+]*territory\s*:\s*\"([^\"]*)\")"
+            """ 
+            territoires = []
+            regex_territory =  r"([+]*territory\s*:\s*\"([^\"]*)\")"
             matches = re.finditer(regex_territory, fq, re.MULTILINE)
             for _, match in enumerate(matches, start=1):
                 territoires.append(match.group(2))
-
-            # TODO: à réécrire entièrement !!!! 
-            # VocabularyReader._get_territories_by_hierarchy n'existe plus,
-            # notamment [LL-2023.01.10]
             fq = re.sub(regex_territory, "", fq, 0, re.MULTILINE)
-            if territoires:
-                territoires_hierarchy=VocabularyReader._get_territories_by_hierarchy()
-                regions={
-                    value['name'] : key_region  for key_region,value
-                    in territoires_hierarchy['régions-métrople'].items()
-                }
-                regions_names_set=set(regions.keys())
-                regions_sub_to_add=regions_names_set.intersection(set(territoires))
-                if regions_sub_to_add:
-                    include_subdivision=None
+            
+            territoires_uris = []
+            for territoire in territoires:
+                territoire_label = parse.unquote_plus(territoire)
+                territoire_uri = VocabularyReader.get_uri_from_label(
+                    vocabulary='ecospheres_territory', label=territoire_label
+                )
+                territoires_uris.append(territoire_uri)
+            if extras:=search_params.get('extras'):
+                if extras.get('ext_include_subdivision'):
+                    territoires_uris += VocabularyReader.get_children(
+                        vocabulary='ecospheres_territory', uri=territoires_uris
+                    )
 
-                    """ include_subdivision 
+            query = ' OR territory:'.join([
+                '"{0}"'.format(parse.quote(territoire_uri))
+                for territoire_uri in territoires_uris
+            ])
+            if query:
+                fq = f'{fq} +(territory:{query})'
 
-                    Si la valeur du paramètre 'ext_include_subdivision' est à 'true',
-                    on va alors inclure les subdivisions des territoires inclus dans la
-                    reqûete, plus concretement si le filtre territoire inclue une region
-                    et ext_include_subdivision=true alors on va rechercher tous les jeux
-                    de données appartenant aux départements de la région.
+            """ 
+            Filtre par thème Ecosphères :
 
-                    /dataset/?q=&ext_include_subdivision=true&territory=Nouvelle-Aquitaine
+            * Les labels sont remplacés par les URI correspondants.
+            * On veut une union, pas une intersection.
 
-                    """
-                    try: 
-                        extras=search_params.get("extras",None)
-                        include_subdivision=extras.get("ext_include_subdivision",None)
-                    except:
-                        pass
+            TODO: Voir s'il est possible d'utiliser un output validator
+            pour avoir dès le départ les URI dans l'URL ? [LL-2023.01.16]          
 
-                    if include_subdivision == "true":
-                        list_subdivisions=[]
-                        regions_keys=[regions[region_name] for region_name in regions_sub_to_add]
-                        for code_region in regions_keys:
-                            list_subdivisions+=[dept["name"] for dept in territoires_hierarchy["depts_by_region"][code_region]]
-                        
-                        if list_subdivisions:
-                            territoires+=list_subdivisions
+            """
+            categories = []
+            regex_category = r"([+]*territory\s*:\s*\"([^\"]*)\")"
+            matches = re.finditer(regex_category, fq, re.MULTILINE)
+            for _, match in enumerate(matches, start=1):
+                categories.append(match.group(2))
+            fq = re.sub(regex_category, "", fq, 0, re.MULTILINE)
 
-                query=''
-                op=''
-                for territoire in territoires:
-                    if query:
-                        op='OR'
-                    query=f'{query} {op} territory:"{territoire}"'
-                fq=f'{fq} {query.strip()}'
-
-
+            categories_uris = []
+            for category in categories:
+                category_label = parse.unquote_plus(category)
+                category_uri = VocabularyReader.get_uri_from_label(
+                    vocabulary='ecospheres_theme', label=category_label
+                )
+                categories_uris.append(category_uri)
+            query = ' OR category:'.join([
+                '"{0}"'.format(parse.quote(category_uri))
+                for category_uri in categories_uris
+            ])
+            if query:
+                fq = f'{fq} +(category:{query})'
 
             if extras:
                 """
@@ -314,7 +318,6 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
                 if restricted_access is not None:
                     fq = '{fq} extras_restricted_access:{restricted_access} '.format(
                                             fq=fq, restricted_access=restricted_access)
-                import re
                 q = search_params.get('q', '')
                 search_params['q'] = re.sub(":\s", " ", q)
 
