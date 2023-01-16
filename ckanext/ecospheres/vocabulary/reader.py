@@ -309,8 +309,8 @@ class VocabularyReader:
         vocabulary : str
             Name of the vocabulary, ie its ``name``
             property in ``vocabularies.yaml``.
-        uri : str
-            URI of a vocabulary item.
+        uri : str or list(str)
+            URI of a vocabulary item or a list of such URIs.
         database : str, optional
             URL of the database where the vocabulary is stored,
             ie ``dialect+driver://username:password@host:port/database``.
@@ -328,12 +328,15 @@ class VocabularyReader:
         if not vocabulary or not uri:
             return []
         
+        if isinstance(uri, list):
+            cdt = (table_sql.c.child._in(uri))
+        else:
+            cdt = (table_sql.c.child == uri)
+        
         with Session(database=database) as s:
             try:
                 table_sql = get_table_sql(vocabulary, VocabularyHierarchyTable)
-                stmt = select(func.array_agg(table_sql.c.parent.distinct())).where(
-                    table_sql.c.child == uri
-                )
+                stmt = select(func.array_agg(table_sql.c.parent.distinct())).where(cdt)
                 res = s.execute(stmt)
                 return res.scalar() or []
             except Exception as e:
@@ -355,8 +358,8 @@ class VocabularyReader:
         vocabulary : str
             Name of the vocabulary, ie its ``name``
             property in ``vocabularies.yaml``.
-        uri : str
-            URI of a vocabulary item.
+        uri : str or list(str)
+            URI of a vocabulary item or a list of such URIs.
         database : str, optional
             URL of the database where the vocabulary is stored,
             ie ``dialect+driver://username:password@host:port/database``.
@@ -374,12 +377,15 @@ class VocabularyReader:
         if not vocabulary or not uri:
             return []
         
+        if isinstance(uri, list):
+            cdt = (table_sql.c.parent._in(uri))
+        else:
+            cdt = (table_sql.c.parent == uri)
+        
         with Session(database=database) as s:
             try:
                 table_sql = get_table_sql(vocabulary, VocabularyHierarchyTable)
-                stmt = select(func.array_agg(table_sql.c.child.distinct())).where(
-                    table_sql.c.parent == uri
-                )
+                stmt = select(func.array_agg(table_sql.c.child.distinct())).where(cdt)
                 res = s.execute(stmt)
                 return res.scalar() or []
             except Exception as e:
