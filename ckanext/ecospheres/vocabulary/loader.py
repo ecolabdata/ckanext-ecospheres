@@ -124,7 +124,7 @@ def __create_table_and_load_data(
 def intersection(lst1, lst2):
     return list(set(lst1) & set(lst2))
 
-def load_vocab(vocab_list=None, database=None, **kwargs):
+def load_vocab(vocab_list=None, exclude=None, database=None, **kwargs):
     """Load vocabularies into the database.
 
     This function can also be used to update a vocabulary
@@ -136,6 +136,9 @@ def load_vocab(vocab_list=None, database=None, **kwargs):
         A vocabulary name or list of vocabulary names to load into
         the database, ie their ``name`` property in ``vocabularies.yaml``.
         If not provided, all available vocabularies are loaded.
+    exclude : list(str) or str, optional
+        A vocabulary name or list of vocabulary names that shall not be
+        loaded into the database.
     database : str, optional
         URL of the database the vocabulary should be loaded into,
         ie ``dialect+driver://username:password@host:port/database``.
@@ -156,6 +159,11 @@ def load_vocab(vocab_list=None, database=None, **kwargs):
         vocab_to_load = intersection(vocab_list, VocabularyIndex.names())
     else:   
         vocab_to_load = list(VocabularyIndex.names())
+
+    if exclude:
+        for vocabulary in exclude:
+            if vocabulary in vocab_to_load:
+                vocab_to_load.remove(vocabulary)
 
     report = []
 
