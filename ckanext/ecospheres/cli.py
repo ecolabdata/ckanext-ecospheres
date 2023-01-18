@@ -1,13 +1,24 @@
 #!/usr/bin/env python3
 import click
-from ckanext.ecospheres.vocabulary.loader import load_vocab
 
-@click.group(short_help=u"Vocabulary administration commands")
+from ckanext.ecospheres.vocabulary.loader import load_vocab
+from ckanext.ecospheres.vocabulary.reader import VocabularyReader
+
+@click.group(short_help=u'Vocabulary administration commands')
 def vocabulary():
     pass
 
 def get_commands():
     return [vocabulary]
+
+@vocabulary.command()
+def list():
+    '''List all known vocabularies, if any.
+
+    '''
+    vocabularies = VocabularyReader.list_vocabularies()
+    if vocabularies:
+        click.secho('\n'.join(vocabularies), fg=u'green')
 
 @vocabulary.command()
 @click.argument('name', required=False)
