@@ -629,6 +629,39 @@ class VocabularyReader:
                 if territory:
                     return territory
 
+    @classmethod
+    def list_vocabularies(cls, database=None):
+        """List all vocabularies in the database.
+
+        A vocabulary ``voc`` is assumed to exist as long as the 
+        database contains a table named ``voc_label``.
+
+        Parameters
+        ----------
+        database : str, optional
+            URL of the database where the vocabulary is stored,
+            ie ``dialect+driver://username:password@host:port/database``.
+            If not provided, the main CKAN PostgreSQL database will be used.
+        
+        Returns
+        -------
+        list
+            A list of vocabulary names.
+        
+        """
+        with Session(database=database) as s:
+            try:
+                res = s.execute("""
+                    SELECT array_agg(
+                            DISTINCT substring(relname, '^(.*)_label$')
+                            ORDER BY substring(relname, '^(.*)_label$')
+                        )
+                        FROM pg_catalog.pg_class
+                        WHERE relname ~ '^(.*)_label$'
+                    """)
+                return res.scalar()
+            except Exception as e:
+                logger.error('Failed to list vocabularies')
 
 class VocabularyJSONReader:
     
