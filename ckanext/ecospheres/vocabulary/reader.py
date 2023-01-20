@@ -260,7 +260,7 @@ class VocabularyReader:
         vocabulary : str
             Name of the vocabulary, ie its ``name``
             property in ``vocabularies.yaml``.
-        terms : list or tuple
+        terms : str or list(str) or tuple(str)
             Metadata values to test against the regular
             expressions associated with the concepts.
         database : str, optional
@@ -281,15 +281,20 @@ class VocabularyReader:
         if not vocabulary or not terms:
             return reslist
 
+        if isinstance(terms, str):
+            terms = [terms]
+
         with Session(database=database) as s:
             for term in terms:
                 try:
                     table_sql = get_table_sql(vocabulary, VocabularyRegexpTable)
                     stmt = select([func.array_agg(table_sql.c.uri.distinct())]).where(
-                        literal(term).regexp_match(table_sql.c.regexp)
+                        literal(term).op('~')(table_sql.c.regexp)
                     )
                     res = s.execute(stmt)
-                    reslist += res.scalar()
+                    uris = res.scalar()
+                    if uris:
+                        reslist += uris
                 except Exception as e:
                     logger.error(
                         'Failed to look up regular expression matches of '
