@@ -142,7 +142,7 @@ class VocabularyReader:
 
                 # with the provided language
                 if language:
-                    stmt = select(table_sql.c.label).where(
+                    stmt = select([table_sql.c.label]).where(
                         and_(
                             table_sql.c.uri == uri,
                             table_sql.c.language == language
@@ -154,7 +154,7 @@ class VocabularyReader:
                         return val
                 
                 # with the default language
-                stmt = select(table_sql.c.label).where(
+                stmt = select([table_sql.c.label]).where(
                     and_(
                         table_sql.c.uri == uri,
                         table_sql.c.language == DEFAULT_LANGUAGE
@@ -166,7 +166,7 @@ class VocabularyReader:
                     return val
                 
                 # without any language
-                stmt = select(table_sql.c.label).where(
+                stmt = select([table_sql.c.label]).where(
                     table_sql.c.uri == uri
                 )
                 res = s.execute(stmt)
@@ -239,7 +239,7 @@ class VocabularyReader:
                         where_stmt = (func.lower(table_sql.c.label) == label.lower())
                     if language:
                         where_stmt = and_(where_stmt, (table_sql.c.language == language))
-                    stmt = select(table_sql.c.uri).where(where_stmt)
+                    stmt = select([table_sql.c.uri]).where(where_stmt)
                     res = s.execute(stmt)
                     uri = res.scalar()
                     if uri:
@@ -285,7 +285,7 @@ class VocabularyReader:
             for term in terms:
                 try:
                     table_sql = get_table_sql(vocabulary, VocabularyRegexpTable)
-                    stmt = select(func.array_agg(table_sql.c.uri.distinct())).where(
+                    stmt = select([func.array_agg(table_sql.c.uri.distinct())]).where(
                         literal(term).regexp_match(table_sql.c.regexp)
                     )
                     res = s.execute(stmt)
@@ -336,7 +336,7 @@ class VocabularyReader:
         with Session(database=database) as s:
             try:
                 table_sql = get_table_sql(vocabulary, VocabularyHierarchyTable)
-                stmt = select(func.array_agg(table_sql.c.parent.distinct())).where(cdt)
+                stmt = select([func.array_agg(table_sql.c.parent.distinct())]).where(cdt)
                 res = s.execute(stmt)
                 return res.scalar() or []
             except Exception as e:
@@ -385,7 +385,7 @@ class VocabularyReader:
         with Session(database=database) as s:
             try:
                 table_sql = get_table_sql(vocabulary, VocabularyHierarchyTable)
-                stmt = select(func.array_agg(table_sql.c.child.distinct())).where(cdt)
+                stmt = select([func.array_agg(table_sql.c.child.distinct())]).where(cdt)
                 res = s.execute(stmt)
                 return res.scalar() or []
             except Exception as e:
@@ -446,7 +446,7 @@ class VocabularyReader:
             try:
                 hierarchy_table_sql = get_table_sql(vocabulary, VocabularyHierarchyTable)
                 label_table_sql = get_table_sql(vocabulary, VocabularyLabelTable)
-                stmt = select(func.array_agg(label_table_sql.c.label.distinct())).select_from(
+                stmt = select([func.array_agg(label_table_sql.c.label.distinct())]).select_from(
                     hierarchy_table_sql
                 ).join(label_table_sql, hierarchy_table_sql.c.child == label_table_sql.c.uri).where(
                     hierarchy_table_sql.c.parent == uri
@@ -494,7 +494,7 @@ class VocabularyReader:
         with Session(database=database) as s:
             try:
                 table_sql = get_table_sql(vocabulary, VocabularySynonymTable)
-                stmt = select(func.array_agg(table_sql.c.synonym.distinct())).where(
+                stmt = select([func.array_agg(table_sql.c.synonym.distinct())]).where(
                     table_sql.c.uri == uri
                 )
                 res = s.execute(stmt)
@@ -539,7 +539,7 @@ class VocabularyReader:
         with Session(database=database) as s:
             try:
                 table_sql = get_table_sql(vocabulary, VocabularySynonymTable)
-                stmt = select(table_sql.c.uri).where(
+                stmt = select([table_sql.c.uri]).where(
                     table_sql.c.synonym == synonym
                 )
                 res = s.execute(stmt)
