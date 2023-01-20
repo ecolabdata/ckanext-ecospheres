@@ -14,6 +14,7 @@ from ckanext.ecospheres import cli
 from ckanext.ecospheres.scheming.tab import get_fields_by_tab
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 from ckanext.ecospheres.vocabulary.loader import load_vocab as load_all_vocab
+from ckanext.ecospheres.views import organizations_by_admin_type
 
     
 
@@ -381,8 +382,8 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
     # def _get_themes(self):
     #     return VocabularyReader.themes()
     
-    # def _get_organizations(self):
-    #     return VocabularyReader.get_organization_by_admin()
+    def _get_organizations(self):
+        return organizations_by_admin_type()
     
     # def _get_territoires_hierarchy(self):
     #     return VocabularyReader._get_territories_by_hierarchy()
@@ -395,14 +396,14 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         """
         blueprint = Blueprint('dcatapfrench_custom_api', self.__module__)
         # TODO: see if this was useful in any way... [LL-2023.01.10]
-        # rules = [ 
+        rules = [ 
         #     ('/api/territoires', 'get_territoires', self._get_territoires),
         #     ('/api/territoires_hierarchy', 'get_territoires_hierarchy', self._get_territoires_hierarchy),
         #     ('/api/themes', 'get_themes', self._get_themes),
-        #     ('/api/organizations', 'get_organizations', self._get_organizations),
-        #     ]
-        # for rule in rules:
-        #     blueprint.add_url_rule(*rule)
+            ('/api/organizations', 'get_organizations', self._get_organizations),
+        ]
+        for rule in rules:
+            blueprint.add_url_rule(*rule)
 
         from flask import request
         @blueprint.route('/api/load-vocab', methods=["POST"])
