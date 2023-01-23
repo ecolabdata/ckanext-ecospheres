@@ -758,7 +758,58 @@ class VocabularyReader:
                         synonym, vocabulary, str(e)
                     )
                 )
-    
+
+    @classmethod
+    def get_bbox(cls, vocabulary, uri, database=None):
+        """Get the coordinates of the boundary box for the given URI, if any.
+
+        Parameters
+        ----------
+        vocabulary : str
+            Name of the vocabulary, ie its ``name``
+            property in ``vocabularies.yaml``.
+        uri : str
+            URI of a vocabulary item.
+        database : str, optional
+            URL of the database where the vocabulary is stored,
+            ie ``dialect+driver://username:password@host:port/database``.
+            If not provided, the main CKAN PostgreSQL database will be used.
+        
+        Returns
+        -------
+        dict or None
+            A dictionnary with five keys: ``uri`` is the given URI, 
+            ``westlimit``, ``southlimit``, ``eastlimit``, and ``northlimit``
+            are the coordinates of the bounding box.
+            Result will be ``None`` if the vocabulary doesn't exist, is not
+            available, doesn't have a ``spatial`` table, if the URI didn't
+            exist in the vocabulary or if the item didn't have a bbox.
+        
+        """
+        if not vocabulary or not uri:
+            return
+        
+        with Session(database=database) as s:
+            try:
+                table_sql = get_table_sql(vocabulary, VocabularySpatialTable)
+                stmt = f'''
+                    SELECT to_json(spatial_table.*)
+                        FROM {table_sql.schema}.{table_sql.name} AS spatial_table
+                        WHERE spatial_table.uri = :uri
+                '''
+                res = s.execute(stmt, params={'uri': uri})
+                bbox = res.scalar()
+                if bbox and 'id' in bbox:
+                    del bbox['id']
+                return bbox or None
+            except Exception as e:
+                logger.error(
+                    'Failed to get the bbox of the URI'
+                    ' "{0}" in vocabulary "{1}". {2}'.format(
+                        uri, vocabulary, str(e)
+                    )
+                )
+
     @classmethod
     def get_ecospheres_territory(cls, vocabulary, uri, database=None):
         """Return the territory from the ecospheres_territory vocabulary best suited to represent the given URI.
