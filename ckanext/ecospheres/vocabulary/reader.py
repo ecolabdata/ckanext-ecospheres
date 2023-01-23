@@ -60,6 +60,208 @@ class VocabularyReader:
     """Read vocabulary data from the database."""
 
     @classmethod
+    def fetch_data(cls, vocabulary, modelclass, add_count=False, database=None):
+        """Fetch all data from a vocabulary table.
+
+        Parameters
+        ----------
+        vocabulary : str
+            Name of the vocabulary, ie its ``name``
+            property in ``vocabularies.yaml``.
+        modelclass : type
+            A subclass of :py:class:`VocabularyDataTable`.
+        add_count : bool, default False
+            If this is ``True``, the method will add a 
+            ``count`` attribute with value ``-1`` to all records.
+        database : str, optional
+            URL of the database where the vocabulary is stored,
+            ie ``dialect+driver://username:password@host:port/database``.
+            If not provided, the main CKAN PostgreSQL database will be used.
+
+        Returns
+        -------
+        list(dict)
+            A list of dictionnaries containing the attributes
+            of each item of the table. The keys of the
+            dictionnary are the names of the table's columns.
+        
+        """
+        # TODO: If the 'count' key has no use, it shouldn't exist. [LL-2023.01.23]
+        if not vocabulary:
+            return []
+        with Session(database=database) as s:
+            try:
+                table_sql = get_table_sql(vocabulary, modelclass)
+                if add_count:
+                    stmt = f'''
+                        WITH data_with_count AS (
+                        SELECT *, -1 AS "count"
+                            FROM {table_sql.schema}.{table_sql.name}
+                        )
+                        SELECT json_agg(to_json(data_with_count.*))
+                            FROM data_with_count
+                    '''
+                else:
+                    stmt = f'''
+                        SELECT json_agg(to_json({table_sql.name}.*))
+                            FROM {table_sql.schema}.{table_sql.name}
+                    '''
+                    # much cleaner way to do this with SQLAlchemy 1.4.0b2+:
+                    # stmt = select([
+                    #     func.json_agg(func.to_json(table_sql.table_valued()))
+                    # ])
+                res = s.execute(stmt)
+                return res.scalar() or []
+            except Exception as e:
+                logger.error(
+                    "Couldn't fetch data from the {0} table "
+                    'of vocabulary "{1}". {2}'.format(
+                        modelclass, vocabulary, str(e)
+                    )
+                )
+                return []
+
+    @classmethod
+    def fetch_labels(cls, vocabulary, add_count=False, database=None):
+        """Fetch all data from the label table of the given vocabulary.
+
+        Parameters
+        ----------
+        vocabulary : str
+            Name of the vocabulary, ie its ``name``
+            property in ``vocabularies.yaml``.
+        add_count : bool, default False
+            If this is ``True``, the method will add a 
+            ``count`` attribute with value ``-1`` to all records.
+        database : str, optional
+            URL of the database where the vocabulary is stored,
+            ie ``dialect+driver://username:password@host:port/database``.
+            If not provided, the main CKAN PostgreSQL database will be used.
+        
+        Returns
+        -------
+        list(dict)
+            A list of dictionnaries. Each dictionnary represents one
+            label through 4 keys:
+
+            * ``id`` - integer, primary key of the label table.
+            * ``uri`` - URI of the vocabulary item.
+            * ``language`` - language of the label.
+            * ``label`` - label of the vocabulary item.
+
+            If `add_count` is set to ``True``, the dictionnary has
+            an additional key ``count`` with value ``-1``.
+
+        """
+        return cls.fetch_data(
+            vocabulary=vocabulary,
+            modelclass=VocabularyLabelTable,
+            add_count=add_count,
+            database=database
+        )
+
+    @classmethod
+    def fetch_hierarchized_data(cls, vocabulary, children_alias=None, database=None):
+        """Fetch all data from the label and hierachy tables of the given vocabulary.
+
+        This won't work if the vocabulary doesn't have a 
+        hierarchy table in the database.
+
+        Parameters
+        ----------
+        vocabulary : str
+            Name of the vocabulary, ie its ``name``
+            property in ``vocabularies.yaml``.
+        children_alias : str, optional
+            Alternative name for the key listing all
+            children of the given vocabulary item. By default,
+            the key is called ``'children'``.
+        database : str, optional
+            URL of the database where the vocabulary is stored,
+            ie ``dialect+driver://username:password@host:port/database``.
+            If not provided, the main CKAN PostgreSQL database will be used.
+
+        Returns
+        -------
+        list(dict)
+            A list of dictionnaries. Each dictionnary represents one
+            label through 4 keys:
+
+            * ``id`` - integer, primary key of the label table.
+            * ``uri`` - URI of the vocabulary item.
+            * ``language`` - language of the label.
+            * ``label`` - label of the vocabulary item.
+            * ``count`` - vaut toujours -1
+            * ``children`` (name of the key may be changed through the
+              `children_alias` parameter) - list of children labels,
+              which are similar dictionnaries without the ``children``
+              key.
+        
+        """
+        #TODO: [LL-2023.01.23]
+        # - This won't work properly if the vocabulary items have labels
+        # in multiple languages. The method should either have a language
+        # argument to specify one preferred language and return only one
+        # label for each vocabulary item, or it should have a 'labels' key
+        # listing dictionnaries with 'language' and 'label' keys...
+        # - Not sure how this should work if there's more than two levels in
+        # the hierarchy, but that's most likely not it either.
+        # - If the 'count' key has no use, it shouldn't exist.
+
+        if not vocabulary:
+            return []
+
+        children_alias = children_alias or 'children'
+
+        with Session(database=database) as s:
+            try:
+                label_sql = get_table_sql(vocabulary, VocabularyLabelTable)
+                hierarchy_sql = get_table_sql(vocabulary, VocabularyHierarchyTable)
+                stmt = f'''
+                    WITH label_data AS (
+                    SELECT
+                        *, -1 AS "count"
+                        FROM {label_sql.schema}.{label_sql.name}
+                    ),
+                    by_parent AS (
+                    SELECT
+                        hierarchy.parent,
+                        json_agg(
+                            to_json(child_data.*) ORDER BY child_data.label
+                        ) AS {children_alias}
+                        FROM {hierarchy_sql.schema}.{hierarchy_sql.name} AS hierarchy
+                            LEFT JOIN label_data AS child_data
+                                ON child_data.uri = hierarchy.child
+                        GROUP BY hierarchy.parent
+                    ),
+                    by_parent_with_labels AS (
+                    SELECT
+                        parent_data.*,
+                        by_parent.{children_alias}
+                        FROM by_parent
+                            LEFT JOIN label_data AS parent_data
+                                ON parent_data.uri = by_parent.parent
+                    )
+                    SELECT
+                        json_object_agg(
+                            by_parent_with_labels.uri,
+                            to_json(by_parent_with_labels.*)
+                            ORDER BY by_parent_with_labels.label
+                        )
+                        FROM by_parent_with_labels
+                '''
+                res = s.execute(stmt)
+                return res.scalar() or []
+            except Exception as e:
+                logger.error(
+                    "Couldn't fetch hierarchized data "
+                    'of vocabulary "{1}". {2}'.format(
+                        vocabulary, str(e)
+                    )
+                )
+                return []
+
+    @classmethod
     def is_known_uri(cls, vocabulary, uri, database=None):
         """Is the URI registered in given vocabulary ?
 
