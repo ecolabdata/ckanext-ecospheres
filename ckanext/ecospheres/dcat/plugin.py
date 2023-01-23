@@ -374,13 +374,19 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
     # ------------- IBlueprint ---------------#
     
-    # def _get_territoires(self):
-    #     return {
-    #             "territoires": VocabularyReader.labels(vocabulary="ecospheres_territory")
-    #            }
+    def _get_territoires(self):
+        return {
+            'territoires': VocabularyReader.fetch_labels(
+                vocabulary='ecospheres_territory',
+                add_count=True
+            )
+        }
                
-    # def _get_themes(self):
-    #     return VocabularyReader.themes()
+    def _get_themes(self):
+        return VocabularyReader.fetch_hierarchized_data(
+            vocabulary='ecospheres_theme',
+            children_alias='child'
+        )
     
     def _get_organizations(self):
         return organizations_by_admin_type()
@@ -397,9 +403,9 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         blueprint = Blueprint('dcatapfrench_custom_api', self.__module__)
         # TODO: see if this was useful in any way... [LL-2023.01.10]
         rules = [ 
-        #     ('/api/territoires', 'get_territoires', self._get_territoires),
+            ('/api/territoires', 'get_territoires', self._get_territoires),
         #     ('/api/territoires_hierarchy', 'get_territoires_hierarchy', self._get_territoires_hierarchy),
-        #     ('/api/themes', 'get_themes', self._get_themes),
+            ('/api/themes', 'get_themes', self._get_themes),
             ('/api/organizations', 'get_organizations', self._get_organizations),
         ]
         for rule in rules:
