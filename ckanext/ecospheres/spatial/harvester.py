@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from lxml import etree
+import logging
 
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
@@ -17,9 +18,9 @@ from ckanext.ecospheres.spatial.utils import (
     build_catalog_page_url, extract_scheme_and_identifier
 )
 from ckanext.ecospheres.maps import ISO_639_2
-
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 
+logger = logging.getLogger(__name__)
 
 class FrSpatialHarvester(plugins.SingletonPlugin):
     '''Customization of spatial metadata harvest.
@@ -72,7 +73,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             # the 3 letters ones
             language=ISO_639_2.get(language, language)
         
-        dataset_dict = build_dataset_dict_from_schema('dataset', language=language)
+        dataset_dict = build_dataset_dict_from_schema('dataset', main_language=language)
 
         # --- various metadata to pick up from package_dict ---
         for target_field, package_field in {
@@ -93,7 +94,6 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         # --- various metadata to pick up from iso_values ---
         for target_field, iso_field in {
             # dataset_dict key -> iso_values key
-            'free_tags': 'keywords',
             'title': 'title',
             'notes': 'abstract',
             'name': 'guid',
@@ -226,6 +226,9 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 if topic_category_uri:
                     dataset_dict.set_value('theme', topic_category_uri)
         
+        for iso_keyword in iso_values.get('keywords', []):
+            dataset_dict.set_value('free_tags', iso_keyword.get('keyword'))
+
         words = (
             iso_themes + iso_topic_categories
             + dataset_dict.get_values('free_tags')
@@ -255,19 +258,21 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         # --- spatial coverage ---
 
         # bounding box
-        iso_bbox = iso_values.get('bbox')
-        if iso_bbox:
-            coordinates = (
-                iso_bbox.get('west'),
-                iso_bbox.get('east'),
-                iso_bbox.get('south'),
-                iso_bbox.get('north')
-            )
-            if all(coordinate is not None for coordinate in coordinates):
-                wkt = bbox_wkt_from_coordinates(*coordinates)
-                dataset_dict.set_value('bbox', wkt)
-                geojson = bbox_geojson_from_coordinates(*coordinates)
-                dataset_dict.set_value('spatial', geojson)
+        iso_bboxes = iso_values.get('bbox')
+        for iso_bbox in iso_bboxes:
+            if iso_bbox:
+                coordinates = (
+                    iso_bbox.get('west'),
+                    iso_bbox.get('east'),
+                    iso_bbox.get('south'),
+                    iso_bbox.get('north')
+                )
+                if all(coordinate is not None for coordinate in coordinates):
+                    wkt = bbox_wkt_from_coordinates(*coordinates)
+                    dataset_dict.set_value('bbox', wkt)
+                    geojson = bbox_geojson_from_coordinates(*coordinates)
+                    dataset_dict.set_value('spatial', geojson)
+                    break # other bboxes will be lost
 
         # spatial_coverage and territory
         iso_extents = (
@@ -293,7 +298,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 ):
                 spatial_coverage_uri = iso_extent
                 spatial_coverage_voc = 'insee_official_geographic_code'
-            elif len(extent_id) > 2:
+            elif len(iso_extent) > 2:
                 # excluding short strings for now, because of the possible
                 # mix up between codes of different types of territories
                 extent_scheme, extent_id = extract_scheme_and_identifier(iso_extent)
