@@ -88,20 +88,44 @@ def get_localized_date(date_string):
     except (TypeError, ParserError):
         return ''
 
-def get_territories_label(territories, lang=None):
-    # TODO: there should be a safer way to parser this! [LL-2023.01.10]
-    res = re.match(r'{(.*)}',territories)
-    resultats = res.group(1)
-    #liste des territoires de competence de l'organisation
-    departements = resultats.split(',')
-    depts_labels = []
-    for code_dep in departements:
+def parse_territories(raw_territories):
+    """Take a JSON-encoded list of territories and return a Python list.
+
+    Parameters
+    ----------
+    raw_territories : str or None
+        Presumably a JSON-encoded list of territories.
+    
+    Returns
+    -------
+    list
+        The parsed list of territories. This will be an
+        empty list if the parsing failed for some reason.
+    
+    """
+    if not raw_territories:
+        return []
+    try:
+        territories = json.loads(raw_territories)
+    except Exception as e:
+        logger.error(
+            'Failed to parse territories "{0}". {1}'.format(raw_territories, str(e))
+        )
+    if isinstance(territories, list):
+        return territories
+    else:
+        return []
+
+def get_territories_label(raw_territories, lang=None):
+    territory_codes = parse_territories(raw_territories)
+    territory_labels = []
+    for territory_code in territory_codes:
         label = VocabularyReader.get_label(
-            'ecospheres_territory', uri=code_dep, language=lang
+            'ecospheres_territory', uri=territory_code, language=lang
         )
         if label:
-            depts_labels.append(label)
-    return depts_labels
+            territory_labels.append(label)
+    return territory_labels
 
 def get_type_adminstration_label_by_acronym(acronym):
     label = TYPE_ADMINISTRATION.get(acronym, '')
