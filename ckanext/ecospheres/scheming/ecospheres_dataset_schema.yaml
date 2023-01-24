@@ -928,6 +928,7 @@ dataset_fields:
     en: Spatial coverage
   value_type: node or uri
   tab: *tab_details
+  multiple_values: True
   display_snippet: spatial_coverage.html
   repeating_subfields:
   # URI
