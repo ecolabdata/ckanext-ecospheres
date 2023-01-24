@@ -289,7 +289,7 @@ class VocabularyReader:
         with Session(database=database) as s:
             try:
                 table_sql = get_table_sql(vocabulary, VocabularyLabelTable)
-                stmt = exists(table_sql.c.uri).where(table_sql.c.uri == uri).select()
+                stmt = exists([table_sql.c.uri]).where(table_sql.c.uri == uri).select()
                 res = s.execute(stmt)
                 return res.scalar()
             except Exception as e:
@@ -535,14 +535,13 @@ class VocabularyReader:
         if not vocabulary or not uri:
             return []
         
-        if isinstance(uri, list):
-            cdt = (table_sql.c.child._in(uri))
-        else:
-            cdt = (table_sql.c.child == uri)
-        
         with Session(database=database) as s:
             try:
                 table_sql = get_table_sql(vocabulary, VocabularyHierarchyTable)
+                if isinstance(uri, list):
+                    cdt = (table_sql.c.child._in(uri))
+                else:
+                    cdt = (table_sql.c.child == uri)
                 stmt = select([func.array_agg(table_sql.c.parent.distinct())]).where(cdt)
                 res = s.execute(stmt)
                 return res.scalar() or []
@@ -584,14 +583,13 @@ class VocabularyReader:
         if not vocabulary or not uri:
             return []
         
-        if isinstance(uri, list):
-            cdt = (table_sql.c.parent._in(uri))
-        else:
-            cdt = (table_sql.c.parent == uri)
-        
         with Session(database=database) as s:
             try:
                 table_sql = get_table_sql(vocabulary, VocabularyHierarchyTable)
+                if isinstance(uri, list):
+                    cdt = (table_sql.c.parent._in(uri))
+                else:
+                    cdt = (table_sql.c.parent == uri)
                 stmt = select([func.array_agg(table_sql.c.child.distinct())]).where(cdt)
                 res = s.execute(stmt)
                 return res.scalar() or []
