@@ -105,12 +105,21 @@ def parse_territories(raw_territories):
     """
     if not raw_territories:
         return []
+    if isinstance(raw_territories, list):
+        return raw_territories
+    res = re.match(r'{(.*)}', raw_territories)
+    if res:
+        resultats = res.group(1)
+        return resultats.split(',')
     try:
         territories = json.loads(raw_territories)
     except Exception as e:
         logger.error(
-            'Failed to parse territories "{0}". {1}'.format(raw_territories, str(e))
+            'Failed to parse territories "{0}". {1}'.format(
+                raw_territories, str(e)
+            )
         )
+        return []
     if isinstance(territories, list):
         return territories
     else:
