@@ -7,6 +7,7 @@ from ckanext.harvest.harvesters.base import HarvesterBase
 import ckan.model as model
 import re
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
+from ckanext.ecospheres import helpers
 
 
 ###############Constantes & Variables ######################
@@ -86,28 +87,24 @@ class DCATfrRDFHarvester(DCATRDFHarvester):
         On peut ajouter/supprimer/modifier des métadonnées du jeux de données.
 
         '''
+        # TODO: à remplacer par un validateur ! [LL-2023.01.24]
         try:
             spatial=dataset_dict.get("spatial",None)
             if not spatial:
                 org=self.__get_organization_infos(harvest_object)
-                territories_codes=self._get_territory(org)
-                # TODO: there should be a safer way to parser this!
-                # same as helpers.get_territories_label [LL-2023.01.10]
-                res=re.match(r'{(.*)}',territories_codes)
-                resultats=res.group(1)
-                #liste des territoires de competence de l'organisation
-                departements=resultats.split(',')
+                raw_territories=self._get_territory(org)
+                territories_codes = helpers.parse_territories(raw_territories)
                 territories=[]
-                if departements:
-                    for code_dep in departements:
-                        if VocabularyReader.is_known_uri('ecospheres_territory', code_dep):
-                            territories.append({'uri': code_dep})
+                if territories_codes:
+                    for territory_code in territories_codes:
+                        if VocabularyReader.is_known_uri('ecospheres_territory', territory_code):
+                            territories.append({'uri': territory_code})
                             #TODO: ajouter algo calculate GeoJSON
-                            # spatial=VocabularyReader.get_territory_spatial_by_code_region(code_region=code_dep)
+                            # spatial=VocabularyReader.get_territory_spatial_by_code_region(code_region=territory_code)
                 dataset_dict["territory"] = territories
         except Exception as e:
-            logger.error("Erreur lors du traitement du champ territory. {}".format(str(e)))
-        self.__before_create(harvest_object,dataset_dict)
+            logger.error("Couldn't infer the dataset's territories from its organization's. {}".format(str(e)))
+        self.__before_create(harvest_object, dataset_dict)
         
     
     def __aggregate(self,dataset_dict,key):
