@@ -4,7 +4,7 @@ import click
 from ckanext.ecospheres.vocabulary.loader import load_vocab
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 
-@click.group(short_help=u'Vocabulary administration commands')
+@click.group(short_help=u'Vocabulary administration commands.')
 def vocabulary():
     pass
 
@@ -22,8 +22,8 @@ def list():
 
 @vocabulary.command()
 @click.argument('name', required=False)
-@click.option('--include', multiple=True, help='another vocabulary to load')
-@click.option('--exclude', multiple=True, help='a vocabulary not to load')
+@click.option('-i', '--include', 'include', multiple=True, help='Another vocabulary to load.')
+@click.option('-e', '--exclude', 'exclude', multiple=True, help='A vocabulary not to load.')
 def load(name=None, include=None, exclude=None):
     '''Load vocabularies into CKAN database.
 
