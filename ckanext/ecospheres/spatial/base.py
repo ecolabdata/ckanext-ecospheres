@@ -84,6 +84,26 @@ class EcospheresObjectDict(dict):
 
     """
 
+    def flat(self):
+        """Renvoie une version de l'objet qui n'utilise que les types standards de Python.
+        
+        """
+        flat_obj = {}
+        for field, value in self.items():
+            if isinstance(
+                value,
+                (
+                    EcospheresSimpleTranslationDict,
+                    EcospheresMultiTranslationsDict,
+                    EcospheresMultiValuesList,
+                    EcospheresSubfieldsList
+                )
+            ):
+                flat_obj[field] = value.flat()
+            else:
+                flat_obj[field] = value
+        return flat_obj
+
     def get_values(self, field_name, language=None):
         """Liste toutes les valeurs d'un champ du dictionnaire.
         
@@ -434,6 +454,26 @@ class EcospheresSubfieldsList(list):
         # une copie est une liste vide avec le même modèle
         return copy
 
+    def flat(self):
+        """Renvoie une version de l'objet qui n'utilise que les types standards de Python.
+        
+        """
+        flat_obj = []
+        for value in self:
+            if isinstance(
+                value,
+                (
+                    EcospheresSimpleTranslationDict,
+                    EcospheresMultiTranslationsDict,
+                    EcospheresMultiValuesList,
+                    EcospheresSubfieldsList
+                )
+            ):
+                flat_obj.append(value.flat())
+            else:
+                flat_obj.append(value)
+        return flat_obj
+
 class EcospheresSimpleTranslationDict(dict):
     """Dictionnaire de traductions (une seule valeur par langue).
     
@@ -460,6 +500,12 @@ class EcospheresSimpleTranslationDict(dict):
     
     def copy(self):
         return type(self).__call__(self.main_language)
+    
+    def flat(self):
+        """Renvoie une version de l'objet qui n'utilise que les types standards de Python.
+        
+        """
+        return dict(self)
 
 class EcospheresMultiTranslationsDict(dict):
     """Dictionnaire de traductions (plusieurs valeurs par langue).
@@ -491,6 +537,12 @@ class EcospheresMultiTranslationsDict(dict):
     
     def copy(self):
         return type(self).__call__(self.main_language)
+    
+    def flat(self):
+        """Renvoie une version de l'objet qui n'utilise que les types standards de Python.
+        
+        """
+        return dict(self)
 
 class EcospheresMultiValuesList(list):
     """Liste de valeurs littérales non traduisibles.
@@ -512,6 +564,12 @@ class EcospheresMultiValuesList(list):
 
     def copy(self):
         return type(self).__call__()
+    
+    def flat(self):
+        """Renvoie une version de l'objet qui n'utilise que les types standards de Python.
+        
+        """
+        return list(self)
 
 def schema_reader(schema_sublist, main_language=None):
     """Génère un dictionnaire vierge à partir d'une liste de champs.
