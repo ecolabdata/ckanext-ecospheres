@@ -8,7 +8,6 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
 # ---------------------------------- Onglets ---------------------------------------------
 # ----------------------------------------------------------------------------------------
 
-
 .tab_data: &tab_data
   fr: Accès aux données
   en: Data access
@@ -35,7 +34,7 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
 
 .media_type_fields: &media_type_fields
   repeating_subfields: 
-  # URI
+    # URI
     - field_name: uri
       label:
         fr:  URI
@@ -63,10 +62,9 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       label: 
         fr: Nom
         en: Name
-      preset: fluent_text
+      preset: multilingual_text
       value_type: literal
       translatable_values: True
-
     # TYPE
     # > dct:type
     # [+ DCAT-AP]
@@ -83,7 +81,6 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       known_values: require
       vocabularies:
         - adms_publisher_type
-    
     # EMAIL
     # > foaf:mbox
     # [+ GeoDCAT-AP]
@@ -96,7 +93,6 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       value_type: uri
       # TODO: ajouter un display_snippet pour l'hyperlien + suppression
       # du préfixe à l'affichage.
-    
     # PHONE
     # > foaf:phone
     # [+ GeoDCAT-AP]
@@ -109,7 +105,6 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       value_type: uri
       # TODO: ajouter un display_snippet pour l'hyperlien + suppression
       # du préfixe à l'affichage.
-
     # URL
     # > foaf:workplaceHomepage
     # [+ GeoDCAT-AP]
@@ -120,7 +115,6 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
         fr: Site internet
         en: Website
       value_type: uri
-
     # AFFILIATION {*}
     # > org:memberOf [-> org:Organization] / foaf:name
     # [+ GeoDCAT-AP]
@@ -128,10 +122,9 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       label: 
         fr: Appartient à
         en: Belongs to
-      preset: fluent_text
+      preset: multilingual_text
       value_type: literal
       translatable_values: True
-
     # ACRONYM {*}
     # - non exposé pour l'heure
     # - information fournie par Dido uniquement
@@ -141,9 +134,9 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       label: 
         fr: Sigle
         en: Abbreviations
+      preset: multilingual_text
       value_type: literal
       translatable_values: True
-
     # COMMENT {*}
     # - non exposé pour l'heure
     # - information fournie par Dido uniquement
@@ -152,7 +145,7 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
         fr: Commentaire
         en: Comment
       help_text: Description ou autre information relative à l'organisation.
-      preset: fluent_text
+      preset: multilingual_text
       value_type: literal
       translatable_values: True
 
@@ -166,10 +159,9 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       label:
         fr: Nom
         en: Name
-      preset: fluent_text
+      preset: multilingual_text
       value_type: literal
       translatable_values: True
-
     # EMAIL
     # > vcard:hasEmail
     # [+ GeoDCAT-AP]
@@ -181,7 +173,6 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       value_type: uri
       # TODO: ajouter un display_snippet pour l'hyperlien + suppression
       # du préfixe à l'affichage.
-
     # PHONE
     # > vcard:hasTelephone
     # [+ GeoDCAT-AP]
@@ -193,7 +184,6 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       value_type: uri
       # TODO: ajouter un display_snippet pour l'hyperlien + suppression
       # du préfixe à l'affichage.
- 
     # URL 
     # > vcard:hasURL
     # [+ GeoDCAT-AP]
@@ -203,7 +193,6 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
         en: Website
       display_snippet: link.html
       value_type: uri
-      
     # AFFILIATION {*}
     # > vcard:organization-name
     # [+ GeoDCAT-AP]
@@ -211,23 +200,24 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       label: 
         fr: Appartient à
         en: Belongs to
+      preset: multilingual_text
       value_type: literal
       translatable_values: True
-      
     # ACRONYM {*}
     - field_name: acronym
       label: 
         fr: Sigle
         en: Abbreviations
+      preset: multilingual_text
       value_type: literal
       translatable_values: True
-
     # COMMENT {*}
     - field_name: comment
       label: 
         fr: Commentaire
         en: Comment
       help_text: Description ou autre information relative à l'organisation.
+      preset: multilingual_text
       value_type: literal
       translatable_values: True
 
@@ -238,7 +228,6 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       label: 
         fr: URL
         en: URL
-    
       value_type: uri
       known_values: allow
       vocabularies:
@@ -251,9 +240,8 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
         fr: Libellé
         en: Label
       value_type: literal
+      preset: multilingual_text
       translatable_values: True
-
-
 
 # # ------------------------------------------------------------------------------------
 # # ---------------------------------- JEU DE DONNEES ----------------------------------
@@ -346,22 +334,22 @@ dataset_fields:
   help_text: Périodes décrites par le jeu de données.
   value_type: node
   repeating_subfields:
-  # START_DATE
-  # > dcat:startDate
-  - field_name: start_date
-    preset: fr_date
-    label: 
-      fr: Date de début
-      en: Start date
-    value_type: literal
-  # END_DATE
-  # > dcat:endDate
-  - field_name: end_date
-    preset: fr_date
-    label:
-      fr: Date de fin
-      en: End date
-    value_type: literal
+    # START_DATE
+    # > dcat:startDate
+    - field_name: start_date
+      preset: fr_date
+      label: 
+        fr: Date de début
+        en: Start date
+      value_type: literal
+    # END_DATE
+    # > dcat:endDate
+    - field_name: end_date
+      preset: fr_date
+      label:
+        fr: Date de fin
+        en: End date
+      value_type: literal
 
 # MODIFIED
 # > dct:modified
@@ -490,7 +478,6 @@ dataset_fields:
           known_values: require
           vocabularies:
             - inspire_role
-    
     # AGENT [{}]
     # > prov:agent -> prov:Agent
     - field_name: agent
@@ -506,13 +493,16 @@ dataset_fields:
             fr: Nom
             en: Name
           translatable_values: True
+          preset: multilingual_text
           value_type: literal
+        # EMAIL
         # > foaf:mbox 
         - field_name: email
           label:
             fr: Courriel
             en: Mail
           value_type: uri
+        # URI
         # > foaf:homePage
         - field_name: url
           label: 
@@ -545,17 +535,20 @@ dataset_fields:
       display_snippet: null
       value_type: uri
     # URL
+    # TODO: calculé à la volée plutôt que stocké?
     - field_name: url
       label:
         fr: URL
         en: URL
       value_type: uri
     # TITLE {*}
+    # TODO: calculé à la volée plutôt que stocké?
     - field_name: title
       label:
         fr: Titre
         en: Title
       value_type: literal
+      preset: multilingual_text
       translatable_values: True
 
 # SERIES_MEMBER {}
@@ -582,20 +575,21 @@ dataset_fields:
         en: Dataset URI
       display_snippet: null
       value_type: uri
-
     # URL
+    # TODO: calculé à la volée plutôt que stocké?
     - field_name: url
       label:
         fr: URL
         en: URL
       value_type: uri
-
     # TITLE {*}
+    # TODO: calculé à la volée plutôt que stocké?
     - field_name: title
       label:
         fr: Titre
         en: Title
       value_type: literal
+      preset: multilingual_text
       translatable_values: True
 
 # ------ Références ------
@@ -638,19 +632,14 @@ dataset_fields:
     en:  Documentation
   value_type: node or uri
   tab: *tab_docs
-
   repeating_subfields:
-
     # URI
     - field_name: uri
       label: 
         fr: URL
         en: URL
       display_snippet: null
-
       value_type: uri
-
-
     # TITLE {*}
     # > dct:title
     # [+ GeoDCAT-AP]
@@ -658,11 +647,9 @@ dataset_fields:
       label: 
         fr: Titre
         en: Title
-      preset: fluent_text
+      preset: multilingual_text
       value_type: literal
       translatable_values: True
-
-
     # DESCRIPTION {*}
     # > dct:description
     # [+ GeoDCAT-AP]
@@ -673,8 +660,6 @@ dataset_fields:
       preset: fluent_markdown
       value_type: literal
       translatable_values: True
-
-
     # URL 
     # > dcat:accessURL
     # [X]
@@ -687,8 +672,6 @@ dataset_fields:
       display_snippet: url_access.html
       value_type: uri
       multiple_values: True
-
-
     # MODIFIED
     # > dct:modified
     # [X]
@@ -700,8 +683,6 @@ dataset_fields:
       preset: fr_date
       help_text: Date de dernière modification du document.
       value_type: literal
-
-
     # CREATED
     # > dct:created
     # [X]
@@ -713,8 +694,6 @@ dataset_fields:
       preset: fr_date
       help_text: Date de création du document.
       value_type: literal
-
-      
     # ISSUED
     # > dct:issued
     # [X]
@@ -726,7 +705,6 @@ dataset_fields:
       preset: fr_date
       help_text: Date de publication du document.
       value_type: literal
-
     
 # # ------ Thèmes et mots clés ------
 
@@ -754,7 +732,7 @@ dataset_fields:
       vocabularies:
         - ecospheres_theme
 
-  # THEME {}
+# THEME {}
 # > dcat:theme
 # - pour les nomemclatures externes, notamment celle de la commission
 #   européenne et la nomenclature INSPIRE
@@ -792,6 +770,7 @@ dataset_fields:
     en: Keywords
   help_text: Mots-clés libres.
   preset: fluent_tags
+  tag_validators: remove_whitespace
   translatable_values: True
   multiple_values: True
   value_type: literal
@@ -809,97 +788,91 @@ dataset_fields:
   value_type: node
   tab: *tab_details
   repeating_subfields:
-
-  # MODIFIED
-  # > dct:modified
-  - field_name: modified
-    label: 
-      fr: Date de modification
-      en : Modified date
-    preset: datetime
-    help_text: Date de dernière modification des métadonnées dans le catalogue d'origine.
-    value_type: literal
-  
-  # HARVESTED
-  # - hors DCAT, affiché dans CKAN mais non exposé
-  - field_name: harvested
-    label: 
-      fr: Date de moissonnage
-      en : Harvest date
-    preset: datetime
-    help_text: Date du dernier moissonnage de la fiche de métadonnées.
-    value_type: literal
-
-  # LANGUAGE {}
-  # > dct:language
-  # [+ DCAT-AP]
-  # - stockage et exposition sous la forme d'une liste d'URI
-  # - affichage des étiquettes, obtenues en interrogeant les URI,
-  #   qui sont présumées pointer sur un registre RDF.
-  - field_name: language
-    label: 
-      fr: Langues
-      en: language
-    display_snippet: language_fr.html
-    help_text: Langues de rédaction des métadonnées.
-    multiple_values: True
-    value_type: uri
-    repeating_subfields:
-      # URI
-      - field_name: uri
-        label: 
-          fr: URI
-          en: URI
-        value_type: uri
-        known_values: require
-        vocabularies:
-          - eu_language
-  
-  # IDENTIFIER 
-  # > dct:identifier
-  - field_name: identifier
-    label:
-      fr: Identifiant
-      en: Identifiant
-    display_snippet: null
-    help_text: Identifiant de la fiche de métadonnées.
-    value_type: literal
-  
-  # CONTACT_POINT [{}]
-  # > dcat:contactPoint -> vcard:Kind
-  - field_name: contact_point
-    label:
-      fr: Points de contact
-      en: Contact point
-    repeating_label: Point de contact
-    help_text: Entité à contacter pour obtenir des informations sur les métadonnées.
-    value_type: node
-    <<: *common_contact_fields
-  
-  # IN_CATALOG [{}]
-  # > dcat:inCatalog -> dcat:Catalog
-  - field_name: in_catalog
-    label:
-      fr: Catalogue source
-      en: Source catalog
-    value_type: node
-    repeating_subfields:
-    # TITLE {*}
-    # > dct:title
-    - field_name: title
-      label:
-        fr: Nom
-        en: Name
+    # MODIFIED
+    # > dct:modified
+    - field_name: modified
+      label: 
+        fr: Date de modification
+        en : Modified date
+      preset: fr_date
+      help_text: Date de dernière modification des métadonnées dans le catalogue d'origine.
       value_type: literal
-      translatable_values: True
-    # HOMEPAGE
-    # > foaf:homepage
-    - field_name: homepage
-      label:
-        fr: URL
-        en: URL
+    # HARVESTED
+    # - hors DCAT, affiché dans CKAN mais non exposé
+    - field_name: harvested
+      label: 
+        fr: Date de moissonnage
+        en : Harvest date
+      preset: fr_date
+      help_text: Date du dernier moissonnage de la fiche de métadonnées.
+      value_type: literal
+    # LANGUAGE {}
+    # > dct:language
+    # [+ DCAT-AP]
+    # - stockage et exposition sous la forme d'une liste d'URI
+    # - affichage des étiquettes, obtenues en interrogeant les URI,
+    #   qui sont présumées pointer sur un registre RDF.
+    - field_name: language
+      label: 
+        fr: Langues
+        en: language
+      display_snippet: language_fr.html
+      help_text: Langues de rédaction des métadonnées.
+      multiple_values: True
       value_type: uri
-
+      repeating_subfields:
+        # URI
+        - field_name: uri
+          label: 
+            fr: URI
+            en: URI
+          value_type: uri
+          known_values: require
+          vocabularies:
+            - eu_language
+    # IDENTIFIER 
+    # > dct:identifier
+    - field_name: identifier
+      label:
+        fr: Identifiant
+        en: Identifiant
+      display_snippet: null
+      help_text: Identifiant de la fiche de métadonnées.
+      value_type: literal
+    # CONTACT_POINT [{}]
+    # > dcat:contactPoint -> vcard:Kind
+    - field_name: contact_point
+      label:
+        fr: Points de contact
+        en: Contact point
+      repeating_label: Point de contact
+      help_text: Entité à contacter pour obtenir des informations sur les métadonnées.
+      value_type: node
+      <<: *common_contact_fields
+    # IN_CATALOG [{}]
+    # > dcat:inCatalog -> dcat:Catalog
+    - field_name: in_catalog
+      label:
+        fr: Catalogue source
+        en: Source catalog
+      value_type: node
+      repeating_subfields:
+        # TITLE {*}
+        # > dct:title
+        - field_name: title
+          label:
+            fr: Nom
+            en: Name
+          value_type: literal
+          translatable_values: True
+          preset: multilingual_text
+        # HOMEPAGE
+        # > foaf:homepage
+        - field_name: homepage
+          label:
+            fr: URL
+            en: URL
+          value_type: uri
 
 # # ------ Couverture spatiale ------
 
@@ -931,54 +904,51 @@ dataset_fields:
   multiple_values: True
   display_snippet: spatial_coverage.html
   repeating_subfields:
-  # URI
-  - field_name: uri
-    label: 
-      fr: URL
-      en: URL
-    value_type: uri
-    known_values: require
-    vocabularies:
-      - eu_administrative_territory_unit
-      - insee_official_geographic_code
-      - insee_individual_territories
-
-  # IN_SCHEME
-  # > skos:inScheme
-  # [+ GeoDCAT-AP]
-  - field_name: in_scheme
-    label: 
-      fr: Index géographique
-      en: Gazetteer
-    display_snippet: link.html
-    display_property: skos:prefLabel
-    help_text: Type de lieu, index de référence pour l'identifiant (commune, département...).
-    value_type: uri
-    known_values: require
-    vocabularies:
-      - insee_gazetteer
-
-  # IDENTIFIER
-  # > dct:identifier
-  # [+ GeoDCAT-AP]
-  - field_name: identifier
-    label: 
-      fr: Code géographique
-      en: Geographic identifier
-    help_text: Code du département, code INSEE de la commune, etc.
-    value_type: literal
-
-    
-  # LABEL {*}
-  # > skos:prefLabel
-  # [+ GeoDCAT-AP]
-  - field_name: label
-    label:
-      fr:  Libellé
-      en:  Geographic name
-    help_text: Dénomination explicite du lieu.
-    translatable_values: True
-    value_type: literal
+    # URI
+    - field_name: uri
+      label: 
+        fr: URL
+        en: URL
+      value_type: uri
+      known_values: require
+      vocabularies:
+        - eu_administrative_territory_unit
+        - insee_official_geographic_code
+        - insee_individual_territories
+    # IN_SCHEME
+    # > skos:inScheme
+    # [+ GeoDCAT-AP]
+    - field_name: in_scheme
+      label: 
+        fr: Index géographique
+        en: Gazetteer
+      display_snippet: link.html
+      display_property: skos:prefLabel
+      help_text: Type de lieu, index de référence pour l'identifiant (commune, département...).
+      value_type: uri
+      known_values: require
+      vocabularies:
+        - insee_gazetteer
+    # IDENTIFIER
+    # > dct:identifier
+    # [+ GeoDCAT-AP]
+    - field_name: identifier
+      label: 
+        fr: Code géographique
+        en: Geographic identifier
+      help_text: Code du département, code INSEE de la commune, etc.
+      value_type: literal
+    # LABEL {*}
+    # > skos:prefLabel
+    # [+ GeoDCAT-AP]
+    - field_name: label
+      label:
+        fr:  Libellé
+        en:  Geographic name
+      help_text: Dénomination explicite du lieu.
+      translatable_values: True
+      preset: multilingual_text
+      value_type: literal
 
 # SPATIAL
 # - utilisé par ckanext-spatial pour la prévisualisation cartographique
@@ -1010,6 +980,7 @@ dataset_fields:
   multiple_values: True
   value_type: uri
   repeating_subfields:
+    # URI
     - field_name: uri
       label: 
         fr: URI
@@ -1033,6 +1004,7 @@ dataset_fields:
   multiple_values: True
   value_type: uri
   repeating_subfields:
+    # URI
     - field_name: uri
       label: 
         fr: URI
@@ -1041,7 +1013,6 @@ dataset_fields:
       known_values: require
       vocabularies:
         - ecospheres_territory
-
 
 # # ------- Etc. ------
 
@@ -1060,28 +1031,29 @@ dataset_fields:
   tab: *tab_details
   display_snippet: access_rights.html
   repeating_subfields:
-  # URI
-  - field_name: uri
-    label: 
-      fr: URL
-      en: URL
-    value_type: uri
-    known_values: require
-    vocabularies:
-      - inspire_limitation_on_public_access
-      - eu_access_right
-  # LABEL {*}
-  # > rdfs:label
-  # [+ GeoDCAT-AP]
-  - field_name: label
-    label: 
-      fr: Mention
-      en: Mention
-    help_text: >
-      Description des contraintes réglementaires qui limitent l'accès
-      aux données et des modalités pratiques pour les obtenir.
-    translatable_values: True
-    value_type: literal
+    # URI
+    - field_name: uri
+      label: 
+        fr: URL
+        en: URL
+      value_type: uri
+      known_values: require
+      vocabularies:
+        - inspire_limitation_on_public_access
+        - eu_access_right
+    # LABEL {*}
+    # > rdfs:label
+    # [+ GeoDCAT-AP]
+    - field_name: label
+      label: 
+        fr: Mention
+        en: Mention
+      help_text: >
+        Description des contraintes réglementaires qui limitent l'accès
+        aux données et des modalités pratiques pour les obtenir.
+      translatable_values: True
+      preset: multilingual_markdown
+      value_type: literal
 
 # RESTRICTED_ACCESS
 # - non exposé dans l'export DCAT, utilisé pour l'élément
@@ -1194,11 +1166,14 @@ dataset_fields:
 # PROVENANCE [{*}]
 # > dct:provenance [-> dct:ProvenanceStatement] / rdfs:label
 # [+ DCAT-AP]
+# TODO: meilleur preset, qui respecte la multiplicité,
+# mais reconnaît le Markdown
 - field_name: provenance
   label: 
     fr: Généalogie
     en: Genealogy
-  display_snippet: multiple_text.html
+  preset: fluent_tags
+  tag_validators: remove_whitespace
   help_text: Informations sur les sources et méthodes de production des données.
   value_type: literal
   multiple_values: True
@@ -1221,7 +1196,7 @@ dataset_fields:
   label: 
     fr: Notes de version
     en: Release Notes
-  display_snippet: markdown.html
+  preset: fluent_markdown
   help_text: Différences entre la version courante des données et les versions antérieures.
   translatable_values: True
   value_type: literal
@@ -1304,12 +1279,14 @@ dataset_fields:
   value_type: node
   tab: *tab_export
   repeating_subfields:
+    # FORMAT
     - field_name: format
       label: 
         fr: Format
         en: Format
       value_type: node or uri
       <<: *media_type_fields
+    # DOWNLOAD_URI
     - field_name: download_url
       label:
         fr:  Téléchargement
@@ -1327,7 +1304,6 @@ dataset_fields:
   display_snippet: link.html
   value_type: uri
   tab: *tab_export
-
 
 # ------------------------------------------------------------------------
 # ------------------------------ RESSOURCES ------------------------------
@@ -1374,7 +1350,7 @@ resource_fields:
   label:
     fr: Nom
     en: Name
-  preset: fluent_text
+  preset: multilingual_text
   translatable_values: True
   value_type: literal
 
@@ -1424,7 +1400,6 @@ resource_fields:
   # display_snippet: resource_format_autocomplete
   preset: url
 
-
 # SERVICE_CONFORMS_TO [{}]
 # > dcat:accessService [-> dcat:DataService] / dct:conformsTo
 # - pour spécifier le protocole/standard auquel se conforme le
@@ -1438,7 +1413,6 @@ resource_fields:
     le service qui met à disposition la ressource.
   value_type: node or uri
   display_snippet: service_conforms_to.html
-
   <<: *standard_fields
 
 # RIGHTS {*}
@@ -1451,7 +1425,7 @@ resource_fields:
     Mention rappelant les droits de propriété intellectuelle sur
     les données, à faire apparaître en cas de réutilisation de la
     ressource.
-  preset: print_text
+  preset: multilingual_markdown
   translatable_values: True
   value_type: literal
 
@@ -1468,40 +1442,40 @@ resource_fields:
   value_type: node or uri
   display_snippet: licence_fr.html
   repeating_subfields:
-  # URI
-  - field_name: uri
-    label:
-      fr: URI
-      en: URI
-    value_type: uri
-    known_values: require
-    vocabularies:
-      - eu_licence
-      - spdx_license
-  # TYPE []
-  # > dct:type
-  # [+ DCAT-AP]
-  - field_name: type
-    label: 
-      fr: Type
-      en: Type
-    help_text: Caractéristiques de la licence.
-    multiple_values: True
-    value_type: uri
-    known_values: require
-    vocabularies:
-      - adms_licence_type
-  # LABEL {*}
-  # > rdfs:label
-  # [+ GeoDCAT-AP]
-  - field_name: label
-    label: 
-      fr: Termes
-      en: Terms
-    help_text: Termes de la licence.
-    preset: fluent_text
-    value_type: literal
-    translatable_values: True
+    # URI
+    - field_name: uri
+      label:
+        fr: URI
+        en: URI
+      value_type: uri
+      known_values: require
+      vocabularies:
+        - eu_licence
+        - spdx_license
+    # TYPE []
+    # > dct:type
+    # [+ DCAT-AP]
+    - field_name: type
+      label: 
+        fr: Type
+        en: Type
+      help_text: Caractéristiques de la licence.
+      multiple_values: True
+      value_type: uri
+      known_values: require
+      vocabularies:
+        - adms_licence_type
+    # LABEL {*}
+    # > rdfs:label
+    # [+ GeoDCAT-AP]
+    - field_name: label
+      label: 
+        fr: Termes
+        en: Terms
+      help_text: Termes de la licence.
+      preset: multilingual_markdown
+      value_type: literal
+      translatable_values: True
 
 # ISSUED
 # > dct:issued
@@ -1512,12 +1486,4 @@ resource_fields:
   preset: fr_date
   help_text: Date de publication de la ressource.
   value_type: literal
-
-
-
-
-
-
-
-
 
