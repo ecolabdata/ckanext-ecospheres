@@ -21,23 +21,18 @@ def list():
         click.secho('\n'.join(vocabularies), fg=u'green')
 
 @vocabulary.command()
-@click.argument('name', required=False)
-@click.option('-i', '--include', 'include', multiple=True, help='Another vocabulary to load.')
-@click.option('-e', '--exclude', 'exclude', multiple=True, help='A vocabulary not to load.')
-def load(name=None, include=None, exclude=None):
+@click.argument(u'name', required=False, nargs=-1)
+@click.option(u'-e', u'--exclude', u'exclude', multiple=True, help=u'A vocabulary not to load.')
+def load(name, exclude):
     '''Load vocabularies into CKAN database.
 
     To load all vocabularies:
 
         >>> ckan -c ckan.ini vocabulary load
     
-    To load one vocabulary:
+    To load some vocabularies:
 
-        >>> ckan -c ckan.ini vocabulary load ecospheres_theme
-
-    To load several vocabularies:
-
-        >>> ckan -c ckan.ini vocabulary load ecospheres_theme --include ecospheres_territory --include adms_publisher_type
+        >>> ckan -c ckan.ini vocabulary load ecospheres_theme ecospheres_territory
     
     To load all vocabularies but two:
 
@@ -45,28 +40,22 @@ def load(name=None, include=None, exclude=None):
 
     Parameters
     ----------
-    name : str, optional
-        Name of one vocabulary to load into the database, ie its
+    name : list(str), optional
+        Names of vocabularies to load into the database, ie their
         ``name`` property in ``vocabularies.yaml``.
         If not provided, all available vocabularies are loaded.
-    include : list(str), optional
-        Names of the vocabularies to load. If `name` and
-        `include` are used, both will be considered.
     exclude : list(str), optional
         Names of the vocabularies that shall not be loaded.
-        If `exclude` is used simultaneously with `name` or
-        `include`, it will exclude vocabularies from their
-        list.
+        If `exclude` is used simultaneously with `name`, it will
+        exclude vocabularies from this list.
 
     '''
     click.secho('Loading vocabularies...', fg=u'green')
-    if include:
-        include = list(include)
-        if name and not name in include:
-            include.append(name)
+    _exclude = []
     if exclude:
-        exclude = list(exclude)
-    report = load_vocab(vocab_list=include or name, exclude=exclude)
+        for ex in exclude:
+            _exclude.append(ex)
+    report = load_vocab(vocab_list=name, exclude=_exclude)
     if not report:
         click.secho('No vocabulary has been loaded', fg=u'green')
     else:
