@@ -67,6 +67,7 @@ et :py:meth:``EcospheresObjectDict.new_item``.
 """
 
 MAIN_LANGUAGE = 'fr'
+LANGUAGES = ('fr', 'en')
 
 class EcospheresObjectDict(dict):
     """Dictionnaire contenant les métadonnées qui décrivent un objet CKAN.
@@ -477,6 +478,10 @@ class EcospheresSubfieldsList(list):
 class EcospheresSimpleTranslationDict(dict):
     """Dictionnaire de traductions (une seule valeur par langue).
     
+    Le dictionnaire est initialisé avec des chaînes de caractères
+    vides pour les langues de :py:data:`LANGUAGES`, si cette liste
+    n'est pas vide.
+
     Les valeurs associées aux clés des :py:class:`EcospheresObjectDict`
     représentant des métadonnées admettant une unique valeur traduisible
     dans plusieurs langues sont de type :py:class:`EcospheresSimpleTranslationDict`.
@@ -485,6 +490,8 @@ class EcospheresSimpleTranslationDict(dict):
 
     def __init__(self, main_language=None):
         self.main_language = main_language or MAIN_LANGUAGE
+        for language in LANGUAGES:
+            self[language] = ''
     
     def add_item(self, value, language=None):
         if not value:
@@ -510,6 +517,10 @@ class EcospheresSimpleTranslationDict(dict):
 class EcospheresMultiTranslationsDict(dict):
     """Dictionnaire de traductions (plusieurs valeurs par langue).
     
+    Le dictionnaire est initialisé avec listes vides pour
+    les langues de :py:data:`LANGUAGES`, si cette liste
+    n'est pas vide.
+
     Les valeurs associées aux clés des :py:class:`EcospheresObjectDict`
     représentant des métadonnées admettant plusieurs valeurs traduisibles
     sont de type :py:class:`EcospheresMultiTranslationsDict`.
@@ -518,6 +529,8 @@ class EcospheresMultiTranslationsDict(dict):
 
     def __init__(self, main_language=None):
         self.main_language = main_language or MAIN_LANGUAGE
+        for language in LANGUAGES:
+            self[language] = []
     
     def add_item(self, value, language=None):
         if not value:
