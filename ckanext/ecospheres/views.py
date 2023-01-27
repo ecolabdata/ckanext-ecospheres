@@ -1,6 +1,6 @@
 import logging
 
-from ckan.model import GroupExtra, Group,Session as Session_CKAN
+import ckan.plugins.toolkit as toolkit
 from ckanext.ecospheres.maps import TYPE_ADMINISTRATION
 
 logger = logging.getLogger(__name__)
@@ -39,37 +39,49 @@ def organizations_by_admin_type():
 
     """
     try:
-        list_of_organizations_as_dict=dict()
-        organizations_as_dict=dict()
-    
-        groups = Session_CKAN.query(Group).filter_by(state='active').all()
+        orgs_dict = {}
+        offset = 0
+        orgs = []
+        while True:
+            tp_orgs = toolkit.get_action('organization_list')(
+                data_dict={
+                    'all_fields': True,
+                    'include_extras': True,
+                    'include_dataset_count': True,
+                    'offset': offset,
+                    'limit': 25
+                }
+            )
+            if tp_orgs:
+                orgs += tp_orgs
+                offset += 25
+            else:
+                break
+        
+        if not orgs:
+            return {"message": "No active organization"}
+            
+        for org in orgs:
+            org_dict = {}
+            org_type = ''
+            for prop in (
+                'name', 'title', 'description', 'created',
+                'image_url', 'package_count'
+            ):
+                org_dict[prop] = org[prop]
+            for extra in org.get('extras', []):
+                if extra['key'] == 'Type':
+                    org_type = extra['value']
+                org_dict[extra['key']] = extra['value']
+            org_dict['count'] = -1
+            org_type_label = TYPE_ADMINISTRATION.get(org_type, 'Autre')
+            orgs_dict.setdefault(org_type_label, {})
+            orgs_dict[org_type_label].setdefault('orgs', [])
+            orgs_dict[org_type_label]['orgs'].append(org_dict)
+            orgs_dict[org_type_label]['count'] = -1
 
-        if not groups:
-            return {"message":"Liste des organisations vide"} 
-        for group in groups:
-            organizations_as_dict.setdefault(group.id,{})
-            organizations_as_dict[group.id]["name"] = group.name
-            organizations_as_dict[group.id]["title"] = group.title
-            organizations_as_dict[group.id]["description"] = group.description
-            organizations_as_dict[group.id]["created"] = group.created
-            organizations_as_dict[group.id]["image_url"] = group.image_url
-            organizations_as_dict[group.id]["count"] = -1
-
-        groups_details = Session_CKAN.query(GroupExtra).all()
-
-        for group_details in groups_details:
-            if group_details.group_id not in organizations_as_dict:
-                continue
-            organizations_as_dict[group_details.group_id][group_details.key] = group_details.value
-
-        for org in organizations_as_dict:
-            list_of_organizations_as_dict.setdefault(TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']],{})
-            list_of_organizations_as_dict[TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]].setdefault("orgs",[])
-            list_of_organizations_as_dict[TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]]["orgs"].append(organizations_as_dict[org])
-            list_of_organizations_as_dict[TYPE_ADMINISTRATION[organizations_as_dict[org]['Type']]]["count"] = -1
-
-        return list_of_organizations_as_dict
+        return orgs_dict
     
     except Exception as e:
-        logger.error('Failed to create organizations view'.format(str(e)))
+        logger.error('Failed to create the view of organizations by administration type. {}'.format(str(e)))
         return {}
