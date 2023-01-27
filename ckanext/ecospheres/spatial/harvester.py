@@ -377,7 +377,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         # conforms_to
         # ...
 
-        return dataset_dict
+        return dataset_dict.flat()
 
         # OLD : to be deleted
 
