@@ -157,6 +157,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                     org_dict.set_value('url', org_object['contact-info'].get('online-resource'))
         
         # --- metadata's metadata ---
+        '''
         meta_dict = dataset_dict.new_item('is_primary_topic_of')
         meta_dict.set_value('harvested', datetime.now().astimezone().isoformat())
         meta_dict.set_value('modified', iso_values.get('metadata-date'))
@@ -202,7 +203,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 )
                 if attributes_page:
                     dataset_dict.set_value('attributes_page', attributes_page)
-
+        '''
         # page
         # TODO
 
