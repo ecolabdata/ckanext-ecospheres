@@ -56,6 +56,10 @@ def bbox_geojson_from_coordinates(west, east, south, north):
         A GeoJSON dump.
 
     """
+    west = float(west)
+    east = float(east)
+    north = float(north)
+    south = float(south)
     geodict = {
         'type': 'Polygon',
         'coordinates': [
