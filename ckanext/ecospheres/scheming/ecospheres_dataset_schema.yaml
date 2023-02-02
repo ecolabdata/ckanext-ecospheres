@@ -657,7 +657,7 @@ dataset_fields:
       label: 
         fr: Description
         en: Description
-      preset: fluent_markdown
+      preset: multilingual_markdown
       value_type: literal
       translatable_values: True
     # URL 
@@ -1196,7 +1196,7 @@ dataset_fields:
   label: 
     fr: Notes de version
     en: Release Notes
-  preset: fluent_markdown
+  preset: multilingual_markdown
   help_text: Différences entre la version courante des données et les versions antérieures.
   translatable_values: True
   value_type: literal
@@ -1360,7 +1360,7 @@ resource_fields:
   label: 
     fr: Description
     en: Description
-  preset: fluent_markdown
+  preset: multilingual_markdown
   translatable_values: True
   value_type: literal
 
