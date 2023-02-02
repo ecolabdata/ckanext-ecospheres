@@ -143,9 +143,24 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         if issued:=validated_dict.get("issued",None):
             search_data["issued"]=issued.replace("+00:00",'')
 
+        # Bricolage pour ne pas indexer des choses qui ne plairont pas à Solr
+        # TODO: indexer proprement ce qui doit l'être! [LL-2023.02.02]
+        for field_name in [
+            'temporal', 'contact_point', 'publisher', 'creator',
+            'rights_holder', 'qualified_attribution', 'in_series', 'series_member',
+            'landing_page', 'attributes_page', 'page', 'free_tags', 'is_primary_topic_of', 
+            'bbox', 'territory_full', 'access_rights', 'restricted_access', 'crs',
+            'conforms_to', 'accrual_periodicity', 'status', 'language', 'provenance',
+            'version', 'version_notes', 'temporal_resolution', 'spatial_resolution',
+            'equivalent_scale', 'as_inspire_xml', 'as_dcat_rdf', 'ckan_api_show',
+            'spatial_coverage', 'themes'
+        ]:
+            if field_name in search_data:
+                del search_data[field_name]
+        if extras:=search_data.get('extras'):
+            extras.clear()
+
         return search_data
-
-
     
     def before_search(self, search_params):
         """
