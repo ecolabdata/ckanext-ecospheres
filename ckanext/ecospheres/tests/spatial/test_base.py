@@ -4,7 +4,8 @@ from builtins import object
 from ckanext.ecospheres.spatial.base import (
     EcospheresDatasetDict, EcospheresSubfieldsList,
     EcospheresSimpleTranslationDict, EcospheresMultiTranslationsDict,
-    EcospheresMultiValuesList, EcospheresObjectDict
+    EcospheresMultiValuesList, EcospheresObjectDict, 
+    EcospheresSingleSubfieldList
 )
 
 
@@ -40,6 +41,15 @@ SIMPLE_DATASET_SCHEMA = {
                 },
                 {
                     'field_name': 'email'
+                }
+            ]
+        },
+        {
+            # métadonnées imbriquées, un seul sous-champ
+            'field_name': 'publisher',
+            'repeating_subfields': [
+                {
+                    'field_name': 'id'
                 }
             ]
         }
@@ -192,12 +202,15 @@ class TestEcospheresDatasetDict(object):
         # champ admettant une unique valeur traduisible
         dataset_dict.set_value('title', 'Nom', 'fr')
         dataset_dict.set_value('title', None, 'fr')
-        assert {k: v for k, v in dataset_dict['title'].items()} == {'fr': 'Nom'}
+        dataset_dict.set_value('title', None, 'it')
+        assert {k: v for k, v in dataset_dict['title'].items()} == {'en': '', 'fr': 'Nom'}
 
         # champ admettant plusieurs valeurs traduisibles
         dataset_dict.set_value('free_tags', 'keyword 1', 'en')
         dataset_dict.set_value('free_tags', None, 'en')
-        assert {k: [v for v in l] for k, l in dataset_dict['free_tags'].items()} == {'en': ['keyword 1']}
+        assert {
+            k: [v for v in l] for k, l in dataset_dict['free_tags'].items()
+        } == {'en': ['keyword 1'], 'fr': []}
 
     def test_remove_values_from_dict_field(self):
         """Vérifie que la suppression des valeurs des champs fonctionne correctement."""
@@ -225,32 +238,65 @@ class TestEcospheresDatasetDict(object):
         dataset_dict.delete_values('title', language='es')
         assert len(dataset_dict['title']) == 3
 
-        # ... en spécifiant une langue référencée
+        # ... en spécifiant une langue référencée et dans la liste des
+        # langues obligatoires
         dataset_dict.delete_values('title', language='en')
-        assert {k: v for k, v in dataset_dict['title'].items()} == {'fr': 'Titre', 'it': 'Titolo'}
+        assert {k: v for k, v in dataset_dict['title'].items()} == {
+            'en': '', 'fr': 'Titre', 'it': 'Titolo'
+        }
+        dataset_dict.set_value('title', 'Title', 'en')
 
+        # ... en spécifiant une langue référencée et hors liste des
+        # langues obligatoires
+        dataset_dict.delete_values('title', language='it')
+        assert {k: v for k, v in dataset_dict['title'].items()} == {
+            'en': 'Title', 'fr': 'Titre'
+        }
+        dataset_dict.set_value('title', 'Titolo', 'it')
+        
         # ... sans spécifier de langue
         dataset_dict.delete_values('title')
-        assert len(dataset_dict['title']) == 0
+        assert len(dataset_dict['title']) == 2
+        assert {k: v for k, v in dataset_dict['title'].items()} == {
+            'en': '', 'fr': ''
+        }
 
         # champ admettant plusieurs valeurs traduisibles
         dataset_dict.set_value('free_tags', ['keyword 1', 'keyword 2'], 'en')
         dataset_dict.set_value('free_tags', ['mot-clé 3'], 'fr')
-        assert len(dataset_dict['free_tags']) == 2
+        dataset_dict.set_value('free_tags', ['palabra 4', 'palabra 5'], 'es')
+        assert len(dataset_dict['free_tags']) == 3
 
         # ... en spécifiant une langue non référencée
-        dataset_dict.delete_values('free_tags', language='es')
-        assert len(dataset_dict['free_tags']) == 2
+        dataset_dict.delete_values('free_tags', language='it')
+        assert len(dataset_dict['free_tags']) == 3
 
-        # ... en spécifiant une langue référencée
+        # ... en spécifiant une langue référencée et dans la liste des langues
+        # obligatoires
         dataset_dict.delete_values('free_tags', language='fr')
         assert {k: [v for v in l] for k, l in dataset_dict['free_tags'].items()} == {
-            'en': ['keyword 1', 'keyword 2']
+            'en': ['keyword 1', 'keyword 2'],
+            'es': ['palabra 4', 'palabra 5'],
+            'fr': []
+        }
+        dataset_dict.set_value('free_tags', ['mot-clé 3'], 'fr')
+
+        # ... en spécifiant une langue référencée et hors liste des langues
+        # obligatoires
+        dataset_dict.delete_values('free_tags', language='es')
+        assert {k: [v for v in l] for k, l in dataset_dict['free_tags'].items()} == {
+            'en': ['keyword 1', 'keyword 2'],
+            'fr': ['mot-clé 3']
         }
 
         # ... sans spécifier de langue
         dataset_dict.delete_values('free_tags')
-        assert len(dataset_dict['free_tags']) == 0        
+        assert len(dataset_dict['free_tags']) == 2
+        assert {k: [v for v in l] for k, l in dataset_dict['free_tags'].items()} == {
+            'en': [],
+            'fr': []
+        }
+
 
     def test_remove_all_resources_from_dataset_dict(self):
         """Contrôle le bon déroulement de la suppression des ressources."""
@@ -364,48 +410,45 @@ class TestEcospheresDatasetDict(object):
             'mot', 'clé'
         ]
 
-    def test_get_values_from_first_subfield(self):
-        """Teste la récupération des valeurs pour un champ avec sous-champs."""
+    def test_get_values_from_single_subfield(self):
+        """Teste la récupération des valeurs pour un champ avec un unique sous-champ."""
 
         dataset_dict = EcospheresDatasetDict(SIMPLE_DATASET_SCHEMA)
 
-        assert dataset_dict.get_values('creator') == []
+        assert isinstance(dataset_dict['creator'], EcospheresSubfieldsList)
+        assert isinstance(dataset_dict['publisher'], EcospheresSubfieldsList)
+        assert not isinstance(dataset_dict['creator'], EcospheresSingleSubfieldList)
+        assert isinstance(dataset_dict['publisher'], EcospheresSingleSubfieldList)
 
-        creator_dict_1 = dataset_dict.new_item('creator')
-        creator_dict_1.set_value('name', 'Someone', language='en')
-        creator_dict_1.set_value('name', "Quelqu'un", language='fr')
-        creator_dict_1.set_value('email', 'mailto:someone@something.org')
-        creator_dict_2 = dataset_dict.new_item('creator')
-        creator_dict_2.set_value('name', 'Someone else', language='en')
-        creator_dict_2.set_value('email', 'mailto:someone-else@something.org')
-        creator_dict_3 = dataset_dict.new_item('creator')
-        creator_dict_3.set_value('email', 'mailto:mister-x@something.org')
+        assert dataset_dict.get_values('publisher') == []
 
-        assert dataset_dict.get_values('creator') == ['Someone', "Quelqu'un", 'Someone else']
-        assert dataset_dict.get_values('creator', language='en') == ['Someone', 'Someone else']
+        creator_dict_1 = dataset_dict.new_item('publisher')
+        creator_dict_1.set_value('id', 'Someone')
+        creator_dict_2 = dataset_dict.new_item('publisher')
+        creator_dict_2.set_value('id', 'Someone else')
 
-    def test_set_value_of_first_subfield(self):
-        """Teste le raccourci pour la mise à jour d'un champ avec sous-champs."""
+        assert dataset_dict.get_values('publisher') == ['Someone', 'Someone else']
+
+    def test_set_value_of_single_subfield(self):
+        """Teste le raccourci pour la mise à jour d'un champ avec un unique sous-champ."""
 
         dataset_dict = EcospheresDatasetDict(SIMPLE_DATASET_SCHEMA)
 
-        dataset_dict.set_value('creator', 'Someone', language='en')
-        assert dataset_dict['creator'][0].get_values('name') == ['Someone']
-        assert dataset_dict['creator'][0].get_values('name', language='en') == ['Someone']
+        dataset_dict.set_value('publisher', 'Someone')
+        assert dataset_dict['publisher'][0].get_values('id') == ['Someone']
 
-        dataset_dict.set_value('creator', ["Quelqu'un", "d'autre"], language='fr')
-        assert dataset_dict['creator'][0].get_values('name', language='fr') == []
-        assert dataset_dict['creator'][1].get_values('name') == ["Quelqu'un"]
-        assert dataset_dict['creator'][1].get_values('name', language='fr') == ["Quelqu'un"]
-        assert dataset_dict['creator'][2].get_values('name') == ["d'autre"]
-        assert dataset_dict['creator'][2].get_values('name', language='fr') == ["d'autre"]
+        dataset_dict.set_value('publisher', ["Quelqu'un", "d'autre"], language='fr')
+        assert dataset_dict['publisher'][1].get_values('id') == ["Quelqu'un"]
+        assert dataset_dict['publisher'][2].get_values('id') == ["d'autre"]
 
-        assert len(dataset_dict['creator']) == 3
-        dataset_dict.set_value('creator', [], language='fr')
-        assert len(dataset_dict['creator']) == 3
-        dataset_dict.set_value('creator', None)
-        assert len(dataset_dict['creator']) == 3
+        assert len(dataset_dict['publisher']) == 3
+        dataset_dict.set_value('publisher', [])
+        assert len(dataset_dict['publisher']) == 3
+        dataset_dict.set_value('publisher', None)
+        assert len(dataset_dict['publisher']) == 3
 
+        dataset_dict.set_value('publisher', "Quelqu'un")
+        assert len(dataset_dict['publisher']) == 3
 
     def test_copies_are_not_linked(self):
         """Vérifie qu'il ne reste aucun lien résiduel entre deux copies de dictionnaires de métadonnées."""
@@ -413,9 +456,9 @@ class TestEcospheresDatasetDict(object):
         original = EcospheresDatasetDict(SIMPLE_DATASET_SCHEMA)
         copy = original.copy()
 
-        original.set_value('creator', ['Someone', 'Else'])
-        assert original.get_values('creator') == ['Someone', 'Else']
-        assert copy.get_values('creator') == []
+        original.set_value('publisher', ['Someone', 'Else'])
+        assert original.get_values('publisher') == ['Someone', 'Else']
+        assert copy.get_values('publisher') == []
 
         original.set_value('title', 'Titre', 'fr')
         assert original.get_values('title') == ['Titre']
@@ -433,4 +476,28 @@ class TestEcospheresDatasetDict(object):
         assert original.get_values('version') == ['v1']
         assert copy.get_values('version') == []
 
+    def test_instances_are_not_linked(self):
+        """Vérifie qu'il ne reste aucun lien entre deux instances de la classe."""
 
+        original = EcospheresDatasetDict(SIMPLE_DATASET_SCHEMA)
+        copy = EcospheresDatasetDict(SIMPLE_DATASET_SCHEMA)
+
+        original.set_value('publisher', ['Someone', 'Else'])
+        assert original.get_values('publisher') == ['Someone', 'Else']
+        assert copy.get_values('publisher') == []
+
+        original.set_value('title', 'Titre', 'fr')
+        assert original.get_values('title') == ['Titre']
+        assert copy.get_values('title') == []
+
+        original.set_value('free_tags', ['mot 1', 'mot 2'], 'fr')
+        assert original.get_values('free_tags', language='fr') == ['mot 1', 'mot 2']
+        assert copy.get_values('free_tags') == []
+
+        original.set_value('category', ['namespace:theme1', 'namespace:theme2'])
+        assert original.get_values('category') == ['namespace:theme1', 'namespace:theme2']
+        assert copy.get_values('category') == []
+
+        original.set_value('version', 'v1')
+        assert original.get_values('version') == ['v1']
+        assert copy.get_values('version') == []
