@@ -137,10 +137,12 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 'author': 'creator',
                 'pointOfContact': 'contact_point'
                 }
+            org_couples = []
             for org_object in iso_values['responsible-organisation']:
-                if not 'role' in org_object or not 'organisation-name' in org_object:
+                org_role = org_object.get('role')
+                org_name = org_object.get('organisation-name')
+                if not org_role or not org_name or (org_role, org_name) in org_couples:
                     continue
-                org_role = org_object['role']
                 if org_role in base_role_map:
                     org_dict = dataset_dict.new_item(base_role_map[org_role])
                 else:
@@ -151,7 +153,8 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                         org_dict = qa_dict.new_item('agent')
                     else:
                         continue
-                org_dict.set_value('name', org_object['organisation-name'])
+                org_dict.set_value('name', org_name)
+                org_couples.append((org_role, org_name))
                 if 'contact-info' in org_object:
                     org_dict.set_value('email', org_object['contact-info'].get('email'))
                     org_dict.set_value('url', org_object['contact-info'].get('online-resource'))
