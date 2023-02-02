@@ -66,6 +66,9 @@ et :py:meth:``EcospheresObjectDict.new_item``.
 
 """
 
+import logging
+logger = logging.getLogger(__name__)
+
 MAIN_LANGUAGE = 'fr'
 LANGUAGES = ('fr', 'en')
 
@@ -108,10 +111,9 @@ class EcospheresObjectDict(dict):
     def get_values(self, field_name, language=None):
         """Liste toutes les valeurs d'un champ du dictionnaire.
         
-        Pour les champs avec ``repeating_subfields``, cette
-        méthode récupère les valeurs du premier des champs qui décrivent
-        l'objet (de manière récursive si ce champ a lui-même
-        des ``repeating_subfields``).
+        Cette méthode ne prend pas en charge les champs avec
+        ``repeating_subfields``, sauf s'il n'y a qu'un seul 
+        sous-champ admettant des valeurs littérales ou des URI.
 
         Parameters
         ----------
@@ -135,6 +137,7 @@ class EcospheresObjectDict(dict):
 
         """
         if not field_name in self:
+            logger.error(f'Unknown field name "{field_name}"')
             return []
         
         values = self[field_name]
@@ -142,20 +145,20 @@ class EcospheresObjectDict(dict):
         if isinstance(values, EcospheresSimpleTranslationDict):
             if language:
                 if language in values:
-                    return [values[language]]
+                    return [values[language]] if values[language] else []
                 else:
                     return []
             else:
                 res = []
                 for value in values.values():
-                    if not value in res:
+                    if value and not value in res:
                         res.append(value)
                 return res
         
         if isinstance(values, EcospheresMultiTranslationsDict):
             if language:
                 if language in values:
-                    return values[language]
+                    return [v for v in values[language] if v]
                 else:
                     return []
             else:
@@ -169,8 +172,12 @@ class EcospheresObjectDict(dict):
         if isinstance(values, EcospheresMultiValuesList):
             return values
         
-        if isinstance(values, EcospheresSubfieldsList):
+        if isinstance(values, EcospheresSingleSubfieldList):
             return values.list_values(language=language)
+        
+        if isinstance(self[field_name], EcospheresSubfieldsList):
+            logger.error(f'The method get_values cannot be used for "{field_name}"')
+            return []
 
         return [values] if values else []
 
@@ -178,12 +185,10 @@ class EcospheresObjectDict(dict):
         """Définit la valeur ou l'une des valeurs d'un champ du dictionnaire.
         
         Pour les champs avec ``repeating_subfields``, cette
-        méthode alimente le premier des champs qui décrivent
-        l'objet (de manière récursive si ce champ a lui-même
-        des ``repeating_subfields``). Il est tout à fait justifié
-        de l'utiliser quand il n'y a qu'un seul sous-champ prenant
-        des valeurs littérales ou des URI, sinon il est recommandé
-        d'utiliser :py:meth:`EcospheresObjectDict.new_item`.
+        méthode ne fonctionnera que s'il n'y a qu'un unique
+        sous-champ prenant des valeurs littérales ou des URI.
+        Sinon il est nécessaire d'utiliser la méthode
+        :py:meth:`EcospheresObjectDict.new_item`.
 
         Si le champ admet plusieurs valeurs, traduisibles ou non,
         la nouvelle valeur est ajoutée aux précédentes, sauf si
@@ -233,12 +238,16 @@ class EcospheresObjectDict(dict):
         >>> dataset_dict['title']
         {'fr': 'Mon titre'}
 
-        >>> dataset_dict.set_value('free_tag', ['Mot-clé A', 'Mot-clé A', 'Mot-clé B'], 'fr')
+        >>> dataset_dict.set_value(
+        ...     'free_tag',
+        ...      ['Mot-clé A', 'Mot-clé A', 'Mot-clé B'], 'fr'
+        ... )
         >>> dataset_dict['free_tag']
         {'fr': ['Mot-clé A', 'Mot-clé B']}
 
         """  
         if not field_name in self:
+            logger.error(f'Unknown field name "{field_name}"')
             return
         
         if isinstance(value, list):
@@ -252,8 +261,11 @@ class EcospheresObjectDict(dict):
 
         if isinstance(self[field_name], (EcospheresSimpleTranslationDict,
             EcospheresMultiTranslationsDict, EcospheresMultiValuesList,
-            EcospheresSubfieldsList)):
+            EcospheresSingleSubfieldList)):
             self[field_name].add_item(value=value, language=language)
+        elif isinstance(self[field_name], EcospheresSubfieldsList):
+            logger.error(f'The method set_value cannot be used for "{field_name}"')
+            return
         else:
             # reste le cas où le champ admet des valeurs simples
             # non traduisibles
@@ -274,6 +286,7 @@ class EcospheresObjectDict(dict):
         
         """
         if not field_name in self:
+            logger.error(f'Unknown field name "{field_name}"')
             return
         if isinstance(self[field_name], (EcospheresSimpleTranslationDict,
             EcospheresMultiTranslationsDict, EcospheresMultiValuesList,
@@ -423,6 +436,22 @@ class EcospheresSubfieldsList(list):
 
     """
 
+    def __new__(cls, model):
+        if not cls.__name__ == 'EcospheresSingleSubfieldList':
+            if len(model) == 1 and all(
+                not isinstance(
+                    model[field_name],
+                    (
+                        EcospheresSimpleTranslationDict,
+                        EcospheresMultiTranslationsDict,
+                        EcospheresMultiValuesList,
+                        EcospheresSubfieldsList
+                    )
+                ) for field_name in model
+            ):
+                return EcospheresSingleSubfieldList.__call__(model)
+        return super().__new__(cls, model)
+
     def __init__(self, model):
         self.model = model
     
@@ -433,22 +462,6 @@ class EcospheresSubfieldsList(list):
 
     def remove_items(self, *args, **kwargs):
         self.clear()
-
-    def add_item(self, value, *args, **kwargs):
-        if not value:
-            return
-        new_item = self.new_item()
-        for field_name in new_item:
-            new_item.set_value(field_name, value, *args, **kwargs)
-            break
-    
-    def list_values(self, *args, **kwargs):
-        values = []
-        for item in self:
-            for field_name in item:
-                values += item.get_values(field_name, *args, **kwargs)
-                break
-        return values
 
     def copy(self):
         copy = type(self).__call__(self.model)
@@ -474,6 +487,53 @@ class EcospheresSubfieldsList(list):
             else:
                 flat_obj.append(value)
         return flat_obj
+
+class EcospheresSingleSubfieldList(EcospheresSubfieldsList):
+    """Liste d'objets décrits par une unique métadonnée admettant des valeurs littérales ou des URI.
+    
+    Attributes
+    ----------
+    subfield : str
+        Nom de l'unique sous-champ décrivant
+        l'objet.
+
+    """
+
+    def __new__(cls, model):
+        if len(model) != 1 or any(
+            isinstance(
+                model[field_name],
+                (
+                    EcospheresSimpleTranslationDict,
+                    EcospheresMultiTranslationsDict,
+                    EcospheresMultiValuesList,
+                    EcospheresSubfieldsList
+                )
+            ) for field_name in model
+        ):
+            return EcospheresSubfieldsList.__call__(model)
+        return super().__new__(cls, model)
+
+    def __init__(self, model):
+        for field in model:
+            self.subfield = field
+            break
+        super().__init__(model)
+
+    def add_item(self, value, *args, **kwargs):
+        if not value or any(
+            item[self.subfield] == value
+            for item in self
+        ):
+            return
+        new_item = self.new_item()
+        new_item.set_value(self.subfield, value, *args, **kwargs)
+
+    def list_values(self, *args, **kwargs):
+        values = []
+        for item in self:
+            values += item.get_values(self.subfield, *args, **kwargs)
+        return values
 
 class EcospheresSimpleTranslationDict(dict):
     """Dictionnaire de traductions (une seule valeur par langue).
@@ -502,8 +562,13 @@ class EcospheresSimpleTranslationDict(dict):
     def remove_items(self, language=None):
         if not language:
             self.clear()
+            for language in LANGUAGES:
+                self[language] = ''
         elif language in self:
-            del self[language]
+            if language in LANGUAGES:
+                self[language] = ''
+            else:
+                del self[language]
     
     def copy(self):
         return type(self).__call__(self.main_language)
@@ -545,8 +610,13 @@ class EcospheresMultiTranslationsDict(dict):
     def remove_items(self, language=None):
         if not language:
             self.clear()
+            for language in LANGUAGES:
+                self[language] = []
         elif language in self:
-            del self[language]
+            if language in LANGUAGES:
+                self[language] = []
+            else:
+                del self[language]
     
     def copy(self):
         return type(self).__call__(self.main_language)
