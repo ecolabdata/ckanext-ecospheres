@@ -6,6 +6,7 @@ presets:
 - preset_name: url
   values:
     display_snippet: dcat_url.html
+
 - preset_name: print_text
   values:
     display_snippet: dcat_print_text.html
@@ -13,6 +14,7 @@ presets:
 - preset_name: fr_date
   values: 
     display_snippet: dcat_fr_date.html
+    validators: ignore_missing isodate convert_to_json_if_date
     # output_validators: timestamp_to_datetime
 
 - preset_name: fr_aggregate
@@ -23,11 +25,9 @@ presets:
   values:
     display_snippet: dcat_print_fr_documentation_json.html
 
-
 - preset_name: fr_licence
   values:
     display_snippet: dcat_fr_licence.html
-
 
 - preset_name: multilingual_text
   values: 
@@ -35,10 +35,10 @@ presets:
     validators: fluent_text
     output_validators: multilingual_text_output
 
-
 - preset_name: multilingual_markdown
   values: 
     form_snippet: fluent_markdown.html
     display_snippet: fluent_markdown.html
     validators: fluent_text
     output_validators: multilingual_text_output
+
