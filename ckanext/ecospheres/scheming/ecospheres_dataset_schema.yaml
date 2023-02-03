@@ -1129,6 +1129,7 @@ dataset_fields:
 # - stockage et exposition sous forme d'URI
 # - affichage de l'étiquette récupérée par interrogation de l'URI
 - field_name: status
+  display_snippet: accrual_periodicity.html
   label:
     fr:  Maturité
     en:  Dataset status
