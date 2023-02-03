@@ -157,10 +157,12 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 org_couples.append((org_role, org_name))
                 if 'contact-info' in org_object:
                     org_dict.set_value('email', org_object['contact-info'].get('email'))
-                    org_dict.set_value('url', org_object['contact-info'].get('online-resource'))
+                    online_resource = org_object['contact-info'].get('online-resource')
+                    if online_resource:
+                        org_dict.set_value('url', online_resource.get('url'))
         
         # --- metadata's metadata ---
-        '''
+        
         meta_dict = dataset_dict.new_item('is_primary_topic_of')
         meta_dict.set_value('harvested', datetime.now().astimezone().isoformat())
         meta_dict.set_value('modified', iso_values.get('metadata-date'))
@@ -177,7 +179,9 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 org_dict = meta_dict.new_item('contact_point')
                 if 'contact-info' in org_object:
                     org_dict.set_value('email', org_object['contact-info'].get('email'))
-                    org_dict.set_value('url', org_object['contact-info'].get('online-resource'))
+                    online_resource = org_object['contact-info'].get('online-resource')
+                    if online_resource:
+                        org_dict.set_value('url', online_resource.get('url'))
                     # TODO: le numéro de téléphone n'est pas récupéré dans 'contact-info',
                     # "gmd:phone/gmd:CI_Telephone/gmd:voice/gco:CharacterString/text()"
 
@@ -206,7 +210,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 )
                 if attributes_page:
                     dataset_dict.set_value('attributes_page', attributes_page)
-        '''
+        
         # page
         # TODO
 
@@ -289,6 +293,8 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         
         for iso_extent in iso_extents:
             spatial_coverage_uri = None
+            extent_scheme = None
+            extent_id = None
             if VocabularyReader.is_known_uri(
                 'eu_administrative_territory_unit', iso_extent
                 ):
@@ -332,7 +338,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 # whatever it is, it's not an URI, so should hopefully be readable
                 # by a human being.
                 spatial_coverage_dict = dataset_dict.new_item('spatial_coverage')
-                spatial_coverage_dict.set_value('label', extent_id)
+                spatial_coverage_dict.set_value('label', extent_id or iso_extent)
 
             if not dataset_dict.get_values('territory'):
                 # get the territories from the organization
