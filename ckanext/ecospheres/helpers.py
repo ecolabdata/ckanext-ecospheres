@@ -10,12 +10,15 @@ from ckan.lib.helpers import lang
 from ckan.lib.helpers import *
 from ckan.lib.formatters import localised_nice_date
 
+import ckan.plugins.toolkit as toolkit
+
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 from ckanext.ecospheres.maps import TYPE_ADMINISTRATION
 
 logger = logging.getLogger(__name__)
 
 LANGUAGES = {'fr', 'en'}
+TERRITORY = 'Territoire'
 
 def validate_dateformat(date_string, date_format):
     try:
@@ -178,3 +181,32 @@ def get_vocab_label_by_uri_from_list_of_vocabularies(vocabs,uri,lang=None):
             return voc_label
     return uri
 
+def get_org_territories(org_name_or_id):
+    '''Return a list of all territories associated to the given CKAN organization.
+
+    Parameters
+    ----------
+    org_name_or_id : str
+        Organization's name or identifier.
+
+    Returns
+    -------
+    list(str)
+        List of territory codes/URIs. This will
+        be an empty list if the organization doesn't
+        exist or doesn't have any associated territory.
+
+    '''
+    org = toolkit.get_action('organization_show')(
+        data_dict={
+            'id': org_name_or_id,
+            'include_extras': True
+        }
+    )
+    if not org or not 'extras' in org:
+        return []
+    for extra in org['extras']:
+        if extra.get('key') == TERRITORY:
+            raw_territories = extra.get('value')
+            return parse_territories(raw_territories) or [] 
+    return []
