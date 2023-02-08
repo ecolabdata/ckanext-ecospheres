@@ -19,6 +19,7 @@ from ckanext.ecospheres.spatial.utils import (
 )
 from ckanext.ecospheres.maps import ISO_639_2
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
+from ckanext.ecospheres.helpers import get_org_territories
 
 logger = logging.getLogger(__name__)
 
@@ -110,6 +111,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             dataset_dict.set_value('title', iso_values.get('alternate-title'))
 
         name = dataset_dict.get('name')
+        owner_org = dataset_dict.get('owner_org')
 
         # --- dates ----
         if iso_values.get('dataset-reference-date'):
@@ -338,10 +340,12 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 spatial_coverage_dict = dataset_dict.new_item('spatial_coverage')
                 spatial_coverage_dict.set_value('label', extent_id or iso_extent)
 
-            if not dataset_dict.get_values('territory'):
-                # get the territories from the organization
-                # TODO
-                pass
+        if not dataset_dict.get_values('territory'):
+            # get the territories from the organization
+            dataset_dict.set_value(
+                'territory',
+                get_org_territories(owner_org)
+            )
 
         # --- relations ---
 
