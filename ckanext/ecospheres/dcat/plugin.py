@@ -148,12 +148,13 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         for field_name in [
             'temporal', 'contact_point', 'publisher', 'creator',
             'rights_holder', 'qualified_attribution', 'in_series', 'series_member',
-            'landing_page', 'attributes_page', 'page', 'free_tags', 'is_primary_topic_of', 
+            'landing_page', 'attributes_page', 'page', 'free_tags', 
             'bbox', 'territory_full', 'access_rights', 'restricted_access', 'crs',
             'conforms_to', 'accrual_periodicity', 'status', 'language', 'provenance',
             'version', 'version_notes', 'temporal_resolution', 'spatial_resolution',
             'equivalent_scale', 'as_inspire_xml', 'as_dcat_rdf', 'ckan_api_show',
-            'spatial_coverage', 'themes'
+            'spatial_coverage', 'themes', 'record_in_catalog', 'record_contact_point',
+            'record_language'
         ]:
             if field_name in search_data:
                 del search_data[field_name]
