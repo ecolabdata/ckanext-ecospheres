@@ -162,21 +162,19 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                         org_dict.set_value('url', online_resource.get('url'))
         
         # --- metadata's metadata ---
-        
-        meta_dict = dataset_dict.new_item('is_primary_topic_of')
-        meta_dict.set_value('harvested', datetime.now().astimezone().isoformat())
-        meta_dict.set_value('modified', iso_values.get('metadata-date'))
-        meta_dict.set_value('identifier', name)
+        dataset_dict.set_value('record_harvested', datetime.now().astimezone().isoformat())
+        dataset_dict.set_value('record_modified', iso_values.get('metadata-date'))
+        dataset_dict.set_value('record_identifier', name)
 
         meta_language = iso_values.get('metadata-language')
         if meta_language:
             meta_language_uri =  VocabularyReader.get_uri_from_label('eu_language', meta_language)
             if meta_language_uri:
-                meta_dict.set_value('language', meta_language_uri)
+                dataset_dict.set_value('record_language', meta_language_uri)
 
         if iso_values.get('metadata-point-of-contact'):
             for org_object in iso_values['metadata-point-of-contact']:
-                org_dict = meta_dict.new_item('contact_point')
+                org_dict = dataset_dict.new_item('record_contact_point')
                 if 'contact-info' in org_object:
                     org_dict.set_value('email', org_object['contact-info'].get('email'))
                     online_resource = org_object['contact-info'].get('online-resource')
@@ -185,7 +183,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                     # TODO: le numéro de téléphone n'est pas récupéré dans 'contact-info',
                     # "gmd:phone/gmd:CI_Telephone/gmd:voice/gco:CharacterString/text()"
 
-        catalog_dict = meta_dict.new_item('in_catalog')
+        catalog_dict = dataset_dict.new_item('record_in_catalog')
 
         for elem in package_dict['extras']:
         # the following are "default extras" from the
