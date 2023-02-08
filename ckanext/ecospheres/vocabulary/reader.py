@@ -319,9 +319,6 @@ class VocabularyReader:
             Likewise, the method will try to find a label in 
             :py:data:`DEFAULT_LANGUAGE` if `language` has no match.
             If it doesn't work, any label of the URI may be returned.
-        case_sensitive : bool, default False
-            If ``True``, the case will be considered when
-            testing the labels.
         database : str, optional
             URL of the database where the vocabulary is stored,
             ie ``dialect+driver://username:password@host:port/database``.
