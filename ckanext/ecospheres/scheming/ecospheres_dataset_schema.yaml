@@ -24,9 +24,9 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
   fr: Contacts et acteurs
   en: Relevant parties
 
-.tab_export: &tab_export
-  fr: Export
-  en: Metadata export
+.tab_catalog: &tab_catalog
+  fr: Catalogage
+  en: Record
 
 # ----------------------------------------------------------------------------------------
 # ---------------------------------- Variables communes ----------------------------------
@@ -91,6 +91,7 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
         fr: Courriel
         en: Mail
       value_type: uri
+      display_snippet: email.html
       # TODO: ajouter un display_snippet pour l'hyperlien + suppression
       # du préfixe à l'affichage.
     # PHONE
@@ -115,6 +116,7 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
         fr: Site internet
         en: Website
       value_type: uri
+      display_snippet: link.html
     # AFFILIATION {*}
     # > org:memberOf [-> org:Organization] / foaf:name
     # [+ GeoDCAT-AP]
@@ -169,7 +171,7 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       label:
         fr: Courriel
         en: Mail
-      display_snippet: link.html
+      display_snippet: email.html
       value_type: uri
       # TODO: ajouter un display_snippet pour l'hyperlien + suppression
       # du préfixe à l'affichage.
@@ -180,7 +182,6 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       label: 
         fr: Téléphone
         en: Phone
-      display_snippet: link.html
       value_type: uri
       # TODO: ajouter un display_snippet pour l'hyperlien + suppression
       # du préfixe à l'affichage.
@@ -502,6 +503,7 @@ dataset_fields:
             fr: Courriel
             en: Mail
           value_type: uri
+          display_snippet: email.html
         # URI
         # > foaf:homePage
         - field_name: url
@@ -509,6 +511,7 @@ dataset_fields:
             fr: Site internet
             en: Website
           value_type: uri
+          display_snippet: link.html
 
 # ------- Relations -------
 # IN_SERIES {}
@@ -778,101 +781,103 @@ dataset_fields:
 
 # # ------ Métadonnées sur les métadonnées ------
 
-# IS_PRIMARY_TOPIC_OF [{}]
-# > foaf:isPrimaryTopicOf -> dcat:CatalogRecord
-# [- DCAT-AP v2]
-- field_name: is_primary_topic_of
-  label: 
-    fr: Métadonnées sur les métadonnées
-    en: Metadata about metadata
+# RECORD_IN_CATALOG [{}]
+# > foaf:isPrimaryTopicOf [-> dcat:CatalogRecord] / dcat:inCatalog -> dcat:Catalog
+- field_name: record_in_catalog
+  label:
+    fr: Catalogue source
+    en: Source catalog
   value_type: node
-  tab: *tab_details
+  tab: *tab_catalog
   repeating_subfields:
-    # MODIFIED
-    # > dct:modified
-    - field_name: modified
-      label: 
-        fr: Date de modification
-        en : Modified date
-      preset: fr_date
-      help_text: Date de dernière modification des métadonnées dans le catalogue d'origine.
+    # TITLE {*}
+    # > dct:title
+    - field_name: title
+      label:
+        fr: Nom
+        en: Name
       value_type: literal
-    # HARVESTED
-    # - hors DCAT, affiché dans CKAN mais non exposé
-    - field_name: harvested
-      label: 
-        fr: Date de moissonnage
-        en : Harvest date
-      preset: fr_date
-      help_text: Date du dernier moissonnage de la fiche de métadonnées.
-      value_type: literal
-    # LANGUAGE {}
-    # > dct:language
-    # [+ DCAT-AP]
-    # - stockage et exposition sous la forme d'une liste d'URI
-    # - affichage des étiquettes, obtenues en interrogeant les URI,
-    #   qui sont présumées pointer sur un registre RDF.
-    - field_name: language
-      label: 
-        fr: Langues
-        en: language
-      display_snippet: language_fr.html
-      help_text: Langues de rédaction des métadonnées.
-      multiple_values: True
+      translatable_values: True
+      preset: multilingual_text
+    # HOMEPAGE
+    # > foaf:homepage
+    - field_name: homepage
+      label:
+        fr: URL
+        en: URL
       value_type: uri
-      repeating_subfields:
-        # URI
-        - field_name: uri
-          label: 
-            fr: URI
-            en: URI
-          value_type: uri
-          known_values: require
-          vocabularies:
-            - eu_language
-    # IDENTIFIER 
-    # > dct:identifier
-    - field_name: identifier
-      label:
-        fr: Identifiant
-        en: Identifiant
-      display_snippet: null
-      help_text: Identifiant de la fiche de métadonnées.
-      value_type: literal
-    # CONTACT_POINT [{}]
-    # > dcat:contactPoint -> vcard:Kind
-    - field_name: contact_point
-      label:
-        fr: Points de contact
-        en: Contact point
-      repeating_label: Point de contact
-      help_text: Entité à contacter pour obtenir des informations sur les métadonnées.
-      value_type: node
-      <<: *common_contact_fields
-    # IN_CATALOG [{}]
-    # > dcat:inCatalog -> dcat:Catalog
-    - field_name: in_catalog
-      label:
-        fr: Catalogue source
-        en: Source catalog
-      value_type: node
-      repeating_subfields:
-        # TITLE {*}
-        # > dct:title
-        - field_name: title
-          label:
-            fr: Nom
-            en: Name
-          value_type: literal
-          translatable_values: True
-          preset: multilingual_text
-        # HOMEPAGE
-        # > foaf:homepage
-        - field_name: homepage
-          label:
-            fr: URL
-            en: URL
-          value_type: uri
+      display_snippet: link.html
+
+# RECORD IDENTIFIER 
+# > foaf:isPrimaryTopicOf [-> dcat:CatalogRecord] / dct:identifier
+- field_name: record_identifier
+  label:
+    fr: Identifiant de la fiche de métadonnées
+    en: Metadata record identifier
+  display_snippet: null
+  help_text: Identifiant de la fiche de métadonnées.
+  value_type: literal
+  tab: *tab_catalog
+
+# RECORD MODIFIED
+# > foaf:isPrimaryTopicOf [-> dcat:CatalogRecord] / dct:modified
+- field_name: record_modified
+  label: 
+    fr: Date de modification de la fiche
+    en : Record modified
+  preset: datetime_tz
+  help_text: Date de dernière modification des métadonnées dans le catalogue d'origine.
+  value_type: literal
+  tab: *tab_catalog
+
+# RECORD HARVESTED
+# - hors DCAT, affiché dans CKAN mais non exposé
+- field_name: record_harvested
+  label: 
+    fr: Date de moissonnage de la fiche
+    en : Harvest date
+  preset: datetime_tz
+  help_text: Date du dernier moissonnage de la fiche de métadonnées.
+  value_type: literal
+  tab: *tab_catalog
+
+# RECORD LANGUAGE {}
+# > foaf:isPrimaryTopicOf [-> dcat:CatalogRecord] / dct:language
+# [+ DCAT-AP]
+# - stockage et exposition sous la forme d'une liste d'URI
+# - affichage des étiquettes, obtenues en interrogeant les URI,
+#   qui sont présumées pointer sur un registre RDF.
+- field_name: record_language
+  label: 
+    fr: Langues des métadonnées
+    en: Metadata languages
+  display_snippet: language_fr.html
+  help_text: Langues de rédaction des métadonnées.
+  multiple_values: True
+  value_type: uri
+  tab: *tab_catalog
+  repeating_subfields:
+    # URI
+    - field_name: uri
+      label: 
+        fr: URI
+        en: URI
+      value_type: uri
+      known_values: require
+      vocabularies:
+        - eu_language
+
+# RECORD CONTACT_POINT [{}]
+# > foaf:isPrimaryTopicOf [-> dcat:CatalogRecord] / dcat:contactPoint -> vcard:Kind
+- field_name: record_contact_point
+  label:
+    fr: Points de contact pour les métadonnées
+    en: Metadata contact point
+  repeating_label: Point de contact
+  help_text: Entité à contacter pour obtenir des informations sur les métadonnées.
+  value_type: node
+  tab: *tab_catalog
+  <<: *common_contact_fields
 
 # # ------ Couverture spatiale ------
 
@@ -1268,7 +1273,7 @@ dataset_fields:
     en: Metadata as INSPIRE conforming XML
   display_snippet: link.html
   value_type: uri
-  tab: *tab_export
+  tab: *tab_catalog
 
 # AS_DCAT_RDF
 # non exposé dans l'export DCAT
@@ -1278,7 +1283,7 @@ dataset_fields:
     en: Metadata as DCAT conforming RDF file
   display_snippet: link.html
   value_type: node
-  tab: *tab_export
+  tab: *tab_catalog
   repeating_subfields:
     # FORMAT
     - field_name: format
@@ -1304,7 +1309,7 @@ dataset_fields:
     en: Get metadata through CKAN API
   display_snippet: link.html
   value_type: uri
-  tab: *tab_export
+  tab: *tab_catalog
 
 # ------------------------------------------------------------------------
 # ------------------------------ RESSOURCES ------------------------------
