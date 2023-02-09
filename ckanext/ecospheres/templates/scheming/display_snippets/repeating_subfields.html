@@ -5,6 +5,8 @@
       <div class="panel-body">
         <dl class="scheming-subfield-list">
 
+          {%- set uri_subfield = h.ecospheres_retrieve_uri_subfield(field.repeating_subfields, field_data) -%}
+
           {% if field.field_name == "in_series" or field.field_name == "series_member" %}
             {# création d'un lien vers la ressource           {{ data[field.field_name] }}  #}
             <a href="/dataset/{{ field_data['url']   }}"> {{ field_data['title'] }} </a> 
@@ -19,19 +21,17 @@
                   {%- endif -%} 
                 {%- endfor -%}
 
-          {%- elif field.repeating_subfields|length == 1 -%}
-            {%- if field_data[repeating_subfields[0].field_name] -%}
-              {%- snippet 'scheming/snippets/display_field.html',
-                field=field.repeating_subfields[0],
-                data=field_data,
-                entity_type=entity_type,
-                object_type=object_type
-              -%}
-            {%- endif -%}
+          {%- elif uri_subfield -%}
+            {%- snippet 'scheming/snippets/display_field.html',
+              field=uri_subfield,
+              data=field_data,
+              entity_type=entity_type,
+              object_type=object_type
+            -%}
           
           {% else %}
             {% for subfield in field.repeating_subfields %}
-              {%- if field_data[subfield.field_name] -%}
+              {%- if not h.ecospheres_is_empty(field_data[subfield.field_name]) -%}
                 <div style="display:flex;">
                   <dt class="dataset-label" style="font-weight:bold;">
                     {{ h.scheming_language_text(subfield.label) }} :
