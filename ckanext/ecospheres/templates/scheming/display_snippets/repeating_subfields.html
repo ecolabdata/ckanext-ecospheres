@@ -31,7 +31,7 @@
           
           {% else %}
             {% for subfield in field.repeating_subfields %}
-              {%- if not h.ecospheres_is_empty(field_data[subfield.field_name]) -%}
+              {%- if not h.ecospheres_is_empty(field_data, subfield) -%}
                 <div style="display:flex;">
                   <dt class="dataset-label" style="font-weight:bold;">
                     {{ h.scheming_language_text(subfield.label) }} :
