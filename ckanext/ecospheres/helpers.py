@@ -146,6 +146,9 @@ def get_type_adminstration_label_by_acronym(acronym):
     return label
 
 def get_vocabulary_label_by_uri(vocabulary,uri,lang=None):
+    # TODO: to delete [LL-2023.02.09]
+    # use ecospheres_get_vocabulary_label (URI and field name) or
+    # VocabularyReader.get_label (URI and vocabulary name) instead
     try:
         label = VocabularyReader.get_label(
             vocabulary=vocabulary, uri=uri, language=lang
@@ -158,6 +161,7 @@ def get_vocabulary_label_by_uri(vocabulary,uri,lang=None):
         return None
 
 def get_vocabulairies_for_given_repeating_subfields(data,subfield):
+    # TODO: to delete [LL-2023.02.09]
 
     if repeating_subfields_dict:=data.get("repeating_subfields",None):
         
@@ -171,14 +175,50 @@ def get_vocabulairies_for_given_repeating_subfields(data,subfield):
     return None
 
 def get_vocabulairies_for_given_fields(data):
+    # TODO: to delete [LL-2023.02.09]
 
     if vocabularies:=data.get("vocabularies",None):
         return vocabularies
 
 def get_vocab_label_by_uri_from_list_of_vocabularies(vocabs,uri,lang=None):
+    # TODO: to delete [LL-2023.02.09]
     for voc in vocabs:
         if voc_label:=get_vocabulary_label_by_uri(voc,uri,lang=lang):
             return voc_label
+    return uri
+
+def ecospheres_get_vocabulary_label_from_field(field_dict, uri, lang=None):
+    '''Get the label of a field's vocabulary term.
+
+    Parameters
+    ----------
+    field_dict : dict
+        Field definition.
+    uri : str
+        URI of a vocabulary item.
+    lang : str
+        Preferred language for the label.
+    
+    Returns
+    -------
+    str or None
+
+    '''
+    vocabularies = field_dict.get('vocabularies')
+    known_values = field_dict.get('known_values')
+    if vocabularies:
+        for vocabulary in vocabularies:
+            label = VocabularyReader.get_label(
+                vocabulary=vocabulary, uri=uri, language=lang
+            )
+            if label:
+                return label
+        if known_values == 'require':
+            logger.warning(
+                'Unknown vocabulary term for field "{0}": {1}'.format(
+                    field_dict.get('field_name'), uri
+                )
+            )
     return uri
 
 def get_org_territories(org_name_or_id):
