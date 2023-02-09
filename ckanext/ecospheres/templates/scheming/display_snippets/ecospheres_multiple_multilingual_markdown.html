@@ -1,0 +1,6 @@
+{%- set values = h.scheming_language_text(data[field.field_name]) -%}
+{% for value in values %}
+  <div>
+    {{ h.render_markdown(value) }}
+  </div>
+{% endfor %}
