@@ -57,6 +57,7 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
                 'get_vocabulairies_for_given_repeating_subfields':helpers.get_vocabulairies_for_given_repeating_subfields,
                 'get_vocabulairies_for_given_fields':helpers.get_vocabulairies_for_given_fields,
                 'get_vocab_label_by_uri_from_list_of_vocabularies':helpers.get_vocab_label_by_uri_from_list_of_vocabularies,
+                'ecospheres_get_vocabulary_label_from_field': helpers.ecospheres_get_vocabulary_label_from_field
                 }
 
     # ------------- IValidators ---------------#
@@ -343,10 +344,6 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
             search_params['fq'] = fq
         return search_params
     
-
-    
-
-
     def after_search(self,search_results, search_params):
         '''
         Cette fonction est appellé après qu'un resultat soit renvoyé de l'indexateur Solr.
@@ -359,28 +356,40 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         for _dict in search_dicts:
             lang_code = lang()
 
-            if territory:=_dict.get('territory',None):
+            if territory := _dict.get('territory'):
                 for item in territory:
-                    if uri:=item.get("uri",None):
-                        labels=helpers.get_vocabulary_label_by_uri("ecospheres_territory",uri)
-                        territories.append(labels)
-            _dict["territory"]=territories
+                    if uri := item.get('uri'):
+                        if label := VocabularyReader.get_label(
+                            vocabulary='ecospheres_territory', uri=uri, language=lang_code
+                        ):
+                            territories.append(label)
+            _dict['territory'] = territories
 
-            if theme:=_dict.get('theme',None):
+            # TODO: comprendre pourquoi ces deux vocabulaires
+            # sont utilisés alors qu'ils correspondent à deux champs
+            # différents, "category" et "theme" [LL-2023.02.29]
+            if theme:=_dict.get('theme'):
                 for item in theme:
-                    if uri:=item.get("uri",None):
-                        if labels:=helpers.get_vocabulary_label_by_uri("ecospheres_theme",uri,lang_code):
-                            themes.append(labels)
-                        elif labels:=helpers.get_vocabulary_label_by_uri("eu_theme",uri,lang_code):
-                            themes.append(labels)
-            _dict["theme"]=themes
+                    if uri:=item.get('uri'):
+                        if label := VocabularyReader.get_label(
+                            vocabulary='ecospheres_theme', uri=uri, language=lang_code
+                        ):
+                            themes.append(label)
+                        if label := VocabularyReader.get_label(
+                            vocabulary='eu_theme', uri=uri, language=lang_code
+                        ):
+                            themes.append(label)
+            _dict['theme'] = themes
 
-
-            _dict_resources = _dict.get('resources', None)
+            # TODO: not sure what's going on here either...
+            # [LL-2023.02.29]
+            _dict_resources = _dict.get('resources')
             for resource in _dict_resources:
-                if resoueces_type:=resource["format"]:
-                    label=helpers.get_vocabulary_label_by_uri("iana_media_type",resoueces_type)
-                    resource["format"]=label
+                if uri := resource.get('format'):
+                    if label := VocabularyReader.get_label(
+                            vocabulary='iana_media_type', uri=uri, language=lang_code
+                    ):
+                        resource['format'] = label
 
         return search_results
 
