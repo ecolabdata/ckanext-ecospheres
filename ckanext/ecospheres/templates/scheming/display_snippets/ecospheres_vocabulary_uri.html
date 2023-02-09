@@ -1,0 +1,7 @@
+{%- set uri = data[field.field_name] -%}
+{%- set label = h.ecospheres_get_vocabulary_label_from_field(field, uri, lang=h.lang()) -%}
+{%- if label == uri -%}
+  <a href="{{ uri }}">{{ label }}</a>
+{%- else -%}
+  {{ label }}
+{%- endif -%}
