@@ -221,6 +221,47 @@ def ecospheres_get_vocabulary_label_from_field(field_dict, uri, lang=None):
             )
     return uri
 
+def ecospheres_is_empty(value):
+    '''Is the field value empty?
+
+    Take into account the fact that some metadata are
+    stored as dictionaries of translated values.
+
+    Returns
+    -------
+    bool
+
+    '''
+    if isinstance(value, (str, list)):
+        return not bool(value)
+    elif isinstance(value, dict):
+        return all(ecospheres_is_empty(subvalue) for subvalue in value.values())
+    else:
+        return value is None
+
+def ecospheres_retrieve_uri_subfield(subfields, data_dict):
+    '''If there is a URI key with a value in the data, return the corresponding subfield info.
+
+    Parameters
+    ----------
+    subfields : list(dict)
+        List of subfields definitions.
+    data_dict : dict
+        Metadata dictionary, with the values of the
+        subfields of said field.
+    
+    Returns
+    -------
+    dict or None
+        The definition of the subfield holding an URI,
+        if any.
+
+    '''
+    if 'uri' in data_dict and data_dict['uri']:
+        for subfield in subfields:
+            if subfield.get('field_name') == 'uri':
+                return subfield
+
 def get_org_territories(org_name_or_id):
     '''Return a list of all territories associated to the given CKAN organization.
 
