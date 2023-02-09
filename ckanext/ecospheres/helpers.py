@@ -221,23 +221,38 @@ def ecospheres_get_vocabulary_label_from_field(field_dict, uri, lang=None):
             )
     return uri
 
-def ecospheres_is_empty(value):
-    '''Is the field value empty?
+def ecospheres_is_empty(data_dict, subfield):
+    '''Is the subfield value empty?
 
     Take into account the fact that some metadata are
     stored as dictionaries of translated values.
+
+    Parameters
+    ----------
+    data_dict : dict
+        Metadata dictionary for a field of
+        which `subfield` is presumably a subfield.
+    subfield : dict
+        Subfield definition.
 
     Returns
     -------
     bool
 
     '''
-    if isinstance(value, (str, list)):
+    value = data_dict.get(subfield['field_name'])
+    return _is_empty(value)
+    
+def _is_empty(value):
+    if isinstance(value, str):
         return not bool(value)
     elif isinstance(value, dict):
-        return all(ecospheres_is_empty(subvalue) for subvalue in value.values())
+        return all(_is_empty(subvalue) for subvalue in value.values())
+    elif isinstance(value, list):
+        return all(_is_empty(subvalue) for subvalue in value)
     else:
         return value is None
+
 
 def ecospheres_retrieve_uri_subfield(subfields, data_dict):
     '''If there is a URI key with a value in the data, return the corresponding subfield info.
