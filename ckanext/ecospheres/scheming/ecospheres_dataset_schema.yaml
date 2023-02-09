@@ -44,6 +44,7 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       vocabularies:
         - eu_file_type
         - iana_media_type
+      display_snippet: ecospheres_vocabulary_uri.html
     # LABEL
     # > rdfs:label
     # [+ GeoDCAT-AP]
@@ -69,14 +70,11 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
     # > dct:type
     # [+ DCAT-AP]
     # - stockage et exposition sous forme d'URI
-    # - affichage du label, obtenu en interrogeant l'URI, qui est présumée 
-    #   pointer sur un registre RDF.  pointer sur un registre RDF.
     - field_name: type
       label: 
         fr: Type
         en: Type
-      display_snippet: link.html
-      display_property: skos:prefLabel
+      display_snippet: ecospheres_vocabulary_uri.html
       value_type: uri
       known_values: require
       vocabularies:
@@ -92,8 +90,6 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
         en: Mail
       value_type: uri
       display_snippet: email.html
-      # TODO: ajouter un display_snippet pour l'hyperlien + suppression
-      # du préfixe à l'affichage.
     # PHONE
     # > foaf:phone
     # [+ GeoDCAT-AP]
@@ -233,6 +229,7 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       known_values: allow
       vocabularies:
         - ecospheres_data_standard
+      display_snippet: ecospheres_vocabulary_linked_uri.html
     # TITLE {*}
     # > dct:title
     # [+ GeoDCAT-AP]
@@ -466,8 +463,6 @@ dataset_fields:
       label: 
         fr: Rôle
         en: Role
-      display_snippet: link.html
-      display_property: skos:prefLabel
       multiple_values: True
       value_type: uri
       repeating_subfields:
@@ -479,6 +474,7 @@ dataset_fields:
           known_values: require
           vocabularies:
             - inspire_role
+          display_snippet: ecospheres_vocabulary_uri.html
     # AGENT [{}]
     # > prov:agent -> prov:Agent
     - field_name: agent
@@ -724,7 +720,6 @@ dataset_fields:
   multiple_values: True
   value_type: uri
   tab: *tab_details
-  display_snippet: themes_fr.html
   repeating_subfields:
     - field_name: uri
       label: 
@@ -734,6 +729,7 @@ dataset_fields:
       known_values: require
       vocabularies:
         - ecospheres_theme
+      display_snippet: ecospheres_vocabulary_uri.html
 
 # THEME {}
 # > dcat:theme
@@ -746,13 +742,11 @@ dataset_fields:
   label:
     fr: Autres thèmes
     en: Other theme
-    # display_snippet: themes_fr.html
   multiple_values: True
-  display_snippet: null
   value_type: uri
   repeating_subfields:
     - field_name: uri
-      display_snippet: null
+      display_snippet: ecospheres_vocabulary_uri.html
       label: 
         fr: URI
         en: URI
@@ -772,11 +766,10 @@ dataset_fields:
     fr: Mots-clés
     en: Keywords
   help_text: Mots-clés libres.
-  preset: fluent_tags
-  tag_validators: remove_whitespace
   translatable_values: True
   multiple_values: True
   value_type: literal
+  display_snippet: ecospheres_multilingual_list.html
   tab: *tab_details
 
 # # ------ Métadonnées sur les métadonnées ------
@@ -851,7 +844,6 @@ dataset_fields:
   label: 
     fr: Langues des métadonnées
     en: Metadata languages
-  display_snippet: language_fr.html
   help_text: Langues de rédaction des métadonnées.
   multiple_values: True
   value_type: uri
@@ -866,6 +858,7 @@ dataset_fields:
       known_values: require
       vocabularies:
         - eu_language
+      display_snippet: ecospheres_vocabulary_uri.html
 
 # RECORD CONTACT_POINT [{}]
 # > foaf:isPrimaryTopicOf [-> dcat:CatalogRecord] / dcat:contactPoint -> vcard:Kind
@@ -907,7 +900,6 @@ dataset_fields:
   value_type: node or uri
   tab: *tab_details
   multiple_values: True
-  display_snippet: spatial_coverage.html
   repeating_subfields:
     # URI
     - field_name: uri
@@ -920,6 +912,7 @@ dataset_fields:
         - eu_administrative_territory_unit
         - insee_official_geographic_code
         - insee_individual_territories
+      display_snippet: ecospheres_vocabulary_uri.html
     # IN_SCHEME
     # > skos:inScheme
     # [+ GeoDCAT-AP]
@@ -927,13 +920,12 @@ dataset_fields:
       label: 
         fr: Index géographique
         en: Gazetteer
-      display_snippet: link.html
-      display_property: skos:prefLabel
       help_text: Type de lieu, index de référence pour l'identifiant (commune, département...).
       value_type: uri
       known_values: require
       vocabularies:
         - insee_gazetteer
+      display_snippet: ecospheres_vocabulary_uri.html
     # IDENTIFIER
     # > dct:identifier
     # [+ GeoDCAT-AP]
@@ -1046,6 +1038,7 @@ dataset_fields:
       vocabularies:
         - inspire_limitation_on_public_access
         - eu_access_right
+      display_snippet: ecospheres_vocabulary_uri.html
     # LABEL {*}
     # > rdfs:label
     # [+ GeoDCAT-AP]
@@ -1079,7 +1072,6 @@ dataset_fields:
   label: 
     fr: Référentiels de coordonnées
     en: Coordinate Reference System
-  display_snippet: crs.html
   multiple_values: True
   value_type: uri
   tab: *tab_details
@@ -1094,6 +1086,7 @@ dataset_fields:
       vocabularies:
         - ogc_epsg
         - ign_crs
+      display_snippet: ecospheres_vocabulary_uri.html
 
 # CONFORMS_TO [{}]
 # > dct:conformsTo -> dct:Standard
@@ -1117,7 +1110,6 @@ dataset_fields:
 # - stockage et exposition sous forme d'URI
 # - affichage de l'étiquette récupérée par interrogation de l'URI
 - field_name: accrual_periodicity
-  display_snippet: accrual_periodicity.html
   label:
     fr:  Fréquence de mise à jour
     en:  Update frequency
@@ -1126,6 +1118,7 @@ dataset_fields:
   vocabularies:
     - inspire_maintenance_frequency
     - eu_frequency
+  display_snippet: ecospheres_vocabulary_uri.html
   tab: *tab_details
 
 # STATUS
@@ -1134,7 +1127,6 @@ dataset_fields:
 # - stockage et exposition sous forme d'URI
 # - affichage de l'étiquette récupérée par interrogation de l'URI
 - field_name: status
-  display_snippet: accrual_periodicity.html
   label:
     fr:  Maturité
     en:  Dataset status
@@ -1144,6 +1136,7 @@ dataset_fields:
     - eu_dataset_status
     - adms_status
     - iso19139_progress_code
+  display_snippet: ecospheres_vocabulary_uri.html
   tab: *tab_details
 
 # LANGUAGE []
@@ -1154,7 +1147,6 @@ dataset_fields:
   label: 
     fr: Langues des données
     en: Data language
-  display_snippet: language_fr.html
   multiple_values: True
   value_type: uri
   tab: *tab_details
@@ -1168,6 +1160,7 @@ dataset_fields:
       known_values: require
       vocabularies:
         - eu_language
+      display_snippet: ecospheres_vocabulary_uri.html
 
 # PROVENANCE [{*}]
 # > dct:provenance [-> dct:ProvenanceStatement] / rdfs:label
@@ -1178,12 +1171,11 @@ dataset_fields:
   label: 
     fr: Généalogie
     en: Genealogy
-  preset: fluent_tags
-  tag_validators: remove_whitespace
   help_text: Informations sur les sources et méthodes de production des données.
   value_type: literal
   multiple_values: True
   translatable_values: True
+  display_snippet: ecospheres_multiple_multilingual_markdown.html
   tab: *tab_details
 
 # VERSION
@@ -1446,7 +1438,6 @@ resource_fields:
     en: Licence
   help_text: Conditions d'utilisation de la ressource.
   value_type: node or uri
-  display_snippet: licence_fr.html
   repeating_subfields:
     # URI
     - field_name: uri
@@ -1458,6 +1449,7 @@ resource_fields:
       vocabularies:
         - eu_licence
         - spdx_license
+      display_snippet: ecospheres_vocabulary_linked_uri.html
     # TYPE []
     # > dct:type
     # [+ DCAT-AP]
@@ -1471,6 +1463,7 @@ resource_fields:
       known_values: require
       vocabularies:
         - adms_licence_type
+      display_snippet: ecospheres_vocabulary_uri.html
     # LABEL {*}
     # > rdfs:label
     # [+ GeoDCAT-AP]
