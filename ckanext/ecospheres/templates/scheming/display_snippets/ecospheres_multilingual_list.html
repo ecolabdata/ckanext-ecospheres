@@ -1,0 +1,8 @@
+{%- set values = h.scheming_language_text(data[field.field_name]) -%}
+<ul>
+  {% for value in values %}
+    <li>
+      {{ value }}
+    </li>
+  {% endfor %}
+</ul>
