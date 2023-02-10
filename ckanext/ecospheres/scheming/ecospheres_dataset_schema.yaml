@@ -769,7 +769,8 @@ dataset_fields:
   translatable_values: True
   multiple_values: True
   value_type: literal
-  display_snippet: ecospheres_multilingual_list.html
+  preset: ecospheres_multilingual_list
+  tag_validators: remove_whitespace
   tab: *tab_details
 
 # # ------ Métadonnées sur les métadonnées ------
@@ -1175,7 +1176,8 @@ dataset_fields:
   value_type: literal
   multiple_values: True
   translatable_values: True
-  display_snippet: ecospheres_multiple_multilingual_markdown.html
+  preset: ecospheres_multiple_multilingual_markdown
+  tag_validators: remove_whitespace
   tab: *tab_details
 
 # VERSION
@@ -1273,7 +1275,6 @@ dataset_fields:
   label:
     fr: Vue DCAT des métadonnées
     en: Metadata as DCAT conforming RDF file
-  display_snippet: link.html
   value_type: node
   tab: *tab_catalog
   repeating_subfields:
@@ -1290,7 +1291,7 @@ dataset_fields:
         fr:  Téléchargement
         en:  Download URL
       help_text: URL de téléchargement direct du fichier.
-      preset: url
+      display_snippet: link.html
       value_type: uri
 
 # CKAN_API_SHOW
