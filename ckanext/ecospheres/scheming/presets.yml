@@ -42,3 +42,16 @@ presets:
     validators: fluent_text
     output_validators: multilingual_text_output
 
+- preset_name: ecospheres_multiple_multilingual_markdown
+  values:
+    display_snippet: ecospheres_multiple_multilingual_markdown.html
+    validators: fluent_tags
+    output_validators: fluent_tags_output
+  # add "tag_validators: remove_whitespace" in the schema
+  
+- preset_name: ecospheres_multilingual_list
+  values:
+    display_snippet: ecospheres_multilingual_list.html
+    validators: fluent_tags
+    output_validators: fluent_tags_output
+  # add "tag_validators: remove_whitespace" in the schema
