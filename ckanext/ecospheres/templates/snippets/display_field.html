@@ -2,8 +2,6 @@
 {#- render the field the user requested, or use a default field -#}
 {%- set display_snippet = field.display_snippet -%}
 
-{{ set tab=h.get_fields_by_tabs() }}
-
 {%- if not display_snippet -%}
   {%- if field.repeating_subfields -%}
     {%- set display_snippet = 'repeating_subfields.html' -%}
@@ -25,6 +23,5 @@
     errors=errors,
     entity_type=entity_type,
     object_type=object_type
-    tab=tab
   -%}
 {%- endif -%}
