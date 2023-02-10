@@ -15,9 +15,10 @@ from ckanext.harvest.harvesters.base import HarvesterBase
 from ckanext.ecospheres.spatial.utils import (
     build_dataset_dict_from_schema, bbox_geojson_from_coordinates,
     bbox_wkt_from_coordinates, build_attributes_page_url,
-    build_catalog_page_url, extract_scheme_and_identifier
+    build_catalog_page_url, extract_scheme_and_identifier,
+    getrecordbyid_request
 )
-from ckanext.ecospheres.maps import ISO_639_2
+from ckanext.ecospheres.maps import ISO_639_2, DCAT_ENDPOINT_FORMATS
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 from ckanext.ecospheres.helpers import get_org_territories
 
@@ -66,6 +67,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         package_dict = data_dict['package_dict']
         iso_values = data_dict['iso_values'] 
         xml_tree = data_dict['xml_tree']
+        harvest_object = data_dict['harvest_object']
 
         language = iso_values.get('metadata-language') or 'fr'
         if len(language) > 2:
@@ -190,10 +192,9 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         for elem in package_dict['extras']:
         # the following are "default extras" from the
         # harvest source, not harvested metadata
-
             if elem['key'] == 'catalog_title':
                 catalog_dict.set_value('title', elem['value'])
-            
+
             elif elem['key'] == 'catalog_homepage':
                 catalog_dict.set_value('homepage', elem['value'])
         
@@ -358,6 +359,33 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         # series_member > uri
         # series_member > url
         # series_member > title
+
+        # --- encoded metadata ---
+        dataset_dict.set_value(
+            'ckan_api_show', toolkit.url_for(
+                'api.action', ver=3, logic_function='package_show',
+                id=name, _external=True
+            )
+        )
+
+        dataset_dict.set_value(
+            'as_inspire_xml', getrecordbyid_request(
+                harvest_object.source.url,
+                name
+            )
+        )
+
+        for dcat_endpoint_format, dcat_endpoint_extension in DCAT_ENDPOINT_FORMATS.items():
+            endpoint_dict = dataset_dict.new_item('as_dcat_rdf')
+            endpoint_dict.set_value(
+                'download_url',
+                '{0}.{1}'.format(
+                    toolkit.url_for('dataset.read', id=name, _external=True),
+                    dcat_endpoint_extension
+                )
+            )
+            format_endpoint_dict = endpoint_dict.new_item('format')
+            format_endpoint_dict.set_value('uri', dcat_endpoint_format)
 
         # --- etc. ---
 
