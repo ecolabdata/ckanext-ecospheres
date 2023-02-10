@@ -239,6 +239,39 @@ def extract_scheme_and_identifier(uri_or_label):
         return (r[1], r[2])
     return (None, uri_or_label)
 
-
+def getrecordbyid_request(url_csw, record_id):
+    """Crée une requête GetRecordById pour envoi en HTTP GET.
+    
+    Parameters
+    ----------
+    url_csw : str
+        L'URL de base du service CSW du catalogue, sans aucun paramètre.
+    record_id : str
+        L'identifiant de la fiche de métadonnées sur le catalogue.
+        Correspond à la valeur de la balise ``gmd:fileIdentifier``
+        des fiches ISO 19139.
+    
+    Returns
+    -------
+    str
+    
+    Notes
+    -----
+    La requête n'est pas en encodage-pourcent.
+    
+    """
+    url_csw = url_csw.rstrip('?/')
+    config = {
+        'service' : 'CSW',
+        'REQUEST': 'GetRecordById',
+        'version': '2.0.2',
+        'namespace': 'xmlns:csw=http://www.opengis.net/cat/csw',
+        'outputFormat': 'application/xml',
+        'outputSchema': 'http://www.isotc211.org/2005/gmd',
+        'ElementSetName': 'full',
+        'Id': record_id
+        }
+    data = '&'.join('{}={}'.format(k, v) for k, v in config.items())
+    return '{}?{}'.format(url_csw, data)
 
 
