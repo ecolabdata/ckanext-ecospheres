@@ -11,12 +11,9 @@ from ckan.lib.helpers import lang
 import ckanext.ecospheres.validators as v
 import ckanext.ecospheres.helpers as helpers
 from ckanext.ecospheres import cli
-from ckanext.ecospheres.scheming.tab import get_fields_by_tab
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 from ckanext.ecospheres.vocabulary.loader import load_vocab as load_all_vocab
 from ckanext.ecospheres.views import organizations_by_admin_type
-
-    
 
 
 class DcatFrenchPlugin(plugins.SingletonPlugin):
@@ -26,7 +23,6 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.IBlueprint)
     plugins.implements(plugins.IClick)
-
     
     
     # ------------- IClick ---------------#
@@ -46,17 +42,16 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         '''
 
         return {
-                'fr_dcat_json_string_to_object_aggregated_ressources':helpers.json_string_to_object_aggregated_ressources,
-                'fr_dcat_aggregated_package_name_to_title':helpers.aggregated_package_name_to_title,
-                'get_localized_value_for_display':helpers.get_localized_value_for_display,
-                'get_localized_date':helpers.get_localized_date,
-                'get_territories_label':helpers.get_territories_label,
-                'get_type_adminstration_label_by_acronym':helpers.get_type_adminstration_label_by_acronym,
-                'get_vocabulary_label_by_uri':helpers.get_vocabulary_label_by_uri,
-                'get_fields_by_tab':get_fields_by_tab,
-                'get_vocabulairies_for_given_repeating_subfields':helpers.get_vocabulairies_for_given_repeating_subfields,
-                'get_vocabulairies_for_given_fields':helpers.get_vocabulairies_for_given_fields,
-                'get_vocab_label_by_uri_from_list_of_vocabularies':helpers.get_vocab_label_by_uri_from_list_of_vocabularies,
+                'fr_dcat_json_string_to_object_aggregated_ressources': helpers.json_string_to_object_aggregated_ressources,
+                'fr_dcat_aggregated_package_name_to_title': helpers.aggregated_package_name_to_title,
+                'get_localized_value_for_display': helpers.get_localized_value_for_display,
+                'get_localized_date': helpers.get_localized_date,
+                'get_territories_label': helpers.get_territories_label,
+                'get_type_adminstration_label_by_acronym': helpers.get_type_adminstration_label_by_acronym,
+                'get_vocabulary_label_by_uri': helpers.get_vocabulary_label_by_uri,
+                'get_vocabulairies_for_given_repeating_subfields': helpers.get_vocabulairies_for_given_repeating_subfields,
+                'get_vocabulairies_for_given_fields': helpers.get_vocabulairies_for_given_fields,
+                'get_vocab_label_by_uri_from_list_of_vocabularies': helpers.get_vocab_label_by_uri_from_list_of_vocabularies,
                 'ecospheres_get_vocabulary_label_from_field': helpers.ecospheres_get_vocabulary_label_from_field,
                 'ecospheres_is_empty': helpers.ecospheres_is_empty,
                 'ecospheres_retrieve_uri_subfield': helpers.ecospheres_retrieve_uri_subfield
