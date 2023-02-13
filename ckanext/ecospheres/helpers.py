@@ -253,6 +253,29 @@ def _is_empty(value):
     else:
         return value is None
 
+def ecospheres_get_package_title(name_or_id):
+    '''Return the package title if the package exists.
+
+    Parameters
+    ----------
+    name_or_id : str
+        Package name or identifier.
+    
+    Returns
+    -------
+    str or None
+        ``None`` if the package doesn't exist or (shouldn't
+        happen) doesn't have a title.
+
+    '''
+    try:
+        package_dict = toolkit.get_action('package_show')(
+            None, {'id': name_or_id}
+        )
+        return package_dict.get('title')
+    except:
+        return
+
 
 def ecospheres_retrieve_uri_subfield(subfields, data_dict):
     '''If there is a URI key with a value in the data, return the corresponding subfield info.
