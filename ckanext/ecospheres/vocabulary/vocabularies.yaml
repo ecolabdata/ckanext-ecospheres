@@ -153,8 +153,8 @@
     fr: Thème (UE)
 
 - name: iana_media_type
-  url: https://op.europa.eu/o/opportal-service/euvoc-download-handler?cellarURI=http%3A%2F%2Fpublications.europa.eu%2Fresource%2Fcellar%2F63af65e1-f70c-11ec-b94a-01aa75ed71a1.0001.03%2FDOC_1&fileName=filetypes-skos-ap-act.rdf
-  uri_property: http://purl.org/dc/terms/conformsTo
+  url: https://www.iana.org/assignments/media-types/media-types.xml
+  parser: iana_media_type
   available: True
   eco_uri: http://registre.data.developpement-durable.gouv.fr/plume/IanaMediaType
   eco_label:
