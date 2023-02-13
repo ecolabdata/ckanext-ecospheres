@@ -514,41 +514,26 @@ dataset_fields:
 # > dcat:inSeries
 # [+ DCAT v3]
 # - dct:isPartOf est également mappé vers ce champ
-# - pour l'affichage, on utilise "title" avec l'URL de la page du guichet
-#   en hyperlien (champ "url")
-# - pour l'exposition DCAT, on utilise uniquement les URI, soit les valeurs
-#   du champ "uri"
+# - on stocke des identifiants sémantiques CKAN (champ "name" du dataset),
+#   ou plus précisément des identifiants présumés.
+# - pour l'affichage, on récupère le libellé (champ "title") du dataset
+#   correspondant s'il existe, sinon la valeur est ignorée.
+# - pour l'exposition DCAT, on récupère l'URI (champ "uri") du dataset
+#   correspondant s'il existe, sinon la valeur est ignorée.
 - field_name: in_series
   label: 
     fr: Inclus dans les séries de données
     en: Included in data series
   help_text: Séries ou lots de données dont fait partie le jeu de données.
   value_type: node or uri
-  # preset: fr_aggregate
   repeating_subfields:
-    # URI
-    - field_name: uri
+    # NAME
+    - field_name: name
       label:
-        fr: URI de la série
-        en: Data series URI
-      display_snippet: null
-      value_type: uri
-    # URL
-    # TODO: calculé à la volée plutôt que stocké?
-    - field_name: url
-      label:
-        fr: URL
-        en: URL
-      value_type: uri
-    # TITLE {*}
-    # TODO: calculé à la volée plutôt que stocké?
-    - field_name: title
-      label:
-        fr: Titre
-        en: Title
+        fr: Identifiant CKAN de la série
+        en: Data series slug
       value_type: literal
-      preset: multilingual_text
-      translatable_values: True
+      display_snippet: null
 
 # SERIES_MEMBER {}
 # > dcat:seriesMember
@@ -556,10 +541,10 @@ dataset_fields:
 # - si présent, on type le dataset comme dcat:DatasetSeries en plus de
 #   dcat:Dataset (ce dernier pour assurer un minimum de rétro-compatibilité)
 # - dct:hasPart est également mappé vers ce champ
-# - pour l'affichage, on utilise "title" avec l'URL de la page du guichet
-#   en hyperlien (champ "url")
-# - pour l'exposition DCAT, on utilise uniquement les URI, soit les valeurs
-#   du champ "uri"
+# - pour l'affichage, on récupère le libellé (champ "title") du dataset
+#   correspondant s'il existe, sinon la valeur est ignorée.
+# - pour l'exposition DCAT, on récupère l'URI (champ "uri") du dataset
+#   correspondant s'il existe, sinon la valeur est ignorée.
 - field_name: series_member
   label:
     fr: Jeux de données de la série
@@ -567,29 +552,13 @@ dataset_fields:
   help_text: Jeux de données rattachés à la série ou lot de données.
   value_type: node or uri
   repeating_subfields:
-    # URI
-    - field_name: uri
+    # NAME
+    - field_name: name
       label:
-        fr: URI du jeu de données
-        en: Dataset URI
-      display_snippet: null
-      value_type: uri
-    # URL
-    # TODO: calculé à la volée plutôt que stocké?
-    - field_name: url
-      label:
-        fr: URL
-        en: URL
-      value_type: uri
-    # TITLE {*}
-    # TODO: calculé à la volée plutôt que stocké?
-    - field_name: title
-      label:
-        fr: Titre
-        en: Title
+        fr: Identifiant CKAN du jeu de données
+        en: Series member slug
       value_type: literal
-      preset: multilingual_text
-      translatable_values: True
+      display_snippet: null
 
 # ------ Références ------
 
