@@ -5,6 +5,19 @@ import ckan.plugins.toolkit as toolkit
 
 from ckanext.ecospheres.spatial.base import EcospheresDatasetDict
 
+ISO_NAMESPACES = {
+           "gts": "http://www.isotc211.org/2005/gts",
+           "gml": "http://www.opengis.net/gml",
+           "gml32": "http://www.opengis.net/gml/3.2",
+           "gmx": "http://www.isotc211.org/2005/gmx",
+           "gsr": "http://www.isotc211.org/2005/gsr",
+           "gss": "http://www.isotc211.org/2005/gss",
+           "gco": "http://www.isotc211.org/2005/gco",
+           "gmd": "http://www.isotc211.org/2005/gmd",
+           "srv": "http://www.isotc211.org/2005/srv",
+           "xlink": "http://www.w3.org/1999/xlink",
+           "xsi": "http://www.w3.org/2001/XMLSchema-instance",
+        }
 
 def build_dataset_dict_from_schema(type='dataset', main_language=None):
     """Construit un dictionnaire de jeu de données d'après le schéma YAML.
