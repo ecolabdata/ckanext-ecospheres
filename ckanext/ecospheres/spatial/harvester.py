@@ -16,7 +16,7 @@ from ckanext.ecospheres.spatial.utils import (
     build_dataset_dict_from_schema, bbox_geojson_from_coordinates,
     bbox_wkt_from_coordinates, build_attributes_page_url,
     build_catalog_page_url, extract_scheme_and_identifier,
-    getrecordbyid_request
+    getrecordbyid_request, ISO_NAMESPACES
 )
 from ckanext.ecospheres.maps import ISO_639_2, DCAT_ENDPOINT_FORMATS
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
@@ -68,6 +68,9 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         iso_values = data_dict['iso_values'] 
         xml_tree = data_dict['xml_tree']
         harvest_object = data_dict['harvest_object']
+
+        user_dict = toolkit.get_action('get_site_user')({'ignore_auth': True})
+        user = user_dict['name']
 
         language = iso_values.get('metadata-language') or 'fr'
         if len(language) > 2:
@@ -216,7 +219,6 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         # TODO
 
         # --- themes and keywords ---
-
         iso_themes = iso_values.get('keyword-inspire-theme', [])
         if iso_themes:
             for theme in iso_themes:
@@ -265,7 +267,6 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             # more than once, hence not test is necessary here
 
         # --- spatial coverage ---
-
         # bounding box
         iso_bboxes = iso_values.get('bbox')
         for iso_bbox in iso_bboxes:
@@ -349,16 +350,35 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             )
 
         # --- relations ---
-
-        # in_series
-        # in_series > uri
-        # in_series > url
-        # in_series > title
-
-        # series_member
-        # series_member > uri
-        # series_member > url
-        # series_member > title
+        children = iso_values.get('aggregation-info', [])
+        children_names = [
+            child['aggregate-dataset-identifier']
+            for child in children 
+            if child.get('aggregate-dataset-identifier')
+        ]
+        if not children_names:
+            children_names = xml_tree.xpath(
+                'gmd:identificationInfo/gmd:MD_DataIdentification/'
+                'gmd:aggregationInfo/gmd:MD_AggregateInformation/'
+                'gmd:aggregateDataSetIdentifier/gmd:MD_Identifier/'
+                'gmd:code/gco:CharacterString/text()',
+                namespaces=ISO_NAMESPACES
+            )
+        for child_name in children_names:
+            # search for the child (which needs to be harvested first,
+            # or it won't be possible to update it)
+            try:
+                child_info = toolkit.get_action('package_show')(None, {'id': child_name})
+                child_in_series = child_info.get('in_series', [])
+                child_in_series.append({'name': name})
+                logger.debug(f'Register series member "{child_name}"')
+                toolkit.get_action('package_patch')(
+                    {'user': user}, {'id': child_name, 'in_series': child_in_series}
+                )
+            except Exception as e:
+                logger.warning(f'Failed to update series member "{child_name}". {str(e)}')
+            series_member = dataset_dict.new_item('series_member')
+            series_member.set_value('name', child_name)
 
         # --- encoded metadata ---
         dataset_dict.set_value(
@@ -388,7 +408,6 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             format_endpoint_dict.set_value('uri', dcat_endpoint_format)
 
         # --- etc. ---
-
         frequency = iso_values.get('frequency-of-update')
         # might either be a code or some label, but codes are
         # stored as alternative labels, so get_uri_from_label
@@ -411,8 +430,23 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 if state_uri:
                     dataset_dict.set_value('status', state_uri)
 
+        crs = iso_values.get('spatial-reference-system')
+        if not crs:
+            crss = xml_tree.xpath(
+                'gmd:referenceSystemInfo/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier'
+                '/gmd:RS_Identifier/gmd:code/gmx:Anchor/@xlink:href',
+                namespaces=ISO_NAMESPACES
+            )
+        else:
+            crss = crs if isinstance(crs, list) else [crs]
+        for crs in crss:
+            if (
+                VocabularyReader.is_known_uri('ogc_epsg', crs)
+                or VocabularyReader.is_known_uri('ign_crs', crs)
+            ):
+                dataset_dict.set_value('crs', crs)
+
         # access_rights
-        # crs
         # conforms_to
         # ...
 
