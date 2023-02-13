@@ -24,8 +24,7 @@ sinon elle vaut ``False``.
 DCAT_ENDPOINT_FORMATS = {
     'https://www.iana.org/assignments/media-types/application/rdf+xml': 'xml',
     'https://www.iana.org/assignments/media-types/text/turtle': 'ttl',
-    'https://www.iana.org/assignments/media-types/application/n-triples': 'n3',
-    # à remplacer par 'https://www.iana.org/assignments/media-types/text/n3'
+    'https://www.iana.org/assignments/media-types/text/n3': 'n3',
     'https://www.iana.org/assignments/media-types/application/ld+json': 'jsonld'
 }
 """Formats de l'exposition DCAT et extensions correspondantes."""
