@@ -153,6 +153,10 @@ IGN_NAMESPACES = {
     'gml': 'http://www.opengis.net/gml'
 }
 
+IANA_NAMESPACES = {
+    'xmlns': 'http://www.iana.org/assignments'
+}
+
 def basic_rdf(
     name, url, format='xml', schemes=None, 
     languages=None, rdf_types=None, recursive=False,
@@ -965,6 +969,67 @@ def ign_crs(name, url, **kwargs):
             
             for synonym in synonyms:
                 result.data.synonym.add(identifier, synonym)
+
+    if not result.data:
+        result.exit(exceptions.NoVocabularyDataError())
+
+    return result
+
+def iana_media_type(name, url, **kwargs):
+    """Build a vocabulary cluster from IANA's media type register.
+
+    Parameters
+    ----------
+    name : str
+        Name of the vocabulary.
+    url : str
+        Base URL of the register. Should return a XML document
+        listing all media types.
+
+    Returns
+    -------
+    VocabularyParsingResult
+
+    """
+    result = VocabularyParsingResult(name)
+    uri_nsp = 'https://www.iana.org/assignments/media-types/'
+
+    try:
+        raw_data = utils.fetch_data(url, format='bytes', **kwargs)
+        tree = etree.parse(BytesIO(raw_data))
+        root = tree.getroot()
+    except Exception as error:
+        result.exit(error)
+        return result
+
+    for registry in root.iter(tag='{*}registry'):
+        for subregistry in registry.iter(tag='{*}registry'):
+            for record in subregistry.iter(tag='{*}record'):
+                valid = True
+
+                label = record.findtext('xmlns:name', namespaces=IANA_NAMESPACES)
+                if not label:
+                    result.log_error(
+                        exceptions.UnexpectedDataError('missing media type label'),
+                    )
+                    valid = False
+                
+                identifier = record.findtext('xmlns:file', namespaces=IANA_NAMESPACES)
+                if not identifier:
+                    result.log_error(
+                        exceptions.UnexpectedDataError(
+                            'missing media type identifier{0}'.format(
+                                f' for "{label}"' if label else ''
+                            )
+                        ),
+                    )
+                    valid = False
+
+                if valid:
+                    result.add_label(
+                        uri='{0}{1}'.format(uri_nsp, identifier),
+                        label=label
+                        )
 
     if not result.data:
         result.exit(exceptions.NoVocabularyDataError())
