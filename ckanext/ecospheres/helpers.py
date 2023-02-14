@@ -263,7 +263,8 @@ def ecospheres_get_package_title(name_or_id):
     
     Returns
     -------
-    str or None
+    dict or None
+        The dictionary holding the title translations.
         ``None`` if the package doesn't exist or (shouldn't
         happen) doesn't have a title.
 
@@ -272,10 +273,13 @@ def ecospheres_get_package_title(name_or_id):
         package_dict = toolkit.get_action('package_show')(
             None, {'id': name_or_id}
         )
-        return package_dict.get('title')
+        if title_raw := package_dict.get('title'):
+            if isinstance(title_raw, str):
+                return json.loads(title_raw)
+            elif isinstance(title_raw, dict):
+                return title_raw
     except:
         return
-
 
 def ecospheres_retrieve_uri_subfield(subfields, data_dict):
     '''If there is a URI key with a value in the data, return the corresponding subfield info.
