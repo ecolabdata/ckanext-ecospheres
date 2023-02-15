@@ -29,6 +29,22 @@ DCAT_ENDPOINT_FORMATS = {
 }
 """Formats de l'exposition DCAT et extensions correspondantes."""
 
+RIGHTS_STATEMENT_MAP = {
+    ('accès',): 'access_rights',
+    ('licence',): 'license',
+    ('license',): 'license'
+}
+"""Mots-clés pour identifier le type de mention portant sur l'accès ou l'usage des données."""
+
+LICENSE_MAP = {
+    ('etalab', 'licence'): 'https://spdx.org/licenses/etalab-2.0',
+    ('etalab', 'license'): 'https://spdx.org/licenses/etalab-2.0',
+    ('licence ouverte',): 'https://spdx.org/licenses/etalab-2.0',
+    ('odbl',): 'https://spdx.org/licenses/ODbL-1.0',
+    ('open database license',): 'https://spdx.org/licenses/ODbL-1.0'
+}
+"""Mots-clés pour reconnaître les licences utilisables par les administrations."""
+
 TYPE_ADMINISTRATION = {
     "AC": "Administration centrale",
     "DR": "Directions régionales",
