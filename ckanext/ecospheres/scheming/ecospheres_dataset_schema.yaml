@@ -32,6 +32,58 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
 # ---------------------------------- Variables communes ----------------------------------
 # ----------------------------------------------------------------------------------------
 
+.rights_fields: &rights_fields
+  field_name: rights
+  label:
+    fr:  Autre mention juridique
+    en:  Rights
+  help_text: > 
+    Autre mention à caractères juridique, par exemple rappelant les
+    droits de propriété intellectuelle sur les données, à faire apparaître
+    en cas de réutilisation.
+  preset: ecospheres_multiple_multilingual_markdown
+  tag_validators: remove_whitespace
+  translatable_values: True
+  multiple_values: True
+  value_type: literal
+
+.rights_fields: &access_rights_fields
+  # - le champ "uri" correspond à l'objet du triplet
+  #   <uri> dct:accessRights <uri>, s'il n'est pas
+  #   défini, l'exposition utilise un noeud anonyme de classe
+  #   dct:RightsStatement 
+  field_name: access_rights
+  label: 
+    fr: Conditions d'accès
+    en: Access conditions
+  help_text: Contraintes réglementaires limitant l'accès au jeu de données.
+  value_type: node or uri
+  repeating_subfields:
+    # URI
+    - field_name: uri
+      label: 
+        fr: URL
+        en: URL
+      value_type: uri
+      known_values: require
+      vocabularies:
+        - inspire_limitation_on_public_access
+        - eu_access_right
+      display_snippet: ecospheres_vocabulary_uri.html
+    # LABEL {*}
+    # > rdfs:label
+    # [+ GeoDCAT-AP]
+    - field_name: label
+      label: 
+        fr: Mention
+        en: Mention
+      help_text: >
+        Description des contraintes réglementaires qui limitent l'accès
+        aux données et des modalités pratiques pour les obtenir.
+      translatable_values: True
+      preset: multilingual_text
+      value_type: literal
+
 .media_type_fields: &media_type_fields
   repeating_subfields: 
     # URI
@@ -319,7 +371,6 @@ dataset_fields:
     en: Organization
   value_type: literal
   display_snippet: null
-  
 
 # # ------- Dates --------
 
@@ -381,7 +432,6 @@ dataset_fields:
   value_type: literal
   tab: *tab_details
 
-
 # # ------ Organisations ------
 
 # CONTACT_POINT [{}]
@@ -400,7 +450,6 @@ dataset_fields:
   tab: *tab_contacts
   <<: *common_contact_fields
 
-
 # PUBLISHER [{}]
 # > dct:publisher -> foaf:Organization
 - field_name: publisher
@@ -412,7 +461,6 @@ dataset_fields:
   tab: *tab_contacts
   <<: *common_field_agent
 
-
 # CREATOR [{}]
 # > dct:creator -> foaf:Organization
 - field_name: creator
@@ -423,7 +471,6 @@ dataset_fields:
   value_type: node
   tab: *tab_contacts
   <<: *common_field_agent
-
 
 # RIGHTS_HOLDER [{}]
 # dct:rightsHolder -> foaf:Organization
@@ -437,7 +484,6 @@ dataset_fields:
   value_type: node
   tab: *tab_contacts
   <<: *common_field_agent
-
 
 # QUALIFIED_ATTRIBUTION [{}]
 # > prov:qualifiedAttribution -> prov:Attribution
@@ -985,43 +1031,8 @@ dataset_fields:
 
 # ACCESS_RIGHTS [{}]
 # > dct:accessRights -> dct:RightsStatement
-# - le champ "uri" correspond à l'objet du triplet
-#   <uri> dct:accessRights <uri>, s'il n'est pas
-#   défini, l'exposition utilise un noeud anonyme de classe
-#   dct:RightsStatement 
-- field_name: access_rights
-  label: 
-    fr: Conditions d'accès
-    en: Access conditions
-  help_text: Contraintes réglementaires limitant l'accès au jeu de données.
-  value_type: node or uri
-  tab: *tab_details
-  display_snippet: access_rights.html
-  repeating_subfields:
-    # URI
-    - field_name: uri
-      label: 
-        fr: URL
-        en: URL
-      value_type: uri
-      known_values: require
-      vocabularies:
-        - inspire_limitation_on_public_access
-        - eu_access_right
-      display_snippet: ecospheres_vocabulary_uri.html
-    # LABEL {*}
-    # > rdfs:label
-    # [+ GeoDCAT-AP]
-    - field_name: label
-      label: 
-        fr: Mention
-        en: Mention
-      help_text: >
-        Description des contraintes réglementaires qui limitent l'accès
-        aux données et des modalités pratiques pour les obtenir.
-      translatable_values: True
-      preset: multilingual_markdown
-      value_type: literal
+- tab: *tab_details
+  <<: *access_rights_fields
 
 # RESTRICTED_ACCESS
 # - non exposé dans l'export DCAT, utilisé pour l'élément
@@ -1032,6 +1043,11 @@ dataset_fields:
     fr: Donnée à accès restreint
     en: Restricted access
   value_type: literal
+
+# RIGHTS {*}
+# > dct:rights [-> dct:RightsStatement] / rdfs:label
+- tab: *tab_details
+  <<: *rights_fields
 
 # CRS {}
 # > dct:conformsTo
@@ -1208,14 +1224,18 @@ dataset_fields:
 
 # # ------ Champs CKAN hors DCAT ------
 
-# LICENSE_ID
+# LICENSE
 # calculé à partir des champs "license" des ressources
-- field_name: license_id
+- field_name: license
   label:
-    fr: Étiquette de licence
-    en: License tag
+    fr: Licence
+    en: License
   display_snippet: null
-  value_type: literal
+  value_type: uri
+  display_snippet: ecospheres_vocabulary_uri.html
+  vocabularies:
+    - eu_licence
+    - spdx_license
 
 # GRAPHIC_PREVIEW
 # URL d'une image illustrant les données
@@ -1340,7 +1360,6 @@ resource_fields:
     en: Media type
   value_type: node or uri
   display_snippet: media_type_fields.html
-
   <<: *media_type_fields
 
 # OTHER_FORMAT [{}]
@@ -1351,7 +1370,6 @@ resource_fields:
     en: Format
   value_type: node or uri
   display_snippet: media_type_fields.html
-
   <<: *media_type_fields
 
 # FORMAT []
@@ -1383,26 +1401,20 @@ resource_fields:
   display_snippet: service_conforms_to.html
   <<: *standard_fields
 
+# ACCESS_RIGHTS [{}]
+# > dct:accessRights -> dct:RightsStatement
+- <<: *access_rights_fields 
+
 # RIGHTS {*}
 # > dct:rights [-> dct:RightsStatement] / rdfs:label
-- field_name: rights
-  label:
-    fr:  Propriété intellectuelle
-    en:  Intellectual property
-  help_text: > 
-    Mention rappelant les droits de propriété intellectuelle sur
-    les données, à faire apparaître en cas de réutilisation de la
-    ressource.
-  preset: multilingual_markdown
-  translatable_values: True
-  value_type: literal
+- <<: *rights_fields
 
 # LICENSE [{}]
 # > dct:license -> dct:LicenseDocument
 # - le champ "uri" correspond à l'objet du triplet <...> dct:license <uri>,
 #   s'il n'est pas défini, l'exposition utilise un noeud anonyme
 #   de classe dct:LicenseDocument 
-- field_name: licenses
+- field_name: license
   label: 
     fr: Licence
     en: Licence
