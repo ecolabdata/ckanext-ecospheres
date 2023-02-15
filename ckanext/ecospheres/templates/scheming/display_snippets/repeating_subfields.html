@@ -21,51 +21,42 @@
       <div class="panel panel-default">
         <div class="panel-body">
           <dl class="scheming-subfield-list">
-
             {%- set uri_subfield = h.ecospheres_retrieve_uri_subfield(field.repeating_subfields, field_data) -%}
-
-            {% if field.field_name == "in_series" or field.field_name == "series_member" %}
-              {# création d'un lien vers la ressource           {{ data[field.field_name] }}  #}
-              <a href="/dataset/{{ field_data['url']   }}"> {{ field_data['title'] }} </a> 
-              </br>
-
-            {%- elif field.field_name == "media_type_ressource" -%}
-                  {%- for item in data[field.field_name] -%}
-                    {%- if item.get("label",None) -%}
-                      {{ item.get("label",None) }}
-                    {%- else -%}
-                      {{ h.get_vocabulary_label_by_uri("iana_media_type",item.get("uri",None)) }}
-                    {%- endif -%} 
-                  {%- endfor -%}
-
-            {%- elif uri_subfield -%}
+            {%- if uri_subfield -%}
               {%- snippet 'scheming/snippets/display_field.html',
                 field=uri_subfield,
                 data=field_data,
                 entity_type=entity_type,
                 object_type=object_type
               -%}
-            
             {% else %}
               {% for subfield in field.repeating_subfields %}
                 {%- if not h.ecospheres_is_empty(field_data, subfield) -%}
-                  <div style="display:flex;">
-                    <dt class="dataset-label" style="font-weight:bold;">
-                      {{ h.scheming_language_text(subfield.label) }}
-                    </dt>
-                    <dd>
-                      {%- snippet 'scheming/snippets/display_field.html',
-                        field=subfield,
-                        data=field_data,
-                        entity_type=entity_type,
-                        object_type=object_type
-                      -%}
-                    </dd>
-                    <br>
-                  </div>  
+                  {% if subfield.field_name in ('label', 'title', 'name') %}
+                    {%- snippet 'scheming/snippets/display_field.html',
+                      field=subfield,
+                      data=field_data,
+                      entity_type=entity_type,
+                      object_type=object_type
+                    -%}
+                  {% else %}
+                    <div style="display:flex;">
+                      <dt class="dataset-label" style="font-weight:bold;">
+                        {{ h.scheming_language_text(subfield.label) }}
+                      </dt>
+                      <dd>
+                        {%- snippet 'scheming/snippets/display_field.html',
+                          field=subfield,
+                          data=field_data,
+                          entity_type=entity_type,
+                          object_type=object_type
+                        -%}
+                      </dd>
+                      <br>
+                    </div>
+                  {% endif %}
                 {%- endif -%}
               {% endfor %}
-            
             {% endif %}
 
           </dl>
