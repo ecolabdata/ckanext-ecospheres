@@ -221,7 +221,35 @@ def ecospheres_get_vocabulary_label_from_field(field_dict, uri, lang=None):
             )
     return uri
 
-def ecospheres_is_empty(data_dict, subfield):
+def ecospheres_get_field_dict(field_name, schema, resource_field=False):
+    '''Return a field definition from the schema.
+
+    Parameters
+    ----------
+    field_name : str
+        Name of a first level field. 
+    schema : dict
+        A ckanext-scheming's schema.
+    resource_field : bool, default False
+        Is the field a resource field or a
+        dataset field (default)?
+    
+    Returns
+    -------
+    dict or None
+        ``None`` if the field doesn't exist.
+    
+    '''
+    if resource_field:
+        fields = schema.get('resource_fields', [])
+    else:
+        fields = schema.get('dataset_fields', [])
+    
+    for field in fields:
+        if field.get('field_name') == field_name:
+            return field
+
+def ecospheres_is_empty(data_dict, subfield=None):
     '''Is the subfield value empty?
 
     Take into account the fact that some metadata are
@@ -232,15 +260,19 @@ def ecospheres_is_empty(data_dict, subfield):
     data_dict : dict
         Metadata dictionary for a field of
         which `subfield` is presumably a subfield.
-    subfield : dict
-        Subfield definition.
+    subfield : dict, optional
+        Subfield definition. If not provided, the function
+        will check if `data_dict` itself is empty.
 
     Returns
     -------
     bool
 
     '''
-    value = data_dict.get(subfield['field_name'])
+    if subfield:
+        value = data_dict.get(subfield['field_name'])
+    else:
+        value = data_dict
     return _is_empty(value)
     
 def _is_empty(value):

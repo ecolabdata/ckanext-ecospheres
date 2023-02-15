@@ -55,7 +55,8 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
                 'ecospheres_get_vocabulary_label_from_field': helpers.ecospheres_get_vocabulary_label_from_field,
                 'ecospheres_is_empty': helpers.ecospheres_is_empty,
                 'ecospheres_retrieve_uri_subfield': helpers.ecospheres_retrieve_uri_subfield,
-                'ecospheres_get_package_title': helpers.ecospheres_get_package_title
+                'ecospheres_get_package_title': helpers.ecospheres_get_package_title,
+                'ecospheres_get_field_dict': helpers.ecospheres_get_field_dict
                 }
 
     # ------------- IValidators ---------------#
