@@ -18,7 +18,10 @@ from ckanext.ecospheres.spatial.utils import (
     build_catalog_page_url, extract_scheme_and_identifier,
     getrecordbyid_request, ISO_NAMESPACES
 )
-from ckanext.ecospheres.maps import ISO_639_2, DCAT_ENDPOINT_FORMATS
+from ckanext.ecospheres.maps import (
+    ISO_639_2, DCAT_ENDPOINT_FORMATS, RIGHTS_STATEMENT_MAP,
+    LICENSE_MAP, RESTRICTED_ACCESS_URIS
+)
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 from ckanext.ecospheres.helpers import get_org_territories
 
@@ -82,6 +85,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         dataset_dict = build_dataset_dict_from_schema('dataset', main_language=language)
 
         # --- various metadata to pick up from package_dict ---
+        # < owner_org >
         for target_field, package_field in {
             # dataset_dict key -> package_dict key
             'owner_org': 'owner_org'
@@ -89,6 +93,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             dataset_dict.set_value(target_field, package_dict.get(package_field))
 
         # --- various metadata to pick up from package_dict's extras ---
+        # < graphic_preview >
         extras_map = {
             # ckanext-spatial extras key -> dataset_dict key
             'graphic-preview-file': 'graphic_preview'   
@@ -98,6 +103,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 dataset_dict.set_value(extras_map[elem['key']], elem['value'])
 
         # --- various metadata to pick up from iso_values ---
+        # < name >, < title >, < notes >, < provenance > and < identifier >
         for target_field, iso_field in {
             # dataset_dict key -> iso_values key
             'title': 'title',
@@ -119,6 +125,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         owner_org = dataset_dict.get('owner_org')
 
         # --- dates ----
+        # < created >, < issued >, < modified >
         if iso_values.get('dataset-reference-date'):
             type_date_map = {
                 # ISO CI_DateTypeCode -> dataset_dict key
@@ -130,12 +137,15 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 if date_object['type'] in type_date_map:
                     dataset_dict.set_value(type_date_map[date_object['type']], date_object['value'])
         
+        # < temporal >
         if iso_values.get('temporal-extent-begin') or iso_values.get('temporal-extent-end'):
             temporal_dict = dataset_dict.new_item('temporal')
             temporal_dict.set_value('start_date', iso_values.get('temporal-extent-begin'))
             temporal_dict.set_value('end_date', iso_values.get('temporal-extent-end'))
 
         # --- organizations ---
+        # < rights_holder >, < publisher >, < creator >, < contact_point >
+        # and < qualified_attribution >
         if iso_values.get('responsible-organisation'):
             base_role_map = {
                 # ISO CI_RoleCode -> dataset_dict key
@@ -169,16 +179,19 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                         org_dict.set_value('url', online_resource.get('url'))
         
         # --- metadata's metadata ---
+        # < record_harvested >, < record_modified > and < record_identifier >
         dataset_dict.set_value('record_harvested', datetime.now().astimezone().isoformat())
         dataset_dict.set_value('record_modified', iso_values.get('metadata-date'))
         dataset_dict.set_value('record_identifier', name)
 
+        # < record_language >
         meta_language = iso_values.get('metadata-language')
         if meta_language:
             meta_language_uri =  VocabularyReader.get_uri_from_label('eu_language', meta_language)
             if meta_language_uri:
                 dataset_dict.set_value('record_language', meta_language_uri)
 
+        # < record_contact_point >
         if iso_values.get('metadata-point-of-contact'):
             for org_object in iso_values['metadata-point-of-contact']:
                 org_dict = dataset_dict.new_item('record_contact_point')
@@ -190,6 +203,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                     # TODO: le numéro de téléphone n'est pas récupéré dans 'contact-info',
                     # "gmd:phone/gmd:CI_Telephone/gmd:voice/gco:CharacterString/text()"
 
+        # < record_in_catalog >
         catalog_dict = dataset_dict.new_item('record_in_catalog')
 
         for elem in package_dict['extras']:
@@ -202,6 +216,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 catalog_dict.set_value('homepage', elem['value'])
         
         # --- references / documentation ---
+            # < landing_page >, < attributes_page > and < uri >
             elif elem['key'] == 'catalog_base_url' and name:
                 landing_page = build_catalog_page_url(elem['value'], name)
                 if landing_page:
@@ -215,10 +230,11 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 if attributes_page:
                     dataset_dict.set_value('attributes_page', attributes_page)
         
-        # page
+        # < page >
         # TODO
 
         # --- themes and keywords ---
+        # < category >, < theme > and < free_tags >
         iso_themes = iso_values.get('keyword-inspire-theme', [])
         if iso_themes:
             for theme in iso_themes:
@@ -267,7 +283,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             # more than once, hence not test is necessary here
 
         # --- spatial coverage ---
-        # bounding box
+        # < bbox > and < spatial >
         iso_bboxes = iso_values.get('bbox')
         for iso_bbox in iso_bboxes:
             if iso_bbox:
@@ -284,7 +300,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                     dataset_dict.set_value('spatial', geojson)
                     break # other bboxes will be lost
 
-        # spatial_coverage and territory
+        # < spatial_coverage > and < territory >
         iso_extents = (
             iso_values.get('extent-free-text', [])
             + iso_values.get('extent-controlled', [])
@@ -350,6 +366,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             )
 
         # --- relations ---
+        # < series_member > and < in_series >
         children = iso_values.get('aggregation-info', [])
         children_names = [
             child['aggregate-dataset-identifier']
@@ -381,20 +398,21 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             series_member.set_value('name', child_name)
 
         # --- encoded metadata ---
+        # < ckan_api_show >
         dataset_dict.set_value(
             'ckan_api_show', toolkit.url_for(
                 'api.action', ver=3, logic_function='package_show',
                 id=name, _external=True
             )
         )
-
+        # < as_inspire_xml >
         dataset_dict.set_value(
             'as_inspire_xml', getrecordbyid_request(
                 harvest_object.source.url,
                 name
             )
         )
-
+        # < as_dcat_rdf >
         for dcat_endpoint_format, dcat_endpoint_extension in DCAT_ENDPOINT_FORMATS.items():
             endpoint_dict = dataset_dict.new_item('as_dcat_rdf')
             endpoint_dict.set_value(
@@ -408,6 +426,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             format_endpoint_dict.set_value('uri', dcat_endpoint_format)
 
         # --- etc. ---
+        # < accrual_periodicity >
         frequency = iso_values.get('frequency-of-update')
         # might either be a code or some label, but codes are
         # stored as alternative labels, so get_uri_from_label
@@ -419,6 +438,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             if frequency_uri:
                 dataset_dict.set_value('accrual_periodicity', frequency_uri)
 
+        # < status >
         states = iso_values.get('progress')
         # apparently admits more than one value, when DCAT does not
         # only the last valid value will be stored
@@ -430,11 +450,13 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 if state_uri:
                     dataset_dict.set_value('status', state_uri)
 
+        # < crs >
         crs = iso_values.get('spatial-reference-system')
         if not crs:
             crss = xml_tree.xpath(
-                'gmd:referenceSystemInfo/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier'
-                '/gmd:RS_Identifier/gmd:code/gmx:Anchor/@xlink:href',
+                'gmd:referenceSystemInfo/gmd:MD_ReferenceSystem/'
+                'gmd:referenceSystemIdentifier/gmd:RS_Identifier/'
+                'gmd:code/gmx:Anchor/@xlink:href',
                 namespaces=ISO_NAMESPACES
             )
         else:
@@ -446,8 +468,75 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             ):
                 dataset_dict.set_value('crs', crs)
 
-        # access_rights
-        # conforms_to
+        # < access_rights >, < rights >, < restricted_access >
+        # and < license_title >
+        rights_statements = (
+            iso_values.get('limitations-on-public-access', [])
+            + iso_values.get('access-constraints', [])
+            + iso_values.get('use-constraints', [])
+            + xml_tree.xpath(
+                'gmd:identificationInfo/gmd:MD_DataIdentification/'
+                'gmd:resourceConstraints/gmd:MD_LegalConstraints/'
+                'gmd:useLimitation/gco:CharacterString/text()',
+                namespaces=ISO_NAMESPACES
+            )
+        )
+        # theorically, "use-constraints" should match "licences" and "rights",
+        # "limitations-on-public-access" and "access-constraints" should
+        # match "access_rights", but it's simply not the case. Everything
+        # is mixed up.
+        resource_license_uri = None
+        resource_license_label = None
+        registered = False
+        restricted_access = False
+        for rights_statement in rights_statements:
+            if not rights_statement:
+                break
+            for statement_terms, field in RIGHTS_STATEMENT_MAP.items():
+                if all(
+                    statement_term.lower() in rights_statement.lower()
+                    for statement_term in statement_terms
+                ):
+                    if field == 'access_rights':
+                        access_rights = dataset_dict.new_item('access_rights')
+                        access_rights_uri = VocabularyReader.get_uri_from_label(
+                            'inspire_limitation_on_public_access', rights_statement
+                        )
+                        if access_rights_uri:
+                            access_rights.set_value('uri', access_rights_uri)
+                            if access_rights_uri in RESTRICTED_ACCESS_URIS:
+                                restricted_access = True
+                        access_rights.set_value('label', rights_statement)
+                        registered = True
+                    
+                    elif field == 'license' and not resource_license_uri:
+                        for license_terms, license_uri in LICENSE_MAP.items():
+                            if all(
+                                license_term.lower() in rights_statement.lower()
+                                for license_term in license_terms
+                            ):
+                                resource_license_uri = license_uri
+                                dataset_dict.set_value(
+                                    'license', resource_license_uri
+                                )
+                                if resource_license_label:
+                                    rights_statement = resource_license_label
+                                    resource_license_label = None
+                                else:
+                                    registered = True
+                                break
+                        else:
+                            if not resource_license_label:
+                                resource_license_label = rights_statement
+                                registered = True
+                    break
+            if not registered:
+                rights = dataset_dict.new_item('rights')
+                rights.set_value('label', rights_statement)
+            
+        dataset_dict.set_value('restricted_access', restricted_access)
+
+        # < conforms_to >
         # ...
 
         return dataset_dict.flat()
