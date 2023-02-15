@@ -137,7 +137,10 @@ class TestEcospheresDatasetSchema(object):
                 fields += field['repeating_subfields']
 
     def test_node_or_uri_fields_have_uri_subfield(self):
-        """Vérifie que les champs de type noeud ou URI ont un sous-champ uri."""
+        """Vérifie que les champs de type noeud ou URI ont un sous-champ uri.
+        
+        Exception admise : un champ "name" peut remplacer le champ "uri". 
+        """
         schema = _get_schema('ecospheres_dataset_schema')
         fields = schema['dataset_fields'] + schema['resource_fields']
         while fields:
@@ -146,9 +149,10 @@ class TestEcospheresDatasetSchema(object):
             sfields = field.get('repeating_subfields')
             assert not value_type == 'node or uri' \
                 or isinstance(sfields, list) \
-                and any(x.get('field_name') == 'uri' for x in sfields), \
-                field.get('field_name')
+                and any(
+                    x.get('field_name') in ('uri', 'name')
+                    for x in sfields
+                ), field.get('field_name')
             if sfields:
                 fields += sfields
-
 
