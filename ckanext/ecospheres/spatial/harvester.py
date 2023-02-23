@@ -481,14 +481,33 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 namespaces=ISO_NAMESPACES
             )
         )
+        rights_statement_uris = xml_tree.xpath(
+            'gmd:identificationInfo/gmd:MD_DataIdentification/'
+            'gmd:resourceConstraints/*/*/gmx:Anchor/@xlink:href',
+            namespaces=ISO_NAMESPACES
+        )
+
         # theorically, "use-constraints" should match "licences" and "rights",
         # "limitations-on-public-access" and "access-constraints" should
         # match "access_rights", but it's simply not the case. Everything
         # is mixed up.
         resource_license_uri = None
         resource_license_label = None
-        registered = False
         restricted_access = False
+
+        for rights_statement_uri in rights_statement_uris:
+            if VocabularyReader.is_known_uri(
+                'inspire_limitation_on_public_access', rights_statement_uri
+            ):
+                access_rights = dataset_dict.new_item('access_rights')
+                access_rights.set_value('uri', rights_statement_uri)
+                if rights_statement_uri in RESTRICTED_ACCESS_URIS:
+                    restricted_access = True
+            else:
+                logger.warning(f'Unknown rights URI "{rights_statement_uri}"')
+        
+        registered = False
+
         for rights_statement in rights_statements:
             if not rights_statement:
                 break
@@ -538,6 +557,9 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
 
         # < conforms_to >
         # ...
+
+        # --- resources ---
+
 
         return dataset_dict.flat()
 
