@@ -86,10 +86,12 @@ class VocabularyReader:
         # TODO: If the 'count' key has no use, it shouldn't exist. [LL-2023.01.23]
         if not vocabulary:
             return []
+
+        table_sql = get_table_sql(vocabulary, modelclass)
+
         try:
             with Session(database=database) as s:
                 try:
-                    table_sql = get_table_sql(vocabulary, modelclass)
                     if add_count:
                         stmt = f'''
                             WITH data_with_count AS (
@@ -164,8 +166,8 @@ class VocabularyReader:
     def fetch_hierarchized_data(cls, vocabulary, children_alias=None, database=None):
         """Fetch all data from the label and hierachy tables of the given vocabulary.
 
-        This won't work if the vocabulary doesn't have a 
-        hierarchy table in the database.
+        Returns an empty list if the vocabulary
+        doesn't have a hierarchy table in the database.
 
         Parameters
         ----------
@@ -211,13 +213,16 @@ class VocabularyReader:
         if not vocabulary:
             return []
 
+        label_sql = get_table_sql(vocabulary, VocabularyLabelTable)
+        hierarchy_sql = get_table_sql(vocabulary, VocabularyHierarchyTable)
+        if not cls.table_exists(hierarchy_sql, database=database):
+            return []
+
         children_alias = children_alias or 'children'
 
         try:
             with Session(database=database) as s:
                 try:
-                    label_sql = get_table_sql(vocabulary, VocabularyLabelTable)
-                    hierarchy_sql = get_table_sql(vocabulary, VocabularyHierarchyTable)
                     stmt = f'''
                         WITH label_data AS (
                         SELECT
@@ -289,10 +294,12 @@ class VocabularyReader:
         """
         if not vocabulary or not uri:
             return False
+        
+        table_sql = get_table_sql(vocabulary, VocabularyLabelTable)
+
         try:
             with Session(database=database) as s:
                 try:
-                    table_sql = get_table_sql(vocabulary, VocabularyLabelTable)
                     stmt = exists([table_sql.c.uri]).where(table_sql.c.uri == uri).select()
                     res = s.execute(stmt)
                     return res.scalar()
@@ -333,7 +340,7 @@ class VocabularyReader:
         Returns
         -------
         str or None
-            The first matching URI. ``None`` if the vocabulary
+            A label for the URI. ``None`` if the vocabulary
             doesn't exist, is not available or there was
             no match for the URI.
 
@@ -341,11 +348,11 @@ class VocabularyReader:
         if not vocabulary or not uri:
             return
         
+        table_sql = get_table_sql(vocabulary, VocabularyLabelTable)
+
         try:
             with Session(database=database) as s:
                 try:
-                    table_sql = get_table_sql(vocabulary, VocabularyLabelTable)
-
                     # with the provided language
                     if language:
                         stmt = select([table_sql.c.label]).where(
@@ -492,6 +499,10 @@ class VocabularyReader:
         if not vocabulary or not terms:
             return reslist
 
+        table_sql = get_table_sql(vocabulary, VocabularyRegexpTable)
+        if not cls.table_exists(table_sql, database=database):
+            return reslist
+
         if isinstance(terms, str):
             terms = [terms]
 
@@ -499,7 +510,6 @@ class VocabularyReader:
             with Session(database=database) as s:
                 for term in terms:
                     try:
-                        table_sql = get_table_sql(vocabulary, VocabularyRegexpTable)
                         stmt = select([func.array_agg(table_sql.c.uri.distinct())]).where(
                             literal(term).op('~')(table_sql.c.regexp)
                         )
@@ -547,10 +557,13 @@ class VocabularyReader:
         if not vocabulary or not uri:
             return []
         
+        table_sql = get_table_sql(vocabulary, VocabularyHierarchyTable)
+        if not cls.table_exists(table_sql, database=database):
+            return []
+
         try:
             with Session(database=database) as s:
                 try:
-                    table_sql = get_table_sql(vocabulary, VocabularyHierarchyTable)
                     if isinstance(uri, list):
                         cdt = (table_sql.c.child._in(uri))
                     else:
@@ -598,10 +611,13 @@ class VocabularyReader:
         if not vocabulary or not uri:
             return []
         
+        table_sql = get_table_sql(vocabulary, VocabularyHierarchyTable)
+        if not cls.table_exists(table_sql, database=database):
+            return []
+        
         try:
             with Session(database=database) as s:
                 try:
-                    table_sql = get_table_sql(vocabulary, VocabularyHierarchyTable)
                     if isinstance(uri, list):
                         cdt = (table_sql.c.parent._in(uri))
                     else:
@@ -665,11 +681,14 @@ class VocabularyReader:
             use_altlabel=False, database=database
         )
 
+        label_table_sql = get_table_sql(vocabulary, VocabularyLabelTable)
+        hierarchy_table_sql = get_table_sql(vocabulary, VocabularyHierarchyTable)
+        if not cls.table_exists(hierarchy_table_sql, database=database):
+            return []
+        
         try:
             with Session(database=database) as s:
                 try:
-                    hierarchy_table_sql = get_table_sql(vocabulary, VocabularyHierarchyTable)
-                    label_table_sql = get_table_sql(vocabulary, VocabularyLabelTable)
                     stmt = select([func.array_agg(label_table_sql.c.label.distinct())]).select_from(
                         hierarchy_table_sql
                     ).join(label_table_sql, hierarchy_table_sql.c.child == label_table_sql.c.uri).where(
@@ -717,10 +736,13 @@ class VocabularyReader:
         if not vocabulary or not uri:
             return []
         
+        table_sql = get_table_sql(vocabulary, VocabularySynonymTable)
+        if not cls.table_exists(table_sql, database=database):
+            return []
+        
         try:
             with Session(database=database) as s:
                 try:
-                    table_sql = get_table_sql(vocabulary, VocabularySynonymTable)
                     stmt = select([func.array_agg(table_sql.c.synonym.distinct())]).where(
                         table_sql.c.uri == uri
                     )
@@ -765,10 +787,13 @@ class VocabularyReader:
         if not vocabulary or not synonym:
             return
         
+        table_sql = get_table_sql(vocabulary, VocabularySynonymTable)
+        if not cls.table_exists(table_sql, database=database):
+            return
+
         try:
             with Session(database=database) as s:
                 try:
-                    table_sql = get_table_sql(vocabulary, VocabularySynonymTable)
                     stmt = select([table_sql.c.uri]).where(
                         table_sql.c.synonym == synonym
                     )
@@ -814,10 +839,13 @@ class VocabularyReader:
         if not vocabulary or not uri:
             return
         
+        table_sql = get_table_sql(vocabulary, VocabularySpatialTable)
+        if not cls.table_exists(table_sql, database=database):
+            return
+        
         try:
             with Session(database=database) as s:
                 try:
-                    table_sql = get_table_sql(vocabulary, VocabularySpatialTable)
                     stmt = f'''
                         SELECT to_json(spatial_table.*)
                             FROM {table_sql.schema}.{table_sql.name} AS spatial_table
@@ -948,7 +976,46 @@ class VocabularyReader:
                         """)
                     return res.scalar()
                 except Exception as e:
-                    logger.error('Failed to list vocabularies')
+                    logger.error('Failed to list vocabularies. {0}'.format(str(e)))
         except Exception as e:
             logger.error('Database session error. {0}'.format(str(e)))
 
+    @classmethod
+    def table_exists(cls, table_sql, database=None):
+        """Check if a table exists in the database.
+
+        Parameters
+        ----------
+        table_sql : sqlalchemy.sql.schema.Table
+            Definition of the table.
+        database : str, optional
+            URL of the database where the vocabulary is stored,
+            ie ``dialect+driver://username:password@host:port/database``.
+            If not provided, the main CKAN PostgreSQL database will be used.
+        
+        Returns
+        -------
+        bool or ``None``
+            ``None`` if the test failed for some reason.
+        
+        """
+        try:
+            with Session(database=database) as s:
+                try:
+                    res = s.execute(
+                        """
+                        SELECT to_regclass(:relfullname) IS NOT NULL
+                        """,
+                        {
+                            'relfullname': f'{table_sql.schema}.{table_sql.name}'
+                        }
+                    )
+                    return res.scalar()
+                except Exception as e:
+                    logger.error(
+                        'Failed to check if "{0}"."{1}" exists. {2}'.format(
+                            table_sql.schema, table_sql.name, str(e)
+                        )
+                    )
+        except Exception as e:
+            logger.error('Database session error. {0}'.format(str(e)))
