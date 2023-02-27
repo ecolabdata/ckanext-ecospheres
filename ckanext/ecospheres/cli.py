@@ -24,6 +24,32 @@ def list():
         click.secho('\n'.join(vocabularies), fg=u'green')
 
 @vocabulary.command(
+    help=u'Return a label for the URI.'
+)
+@click.argument(u'vocabulary')
+@click.argument(u'uri')
+@click.argument(u'language', required=False)
+def label(vocabulary, uri, language):
+    '''Return a label for the URI.
+
+    Parameters
+    ----------
+    vocabulary : str
+        Name of the vocabulary, ie its ``name``
+        property in ``vocabularies.yaml``.
+    uri : str
+        A vocabulary URI.
+    language : str, optional
+        A language code. If specified, the command will try
+        to return a label in that language.
+
+    '''
+    label = VocabularyReader.get_label(
+            vocabulary, uri, language=language
+    )
+    click.secho(label or '< No result >', fg=u'green')
+
+@vocabulary.command(
     help=u'Return the URI of a vocabulary item with matching label.',
     short_help=u'Label search.'
 )
@@ -54,6 +80,9 @@ def lsearch(vocabulary, label, language, case_sensitive, use_altlabel):
         property in ``vocabularies.yaml``.
     label : str
         Some label to look up.
+    language : str, optional
+        A language code. If specified, only labels in that
+        specific language are considered.
     case_sensitive : bool, default False
         If ``True``, the case will be considered when
         testing the labels.
