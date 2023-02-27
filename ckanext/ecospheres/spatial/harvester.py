@@ -23,6 +23,9 @@ from ckanext.ecospheres.maps import (
     LICENSE_MAP, RESTRICTED_ACCESS_URIS
 )
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
+from ckanext.ecospheres.vocabulary.search import (
+    search_uri, search_territory
+)
 from ckanext.ecospheres.helpers import get_org_territories
 
 logger = logging.getLogger(__name__)
@@ -163,7 +166,10 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 if org_role in base_role_map:
                     org_dict = dataset_dict.new_item(base_role_map[org_role])
                 else:
-                    role_uri = VocabularyReader.get_uri_from_label('inspire_role', org_role)
+                    role_uri = search_uri(
+                        ('qualified_attribution', 'had_role'),
+                        org_role
+                    )
                     if role_uri:
                         qa_dict = dataset_dict.new_item('qualified_attribution')
                         qa_dict.set_value('had_role', role_uri)
@@ -187,7 +193,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         # < record_language >
         meta_language = iso_values.get('metadata-language')
         if meta_language:
-            meta_language_uri =  VocabularyReader.get_uri_from_label('eu_language', meta_language)
+            meta_language_uri =  search_uri('record_language', meta_language)
             if meta_language_uri:
                 dataset_dict.set_value('record_language', meta_language_uri)
 
@@ -235,52 +241,53 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
 
         # --- themes and keywords ---
         # < category >, < theme > and < free_tags >
-        iso_themes = iso_values.get('keyword-inspire-theme', [])
-        if iso_themes:
-            for theme in iso_themes:
-                theme_uri =  VocabularyReader.get_uri_from_label(
-                    'inspire_theme', theme
-                )
+        iso_categories = (
+            iso_values.get('topic-category', [])
+        )
+        if iso_categories:
+            for iso_category in iso_categories:
+                theme_uri =  search_uri('theme', iso_category)
                 if theme_uri:
                     dataset_dict.set_value('theme', theme_uri)
-                
-        iso_topic_categories = iso_values.get('topic-category', [])
-        if iso_topic_categories:
-            for iso_topic_category in iso_topic_categories:
-                topic_category_uri = VocabularyReader.get_uri_from_label(
-                    'inspire_topic_category', iso_topic_category
-                )
-                if topic_category_uri:
-                    dataset_dict.set_value('theme', topic_category_uri)
+
+        iso_themes = (
+            iso_values.get('keyword-inspire-theme', [])
+        )
+        if iso_themes:
+            for iso_theme in iso_themes:
+                theme_uri =  search_uri('theme', iso_theme, warn_if_not_found=False)
+                if theme_uri:
+                    dataset_dict.set_value('theme', theme_uri)
         
         for iso_keyword in iso_values.get('keywords', []):
             dataset_dict.set_value('free_tags', iso_keyword.get('keyword'))
 
         words = (
-            iso_themes + iso_topic_categories
+            iso_themes + iso_categories
             + dataset_dict.get_values('free_tags')
             + dataset_dict.get_values('title')
         )
-        if words:
-            for word in words:
-                category_uri = VocabularyReader.get_uri_from_label(
-                    'ecospheres_theme', word
-                )
-                if category_uri:
-                    dataset_dict.set_value('category', category_uri)                
-            category_uris = VocabularyReader.get_uris_from_regexp(
-                'ecospheres_theme', words
+        for word in words:
+            category_uri = search_uri(
+                'category', word, check_regexp=False, warn_if_not_found=False
             )
-            if category_uris:
-                dataset_dict.set_value('category', category_uris)
-            for category_uri in category_uris:
-                parent_category_uri = VocabularyReader.get_parents(
-                    'ecospheres_theme', category_uri
-                )
-                if parent_category_uri:
-                    dataset_dict.set_value('category', parent_category_uri)
-            # NB: the method makes sure no value is listed
-            # more than once, hence not test is necessary here
+            # NB: regular expression search is done separately, to retrieve all
+            # matches instead of one
+            if category_uri:
+                dataset_dict.set_value('category', category_uri)                
+        category_uris = VocabularyReader.get_uris_from_regexp(
+            'ecospheres_theme', words
+        )
+        if category_uris:
+            dataset_dict.set_value('category', category_uris)
+        for category_uri in category_uris:
+            parent_category_uri = VocabularyReader.get_parents(
+                'ecospheres_theme', category_uri
+            )
+            if parent_category_uri:
+                dataset_dict.set_value('category', parent_category_uri)
+        # NB: the method makes sure no value is listed
+        # more than once, hence not test is necessary here
 
         # --- spatial coverage ---
         # < bbox > and < spatial >
@@ -310,53 +317,32 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         # here in case future updates put it to use.
         
         for iso_extent in iso_extents:
-            spatial_coverage_uri = None
-            extent_scheme = None
-            extent_id = None
-            if VocabularyReader.is_known_uri(
-                'eu_administrative_territory_unit', iso_extent
-                ):
-                # actually the less likely vocabulary to be found
-                # in INSPIRE catalogs, but it's much smaller, so
-                # it makes sense to try it first.
-                spatial_coverage_uri = iso_extent
-                spatial_coverage_voc = 'eu_administrative_territory_unit'
-            elif VocabularyReader.is_known_uri(
-                'insee_official_geographic_code', iso_extent
-                ):
-                spatial_coverage_uri = iso_extent
-                spatial_coverage_voc = 'insee_official_geographic_code'
-            elif len(iso_extent) > 2:
-                # excluding short strings for now, because of the possible
-                # mix up between codes of different types of territories
-                extent_scheme, extent_id = extract_scheme_and_identifier(iso_extent)
-                spatial_coverage_uri = VocabularyReader.get_uri_from_label(
-                        'insee_official_geographic_code', extent_id
-                    )
-                spatial_coverage_voc = 'insee_official_geographic_code'
-            
+
+            spatial_coverage_uri = search_uri(
+                'spatial_coverage', iso_extent, warn_if_not_found=False
+                )
             if spatial_coverage_uri:
                 spatial_coverage_dict = dataset_dict.new_item('spatial_coverage')
                 spatial_coverage_dict.set_value('uri', spatial_coverage_uri)
-                dataset_dict.set_value(
-                    'territory',
-                    VocabularyReader.get_ecospheres_territory(
-                        spatial_coverage_voc, spatial_coverage_uri
-                    )
-                )
-            elif extent_scheme:
-                if VocabularyReader.is_known_uri(
-                    'insee_gazetteer', extent_scheme
+                territory = search_territory(spatial_coverage_uri)
+                dataset_dict.set_value('territory', territory)
+                continue
+
+            extent_scheme, extent_id = extract_scheme_and_identifier(iso_extent)
+            if extent_scheme:
+                if extent_scheme_uri := search_uri(
+                    ('spatial_coverage', 'in_scheme'),
+                    extent_scheme
                 ):
                     spatial_coverage_dict = dataset_dict.new_item('spatial_coverage')
-                    spatial_coverage_dict.set_value('in_scheme', extent_scheme)
+                    spatial_coverage_dict.set_value('in_scheme', extent_scheme_uri)
                     spatial_coverage_dict.set_value('identifier', extent_id)
-                # if the gazetteer can't be recognized either, the info is lost
-            else:
-                # whatever it is, it's not an URI, so should hopefully be readable
-                # by a human being.
-                spatial_coverage_dict = dataset_dict.new_item('spatial_coverage')
-                spatial_coverage_dict.set_value('label', extent_id or iso_extent)
+                    continue
+
+            # whatever it is, it's not an URI, so should hopefully be readable
+            # by a human being.
+            spatial_coverage_dict = dataset_dict.new_item('spatial_coverage')
+            spatial_coverage_dict.set_value('label', extent_id or iso_extent)
 
         if not dataset_dict.get_values('territory'):
             # get the territories from the organization
@@ -431,24 +417,16 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         # might either be a code or some label, but codes are
         # stored as alternative labels, so get_uri_from_label
         # will work in both cases
-        if frequency:
-            frequency_uri =  VocabularyReader.get_uri_from_label(
-                'inspire_maintenance_frequency', frequency
-            )
-            if frequency_uri:
-                dataset_dict.set_value('accrual_periodicity', frequency_uri)
+        if frequency_uri := search_uri('accrual_periodicity', frequency):
+            dataset_dict.set_value('accrual_periodicity', frequency_uri)
 
         # < status >
-        states = iso_values.get('progress')
+        states = iso_values.get('progress', [])
         # apparently admits more than one value, when DCAT does not
         # only the last valid value will be stored
-        if states:
-            for state in states:
-                state_uri =  VocabularyReader.get_uri_from_label(
-                    'iso19139_progress_code', state
-                )
-                if state_uri:
-                    dataset_dict.set_value('status', state_uri)
+        for state in states:
+            if state_uri := search_uri('status', state):
+                dataset_dict.set_value('status', state_uri)
 
         # < crs >
         crs = iso_values.get('spatial-reference-system')
@@ -462,14 +440,20 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         else:
             crss = crs if isinstance(crs, list) else [crs]
         for crs in crss:
-            if (
-                VocabularyReader.is_known_uri('ogc_epsg', crs)
-                or VocabularyReader.is_known_uri('ign_crs', crs)
-            ):
-                dataset_dict.set_value('crs', crs)
+            if crs_uri := search_uri('crs', crs):
+                dataset_dict.set_value('crs', crs_uri)
 
         # < access_rights >, < rights >, < restricted_access >
         # and < license_title >
+        # theorically, "use-constraints" should match "licences" and "rights",
+        # "limitations-on-public-access" and "access-constraints" should
+        # match "access_rights", but it's simply not the case. Everything
+        # is mixed up.
+        resource_license_uri = None
+        resource_license_label = None
+        restricted_access = False
+        registered = False
+
         rights_statements = (
             iso_values.get('limitations-on-public-access', [])
             + iso_values.get('access-constraints', [])
@@ -480,75 +464,51 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 'gmd:useLimitation/gco:CharacterString/text()',
                 namespaces=ISO_NAMESPACES
             )
+            + xml_tree.xpath(
+                'gmd:identificationInfo/gmd:MD_DataIdentification/'
+                'gmd:resourceConstraints/*/*/gmx:Anchor/@xlink:href',
+                namespaces=ISO_NAMESPACES
+            )
         )
-        rights_statement_uris = xml_tree.xpath(
-            'gmd:identificationInfo/gmd:MD_DataIdentification/'
-            'gmd:resourceConstraints/*/*/gmx:Anchor/@xlink:href',
-            namespaces=ISO_NAMESPACES
-        )
-
-        # theorically, "use-constraints" should match "licences" and "rights",
-        # "limitations-on-public-access" and "access-constraints" should
-        # match "access_rights", but it's simply not the case. Everything
-        # is mixed up.
-        resource_license_uri = None
-        resource_license_label = None
-        restricted_access = False
-
-        for rights_statement_uri in rights_statement_uris:
-            if VocabularyReader.is_known_uri(
-                'inspire_limitation_on_public_access', rights_statement_uri
-            ):
-                access_rights = dataset_dict.new_item('access_rights')
-                access_rights.set_value('uri', rights_statement_uri)
-                if rights_statement_uri in RESTRICTED_ACCESS_URIS:
-                    restricted_access = True
-            else:
-                logger.warning(f'Unknown rights URI "{rights_statement_uri}"')
-        
-        registered = False
-
         for rights_statement in rights_statements:
-            if not rights_statement:
-                break
-            for statement_terms, field in RIGHTS_STATEMENT_MAP.items():
-                if all(
-                    statement_term.lower() in rights_statement.lower()
-                    for statement_term in statement_terms
-                ):
-                    if field == 'access_rights':
-                        access_rights = dataset_dict.new_item('access_rights')
-                        access_rights_uri = VocabularyReader.get_uri_from_label(
-                            'inspire_limitation_on_public_access', rights_statement
-                        )
-                        if access_rights_uri:
-                            access_rights.set_value('uri', access_rights_uri)
-                            if access_rights_uri in RESTRICTED_ACCESS_URIS:
-                                restricted_access = True
-                        access_rights.set_value('label', rights_statement)
+            for field in ('access_rights', 'license', 'rights'):
+                if not field == 'rights':
+                    if rights_statement_uri := search_uri(
+                        field, rights_statement, warn_if_not_found=False
+                    ):
+                        rights_object = dataset_dict.new_item(field)
+                        rights_object.set_value('uri', rights_statement_uri)
                         registered = True
-                    
-                    elif field == 'license' and not resource_license_uri:
-                        for license_terms, license_uri in LICENSE_MAP.items():
-                            if all(
-                                license_term.lower() in rights_statement.lower()
-                                for license_term in license_terms
-                            ):
-                                resource_license_uri = license_uri
-                                dataset_dict.set_value(
-                                    'license', resource_license_uri
-                                )
-                                if resource_license_label:
-                                    rights_statement = resource_license_label
-                                    resource_license_label = None
-                                else:
+                        if rights_statement_uri in RESTRICTED_ACCESS_URIS:
+                            restricted_access = True
+                        break
+            else:
+                for statement_terms, field in RIGHTS_STATEMENT_MAP.items():
+                    if all(
+                        statement_term.lower() in rights_statement.lower()
+                        for statement_term in statement_terms
+                    ):
+                        if field == 'access_rights':
+                            access_rights = dataset_dict.new_item('access_rights')
+                            access_rights.set_value('label', rights_statement)
+                            registered = True
+                        elif field == 'license' and not resource_license_uri:
+                            for license_terms, license_uri in LICENSE_MAP.items():
+                                if all(
+                                    license_term.lower() in rights_statement.lower()
+                                    for license_term in license_terms
+                                ):
+                                    resource_license_uri = license_uri
+                                    dataset_dict.set_value(
+                                        'license', resource_license_uri
+                                    )
                                     registered = True
-                                break
-                        else:
-                            if not resource_license_label:
-                                resource_license_label = rights_statement
-                                registered = True
-                    break
+                                    break
+                            else:
+                                if not resource_license_label:
+                                    resource_license_label = rights_statement
+                                    registered = True
+                        break
             if not registered:
                 rights = dataset_dict.new_item('rights')
                 rights.set_value('label', rights_statement)
@@ -559,105 +519,28 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         # ...
 
         # --- resources ---
-
+        resources_formats = iso_values.get('data-format')
+        resources_media_type_uris = []
+        resources_format_uris = []
+        resources_format_labels = []
+        if resources_formats:
+            for resource_format in resources_formats:
+                if resource_format_name := resource_format.get('name'):
+                    if resource_media_type_uri := search_uri(
+                        ('resource', 'media_type'), resource_format_name
+                    ):
+                        resources_media_type_uris.append(resource_media_type_uri)
+                    elif resource_format_uri := search_uri(
+                        ('resource', 'other_format'), resource_format_name
+                    ):
+                        resources_format_uris.append(resource_format_uri)
+                    else:
+                        resources_format_labels.append(resource_format_name)
 
         return dataset_dict.flat()
 
         # OLD : to be deleted
 
-        # adding some useful categories from iso_values
-        for key in ('lineage', 'topic-category', 'equivalent-scale', 'metadata-point-of-contact', 'use-constraints', 'aggregation-info', 'temporal-extent-begin', 'temporal-extent-end', 'bbox'):
-            value = iso_values[key]
-            if value and isinstance(value, (list, dict)):
-                package_dict[key] = json.dumps(value)
-            elif value:
-                package_dict[key] = value
-        
-        # more straight-forward serialization for dates
-        value = {}
-        for date_object in iso_values['dataset-reference-date']:
-            value.update({date_object['type']: date_object['value']})
-
-        if value:
-            package_dict['dataset-reference-date'] = json.dumps(value)
-
-        # get other fields from extras
-        extras_to_keep = ['guid', 'metadata-date', 'resource-type', 'licence', 'spatial', 'spatial-reference-system', 'metadata-language', 'coupled-resource', 'access_constraints', 'graphic-preview-file']
-        for extra in package_dict['extras'].copy():
-            field = extra['key']
-            if field not in extras_to_keep :
-                package_dict['extras'].remove(extra)
-            else:
-                package_dict[field] = extra['value']
-                package_dict['extras'].remove(extra)
-        
-        # package name should always be its guid, for easier
-        # handling of packages relationships and duplicate removal
-        package_dict['name'] = package_dict['guid']
-
-
-        ### LXML parsing ###
-        namespaces = {
-           "gts": "http://www.isotc211.org/2005/gts",
-           "gml": "http://www.opengis.net/gml",
-           "gml32": "http://www.opengis.net/gml/3.2",
-           "gmx": "http://www.isotc211.org/2005/gmx",
-           "gsr": "http://www.isotc211.org/2005/gsr",
-           "gss": "http://www.isotc211.org/2005/gss",
-           "gco": "http://www.isotc211.org/2005/gco",
-           "gmd": "http://www.isotc211.org/2005/gmd",
-           "srv": "http://www.isotc211.org/2005/srv",
-           "xlink": "http://www.w3.org/1999/xlink",
-           "xsi": "http://www.w3.org/2001/XMLSchema-instance",
-        }
-
-        # Licence parsing
-        licence_parsed = []
-        for licence in xml_tree.findall("gmd:identificationInfo/gmd:MD_DataIdentification/gmd:resourceConstraints/gmd:MD_LegalConstraints/gmd:useLimitation/gco:CharacterString",\
-                                         namespaces):
-            licence_parsed.append(etree.tostring(licence, method='text', encoding=str))
-        if package_dict['licence'] == '[]':
-            package_dict['licence'] = json.dumps(licence_parsed)
-        
-        licence_list = json.loads(package_dict['licence'])
-        if licence_list:
-            license_map = {
-                ('etalab', 'licence'): 'etalab-2.0',
-                ('licence ouverte',): 'etalab-2.0',
-                ('odbl',): 'ODbL-1.0',
-                ('open database license',): 'ODbL-1.0'
-                }
-            for licence in licence_list:
-                package_license = None                
-                for keywords, license_id in license_map.items() :
-                    if all(w in licence.lower() for w in keywords):
-                        package_license = license_id
-                        break
-                if package_license:
-                    package_dict['license_id'] = package_license
-                    break
-
-        # Aggregate parsing
-        aggregate_parsed = []
-        for agg in xml_tree.findall("gmd:identificationInfo/gmd:MD_DataIdentification/gmd:aggregationInfo/gmd:MD_AggregateInformation/*/gmd:MD_Identifier/gmd:code/gco:CharacterString", namespaces):
-            aggregate_parsed.append(etree.tostring(agg, method='text', encoding=str))
-
-        package_dict['aggregate-dataset-identifier'] = json.dumps(aggregate_parsed)
-
-        relationships_as_subject = []
-        for rel_guid in aggregate_parsed:
-            if rel_guid:
-                rel_package = Package.get(rel_guid)
-                if rel_package:
-                    relationships_as_subject.append(
-                        { 'object': rel_package.id, 'type': 'parent_of' }
-                        )
-                        # TODO: type of relationship should be infered
-                        # from rel.get('association-type')
-        # package_dict['relationships_as_subject'] = relationships_as_subject # fait planter le moissonnage pour l'instant...
-
-        # print(package_dict)
-        # print(iso_values)
 
         # more accommodating resource format identification
         # and droping every 'Unnamed resource'
