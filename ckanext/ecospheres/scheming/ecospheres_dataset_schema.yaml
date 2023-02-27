@@ -1354,12 +1354,12 @@ resource_fields:
 
 # MEDIA_TYPE [{}]
 # > dcat:mediaType -> dct:MediaType
-- field_name: media_type_ressource
+- field_name: media_type
   label: 
     fr: Format (registre IANA)
     en: Media type
   value_type: node or uri
-  display_snippet: media_type_fields.html
+  display_snippet: ecospheres_vocabulary_uri.html
   <<: *media_type_fields
 
 # OTHER_FORMAT [{}]
@@ -1369,7 +1369,7 @@ resource_fields:
     fr: Autres formats
     en: Format
   value_type: node or uri
-  display_snippet: media_type_fields.html
+  display_snippet: ecospheres_vocabulary_uri.html
   <<: *media_type_fields
 
 # FORMAT []
@@ -1382,9 +1382,6 @@ resource_fields:
     fr: Format
     en: Format
   value_type: literal
-  display_snippet: format_fr.html
-  # display_snippet: resource_format_autocomplete
-  preset: url
 
 # SERVICE_CONFORMS_TO [{}]
 # > dcat:accessService [-> dcat:DataService] / dct:conformsTo
