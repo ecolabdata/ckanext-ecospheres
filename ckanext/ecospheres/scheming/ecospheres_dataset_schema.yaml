@@ -357,7 +357,16 @@ dataset_fields:
     en: Description
     fr: Description
   help_text: Description du jeu de données.
-  preset: multilingual_markdown
+  preset: markdown
+  value_type: literal
+  # translatable_values: True
+
+- field_name: notes_translated
+  label: 
+    en: Description (translation)
+    fr: Description (traduction)
+  help_text: Description multilingue du jeu de données.
+  preset: fluent_core_translated
   value_type: literal
   translatable_values: True
 
