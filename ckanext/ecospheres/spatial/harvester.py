@@ -510,8 +510,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                                     registered = True
                         break
             if not registered:
-                rights = dataset_dict.new_item('rights')
-                rights.set_value('label', rights_statement)
+                dataset_dict.set_value('rights', rights_statement)
             
         dataset_dict.set_value('restricted_access', restricted_access)
 
