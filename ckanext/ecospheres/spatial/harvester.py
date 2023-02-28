@@ -110,7 +110,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         for target_field, iso_field in {
             # dataset_dict key -> iso_values key
             'title': 'title',
-            'notes': 'abstract',
+            'notes_translated': 'abstract',
             'name': 'guid',
             'provenance': 'lineage',
             'provenance': 'maintenance-note', # TODO: provenance or version_info ? 
