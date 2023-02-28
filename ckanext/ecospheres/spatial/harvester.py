@@ -166,6 +166,9 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 if org_role in base_role_map:
                     org_dict = dataset_dict.new_item(base_role_map[org_role])
                 else:
+                    continue # TODO: à rendre opérationnel ! [LL-2023.02.28]
+                    # erreur : "Only lists of dicts can be placed against subschema
+                    # ('qualified_attribution', 0, 'had_role', 0, 'uri')"
                     role_uri = search_uri(
                         ('qualified_attribution', 'had_role'),
                         org_role
