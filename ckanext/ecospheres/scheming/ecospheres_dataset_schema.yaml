@@ -84,7 +84,7 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       preset: multilingual_text
       value_type: literal
 
-.media_type_fields: &media_type_fields
+.format_fields: &format_fields
   repeating_subfields: 
     # URI
     - field_name: uri
@@ -280,7 +280,8 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       value_type: uri
       known_values: allow
       vocabularies:
-        - ecospheres_data_standard
+        - plume_data_service_standard
+        # - ecospheres_data_standard
       display_snippet: ecospheres_vocabulary_linked_uri.html
     # TITLE {*}
     # > dct:title
@@ -1282,7 +1283,7 @@ dataset_fields:
         fr: Format
         en: Format
       value_type: node or uri
-      <<: *media_type_fields
+      <<: *format_fields
     # DOWNLOAD_URI
     - field_name: download_url
       label:
@@ -1327,7 +1328,6 @@ resource_fields:
   help_text: URL d'accès à la ressource.
   preset: url
   display_snippet: url_access.html
-  multiple_values: True
   value_type: uri
 
 # DOWNLOAD_URL 
@@ -1338,7 +1338,6 @@ resource_fields:
     en:  Download URL
   help_text: URL de téléchargement direct du fichier, dans le cas d'une ressource téléchargeable.
   preset: url
-  multiple_values: True
   value_type: uri
 
 # TITLE {*}
@@ -1365,21 +1364,24 @@ resource_fields:
 # > dcat:mediaType -> dct:MediaType
 - field_name: media_type
   label: 
-    fr: Format (registre IANA)
-    en: Media type
-  value_type: node or uri
+    fr: Format
+    en: Format
+  help_text: >
+    URI du registre de l'IANA représentant le type de média de la ressource.
+  value_type: uri
+  known_values: require
+  vocabularies:
+    - iana_media_type
   display_snippet: ecospheres_vocabulary_uri.html
-  <<: *media_type_fields
 
 # OTHER_FORMAT [{}]
 # > dct:format -> dct:MediaTypeOrExtent
 - field_name: other_format
   label: 
-    fr: Autres formats
+    fr: Format
     en: Format
   value_type: node or uri
-  display_snippet: ecospheres_vocabulary_uri.html
-  <<: *media_type_fields
+  <<: *format_fields
 
 # FORMAT []
 # on mappe dans le champ "format" natif les étiquettes
