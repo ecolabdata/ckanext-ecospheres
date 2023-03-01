@@ -20,7 +20,7 @@ from ckanext.ecospheres.spatial.utils import (
 )
 from ckanext.ecospheres.maps import (
     ISO_639_2, DCAT_ENDPOINT_FORMATS, RIGHTS_STATEMENT_MAP,
-    LICENSE_MAP, RESTRICTED_ACCESS_URIS
+    LICENSE_MAP, RESTRICTED_ACCESS_URIS, DATA_SERVICES_URIS
 )
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
 from ckanext.ecospheres.vocabulary.search import (
@@ -538,6 +538,48 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                         resources_format_uris.append(resource_format_uri)
                     else:
                         resources_format_labels.append(resource_format_name)
+
+        for resource_dict in package_dict.get('resources', []):
+            # TODO: à compléter ! [LL-2023.02.28]
+            resource_url = resource_dict.get('url')
+            resource_name = resource_dict.get('name', '')
+            if not resource_url:
+                continue
+
+            # ATOM
+            if 'atom' in resource_url or 'atom' in resource_name:
+                atom_resources = []
+                atom_uri = search_uri(
+                    ('resource', 'service_conforms_to'), DATA_SERVICES_URIS.get('atom')
+                )
+
+                for resource_media_type_uri in resources_media_type_uris:
+                    resource = dataset_dict.new_resource()
+                    resource.set_value('media_type', resource_media_type_uri)
+                    atom_resources.append(resource)
+                
+                for resource_format_uri in resources_format_uris:
+                    resource = dataset_dict.new_resource()
+                    resource_format = resource.new_item('other_format')
+                    resource_format.set_value('uri', resource_format_uri)
+                    atom_resources.append(resource)
+                
+                for resource_format_label in resources_format_labels:
+                    resource = dataset_dict.new_resource()
+                    resource_format = resource.new_item('other_format')
+                    resource_format.set_value('label', resource_format_label)
+                    atom_resources.append(resource)
+                    
+                for resource in atom_resources:
+                    resource.set_value('url', resource_url)
+                    resource.set_value('download_url', resource_url)
+                    resource.set_value('name', resource_name or '?')
+                    resource_service = resource.new_item('service_conforms_to')
+                    resource_service.set_value('uri', atom_uri)
+                    if resource_license_uri or resource_license_label:
+                        resource_license = resource.new_item('license')
+                        resource_license.set_value('uri', resource_license_uri)
+                        resource_license.set_value('label', resource_license_label)
 
         return dataset_dict.flat()
 
