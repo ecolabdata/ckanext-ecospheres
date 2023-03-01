@@ -13,6 +13,7 @@ from ckan.lib.formatters import localised_nice_date
 import ckan.plugins.toolkit as toolkit
 
 from ckanext.ecospheres.vocabulary.reader import VocabularyReader
+from ckanext.ecospheres.vocabulary.search import search_label
 from ckanext.ecospheres.maps import TYPE_ADMINISTRATION
 
 logger = logging.getLogger(__name__)
@@ -365,3 +366,37 @@ def get_org_territories(org_name_or_id):
             raw_territories = extra.get('value')
             return parse_territories(raw_territories) or [] 
     return []
+
+def ecospheres_get_format(resource_dict, lang=None):
+    """Return a format label from media type or other format.
+
+    Parameters
+    ----------
+    resource_dict : dict
+        Resource metadata.
+    lang : str, optional
+        Preferred language for the label.
+    
+    Returns
+    -------
+    str or None
+
+    """
+    if media_type_uri := resource_dict.get('media_type'):
+        if media_type_label := search_label(
+            ('resource', 'media_type'),
+            media_type_uri,
+            language=lang
+        ):
+            return media_type_label
+    if format := resource_dict.get('other_format'):
+        if format_uri := format[0].get('uri'):
+            if format_label := search_label(
+                ('resource', 'other_format'),
+                format_uri,
+                language=lang
+            ):
+                return format_label
+        if format_label := format[0].get('label'):
+            return format_label
+
