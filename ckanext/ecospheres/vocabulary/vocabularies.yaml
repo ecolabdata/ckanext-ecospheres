@@ -271,17 +271,6 @@
     en: Status of the dataset (ISO 19139)
     fr: État du jeu de données (ISO 19139)
 
-- name: spdx_license
-  url: https://spdx.org/licenses/licenses.json
-  about: https://github.com/spdx/license-list-data
-  parser: spdx_license
-  translation_scheme: https://registre.data.developpement-durable.gouv.fr/plume/CrpaAuthorizedLicense
-  available: True
-  eco_uri: http://registre.data.developpement-durable.gouv.fr/plume/SpdxLicense
-  eco_label:
-    en: License (SPDX)
-    fr: Licence (SPDX)
-
 - name: ogc_epsg
   url: https://apps.epsg.org/api/v1/CoordRefSystem
   about: https://apps.epsg.org/api/swagger/ui/index
@@ -299,4 +288,25 @@
     en: EPSG Coordinate reference system (OGC)
     fr: Système de référence de coordonnées EPSG (OGC)
 
+- name: plume_data_service_standard
+  url: http://registre.data.developpement-durable.gouv.fr/plume/DataServiceStandard.json
+  format: json-ld
+  uri_property: http://www.w3.org/2004/02/skos/core#exactMatch
+  recursive: True
+  available: True
+  eco_uri: http://registre.data.developpement-durable.gouv.fr/plume/DataServiceStandard
+  eco_label:
+    en: Data Service Standards
+    fr: Standards de services de données
+
+- name: spdx_license
+  url: https://spdx.org/licenses/licenses.json
+  about: https://github.com/spdx/license-list-data
+  parser: spdx_license
+  translation_scheme: https://registre.data.developpement-durable.gouv.fr/plume/CrpaAuthorizedLicense
+  available: True
+  eco_uri: http://registre.data.developpement-durable.gouv.fr/plume/SpdxLicense
+  eco_label:
+    en: License (SPDX)
+    fr: Licence (SPDX)
 
