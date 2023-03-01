@@ -21,6 +21,10 @@ sinon elle vaut ``False``.
 
 """
 
+DATA_SERVICES_URIS = {
+    'atom': 'https://tools.ietf.org/html/rfc4287'
+}
+
 DCAT_ENDPOINT_FORMATS = {
     'https://www.iana.org/assignments/media-types/application/rdf+xml': 'xml',
     'https://www.iana.org/assignments/media-types/text/turtle': 'ttl',
