@@ -2,7 +2,7 @@
 Read vocabulary data from the database.
 
 """
-import logging
+import logging, re
 from sqlalchemy import select, exists, and_, func, literal
 
 from ckanext.ecospheres.vocabulary.loader import Session
@@ -760,6 +760,59 @@ class VocabularyReader:
         
         return []
     
+    @classmethod
+    def get_uri_from_id_fragment(cls, vocabulary, fragment, database=None):
+        """Get one URI with the given identifying part.
+
+        Parameters
+        ----------
+        vocabulary : str
+            Name of the vocabulary, ie its ``name``
+            property in ``vocabularies.yaml``.
+        fragment : str
+            A string that might be the identifying fragment of
+            an URI. For now, only basic alpha-numeric characters,
+            ``'-'`` and ``'_'`` are allowed.
+        database : str, optional
+            URL of the database where the vocabulary is stored,
+            ie ``dialect+driver://username:password@host:port/database``.
+            If not provided, the main CKAN PostgreSQL database will be used.
+        
+        Returns
+        -------
+        str or None
+            The first matching URI. ``None`` if the vocabulary
+            doesn't exist, is not available, the identifier had no
+            match or contained forbidden characters.
+        
+        """
+        if (
+            not vocabulary or not fragment or
+            not re.match('^[a-zA-Z0-9_-]+$', fragment)
+        ):
+            return
+        fragment = fragment.lower().replace('-', '[-]')
+        
+        table_sql = get_table_sql(vocabulary, VocabularyLabelTable)
+
+        try:
+            with Session(database=database) as s:
+                try:
+                    stmt = select([table_sql.c.uri]).where(
+                        func.lower(table_sql.c.uri).op('~')(f'[/#]{fragment}$')
+                    )
+                    res = s.execute(stmt)
+                    return res.scalar()
+                except Exception as e:
+                    logger.error(
+                        'Failed to look up an URI whose identifying part is'
+                        ' "{0}" in vocabulary "{1}". {2}'.format(
+                            fragment, vocabulary, str(e)
+                        )
+                    )
+        except Exception as e:
+            logger.error('Database session error. {0}'.format(str(e)))
+
     @classmethod
     def get_uri_from_synonym(cls, vocabulary, synonym, database=None):
         """Get one URI with matching synonym in given vocabulary, if any.
