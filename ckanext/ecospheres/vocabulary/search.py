@@ -128,7 +128,7 @@ def search_label(field_path, uri, language=None):
 def search_uri(
     field_path, value, check_synonyms=True,
     check_labels=True, check_regexp=True,
-    warn_if_not_found=True
+    check_id_fragment=True, warn_if_not_found=True
 ):
     """Return a valid vocabulary URI for the value. 
 
@@ -144,14 +144,18 @@ def search_uri(
     value : str
         A value, presumably matching one of the 
         vocabulary items allowed for the field.
+    check_id_fragment : bool, default True
+        If ``True`` and `value` wasn't a valid URI,
+        the function will try to find an URI whose
+        identifying part matches `value`.
     check_synonyms : bool, default True
-        If ``True`` and `value` isn't already
-        a valid vocabulary URI, the function will
-        check if `value` is registerd as a synonym
+        If ``True`` and `value` wasn't identified
+        through any of the previous methods, the function
+        will check if `value` is registerd as a synonym
         URI for any vocabulary item.
     check_labels : bool, default True
-        If ``True`` and `value` isn't already
-        a valid vocabulary URI or a synonym, the
+        If ``True`` and `value` wasn't identified
+        through any of the previous methods, the
         function will look for a vocabulary item
         whose label matches `value`.
     check_regexp : bool, default True
@@ -184,6 +188,14 @@ def search_uri(
             vocabulary, value
         ):
             return value
+
+    # ID fragment match
+    if check_id_fragment:
+        for vocabulary in vocabularies:
+            if uri := VocabularyReader.get_uri_from_id_fragment(
+                vocabulary, value
+            ):
+                return uri
 
     # synonym match
     if check_synonyms:
