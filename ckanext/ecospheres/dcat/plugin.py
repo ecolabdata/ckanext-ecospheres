@@ -56,7 +56,8 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
                 'ecospheres_is_empty': helpers.ecospheres_is_empty,
                 'ecospheres_retrieve_uri_subfield': helpers.ecospheres_retrieve_uri_subfield,
                 'ecospheres_get_package_title': helpers.ecospheres_get_package_title,
-                'ecospheres_get_field_dict': helpers.ecospheres_get_field_dict
+                'ecospheres_get_field_dict': helpers.ecospheres_get_field_dict,
+                'ecospheres_get_format': helpers.ecospheres_get_format
                 }
 
     # ------------- IValidators ---------------#
@@ -125,22 +126,24 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
 
         validated_dict = json.loads(search_data['validated_data_dict'])
         
-        if categories:=validated_dict.get("category",None):
+        if categories:=validated_dict.get("category"):
             search_data["category"]=[categorie["uri"] for categorie in categories]
     
-        if territory:=validated_dict.get("territory",None):
+        if territory:=validated_dict.get("territory"):
             search_data["territory"]=[ter['uri'] for ter in territory]
 
-        if modified:=validated_dict.get("modified",None):
+        # TODO: Ce n'est pas une méthode fiable pour supprimer le fuseau horaire !
+        # [LL-2023.02.24]
+        if modified:=validated_dict.get("modified"):
             search_data["modified"]=modified.replace("+00:00",'')
 
-        if restricted_access:=validated_dict.get("restricted_access",None):
+        if restricted_access:=validated_dict.get("restricted_access"):
             search_data["restricted_access"]=restricted_access
 
-        if created:=validated_dict.get("created",None):
+        if created:=validated_dict.get("created"):
             search_data["created"]=created.replace("+00:00",'')
 
-        if issued:=validated_dict.get("issued",None):
+        if issued:=validated_dict.get("issued"):
             search_data["issued"]=issued.replace("+00:00",'')
 
         # Bricolage pour ne pas indexer des choses qui ne plairont pas à Solr
