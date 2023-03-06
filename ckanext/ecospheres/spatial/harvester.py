@@ -446,6 +446,18 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             if crs_uri := search_uri('crs', crs):
                 dataset_dict.set_value('crs', crs_uri)
 
+        # < language >
+        data_languages = iso_values.get('dataset-language', [])
+        if not data_languages:
+            data_languages = xml_tree.xpath(
+                'gmd:identificationInfo/gmd:MD_DataIdentification/'
+                'gmd:language/gco:CharacterString/text()',
+                namespaces=ISO_NAMESPACES
+            )
+        for data_language in data_languages:
+            data_language_uri = search_uri('language', data_language)
+            dataset_dict.set_value('language', data_language_uri)
+
         # < access_rights >, < rights >, < restricted_access >
         # and < license_title >
         # theorically, "use-constraints" should match "licences" and "rights",
@@ -474,44 +486,42 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             )
         )
         for rights_statement in rights_statements:
-            for field in ('access_rights', 'license', 'rights'):
-                if not field == 'rights':
-                    if rights_statement_uri := search_uri(
-                        field, rights_statement, warn_if_not_found=False
-                    ):
-                        rights_object = dataset_dict.new_item(field)
-                        rights_object.set_value('uri', rights_statement_uri)
+            if access_rights_uri := search_uri(
+                'access_rights', rights_statement, warn_if_not_found=False
+            ):
+                access_rights = dataset_dict.new_item('access_rights')
+                access_rights.set_value('uri', access_rights_uri)
+                registered = True
+                if access_rights_uri in RESTRICTED_ACCESS_URIS:
+                    restricted_access = True
+                break
+            elif not resource_license_uri:
+                if license_uri := search_uri(
+                    'license', rights_statement, warn_if_not_found=False,
+                    map=LICENSE_MAP, map_type='all'
+                ):
+                    dataset_dict.set_value('license', license_uri)
+                    resource_license_uri = license_uri
+                    registered = True
+                    break
+
+            for statement_terms, field in RIGHTS_STATEMENT_MAP.items():
+                if all(
+                    statement_term.lower() in rights_statement.lower()
+                    for statement_term in statement_terms
+                ):
+                    if field == 'access_rights':
+                        access_rights = dataset_dict.new_item('access_rights')
+                        access_rights.set_value('label', rights_statement)
                         registered = True
-                        if rights_statement_uri in RESTRICTED_ACCESS_URIS:
-                            restricted_access = True
-                        break
-            else:
-                for statement_terms, field in RIGHTS_STATEMENT_MAP.items():
-                    if all(
-                        statement_term.lower() in rights_statement.lower()
-                        for statement_term in statement_terms
+                    elif (
+                        field == 'license'
+                        and not resource_license_uri
+                        and not resource_license_label
                     ):
-                        if field == 'access_rights':
-                            access_rights = dataset_dict.new_item('access_rights')
-                            access_rights.set_value('label', rights_statement)
-                            registered = True
-                        elif field == 'license' and not resource_license_uri:
-                            for license_terms, license_uri in LICENSE_MAP.items():
-                                if all(
-                                    license_term.lower() in rights_statement.lower()
-                                    for license_term in license_terms
-                                ):
-                                    resource_license_uri = license_uri
-                                    dataset_dict.set_value(
-                                        'license', resource_license_uri
-                                    )
-                                    registered = True
-                                    break
-                            else:
-                                if not resource_license_label:
-                                    resource_license_label = rights_statement
-                                    registered = True
-                        break
+                        resource_license_label = rights_statement
+                        registered = True
+                    break
             if not registered:
                 dataset_dict.set_value('rights', rights_statement)
             
@@ -529,7 +539,8 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
             for resource_format in resources_formats:
                 if resource_format_name := resource_format.get('name'):
                     if resource_media_type_uri := search_uri(
-                        ('resource', 'media_type'), resource_format_name
+                        ('resource', 'media_type'), resource_format_name,
+                        warn_if_not_found=False
                     ):
                         resources_media_type_uris.append(resource_media_type_uri)
                     elif resource_format_uri := search_uri(
