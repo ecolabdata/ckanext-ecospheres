@@ -128,7 +128,8 @@ def search_label(field_path, uri, language=None):
 def search_uri(
     field_path, value, check_synonyms=True,
     check_labels=True, check_regexp=True,
-    check_id_fragment=True, warn_if_not_found=True
+    check_id_fragment=True, warn_if_not_found=True,
+    map=None, map_type='all', map_strict=False
 ):
     """Return a valid vocabulary URI for the value. 
 
@@ -166,6 +167,22 @@ def search_uri(
     warn_if_not_found : bool, default True
         If ``True``, the function will log a warning
         if `value` doesn't match any vocabulary item.
+    map : dict, optional
+        A dictionary to translate `value` before 
+        searching for the URI.
+    map_type : {'all', 'exact'}, optional
+        If `map` is provided, `map_type` explains how
+        to use it:
+        
+        * If `all`, the keys of the `map` should
+          be tuples of strings. The value matches if
+          it contains all terms of the tuple (case
+          unsensitive).
+        * If `exact`, `value` matches if it's equal
+          to the key (case unsensitive).
+    map_strict : False
+        If this is ``True``, the search is aborted
+        if `value` has no match in `map`.
     
     Returns
     -------
@@ -174,7 +191,24 @@ def search_uri(
     """
     if not value:
         return
-
+    
+    if map:
+        if not map_type in ('all', 'exact'):
+            logger.warning(f'Unknown map type "{map_type}"')
+        for map_key, map_value in map.items():
+            if map_type == 'all' and all(
+                map_term.lower() in value.lower()
+                for map_term in map_key
+            ) or (
+                map_type == 'exact'
+                and map_key.lower() == value.lower()
+            ):
+                value = map_value
+                break
+        else:
+            if map_strict:
+                return
+    
     vocabularies = FieldsVocabularies.list(field_path)
     if not vocabularies:
         logger.warning(
