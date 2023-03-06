@@ -8,7 +8,9 @@ from rdflib import (
 
 LABELS_ARE_VALUES_OF = [
     SKOS.prefLabel, DCT.title, RDFS.label, FOAF.name,
-    SKOS.altLabel, DCT.identifier, SKOS.notation
+    SKOS.altLabel, DCT.identifier, SKOS.notation,
+    URIRef('http://publications.europa.eu/ontology/authority/op-mapped-code') 
+    / URIRef('http://publications.europa.eu/ontology/authority/legacy-code')
 ]
 """Ordered list of RDF properties that might provide a label.
 
