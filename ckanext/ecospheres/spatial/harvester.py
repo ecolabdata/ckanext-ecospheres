@@ -18,6 +18,7 @@ from ckanext.ecospheres.spatial.utils import (
     build_catalog_page_url, extract_scheme_and_identifier,
     getrecordbyid_request, ISO_NAMESPACES
 )
+from ckanext.ecospheres.spatial.base import MAIN_LANGUAGE
 from ckanext.ecospheres.maps import (
     ISO_639_2, DCAT_ENDPOINT_FORMATS, RIGHTS_STATEMENT_MAP,
     LICENSE_MAP, RESTRICTED_ACCESS_URIS, DATA_SERVICES_URIS
@@ -29,6 +30,10 @@ from ckanext.ecospheres.vocabulary.search import (
 from ckanext.ecospheres.helpers import get_org_territories
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_LANGUAGE = 'fr'
+# TODO: la langue par défaut de la fiche de métadonnées devrait plutôt
+# être un paramètre de configuration du moissonnage [LL-2023.03.30]
 
 class FrSpatialHarvester(plugins.SingletonPlugin):
     '''Customization of spatial metadata harvest.
@@ -78,7 +83,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         user_dict = toolkit.get_action('get_site_user')({'ignore_auth': True})
         user = user_dict['name']
 
-        language = iso_values.get('metadata-language') or 'fr'
+        language = iso_values.get('metadata-language') or DEFAULT_LANGUAGE
         if len(language) > 2:
             # if possible (and as expected), the RDF language tag
             # will use the 2 letters ISO language codes instead of
@@ -109,7 +114,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         # < name >, < title >, < notes >, < provenance > and < identifier >
         for target_field, iso_field in {
             # dataset_dict key -> iso_values key
-            'title': 'title',
+            'title_translated': 'title',
             'notes_translated': 'abstract',
             'name': 'guid',
             'provenance': 'lineage',
@@ -121,11 +126,23 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         # NB: package name should always be its guid, for easier
         # handling of packages relationships and duplicate removal
 
-        if not dataset_dict.get('title'):
-            dataset_dict.set_value('title', iso_values.get('alternate-title'))
-
         name = dataset_dict.get('name')
         owner_org = dataset_dict.get('owner_org')
+
+        if not dataset_dict.get_values('title_translated'):
+            dataset_dict.set_value(
+                'title_translated',
+                iso_values.get('alternate-title') or name
+            )
+        
+        dataset_dict.set_value(
+            'title',
+            dataset_dict.get_values('title_translated', language=MAIN_LANGUAGE) 
+        )
+        dataset_dict.set_value(
+            'notes',
+            dataset_dict.get_values('notes_translated', language=MAIN_LANGUAGE) 
+        )
 
         # --- dates ----
         # < created >, < issued >, < modified >
@@ -137,6 +154,12 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 'revision': 'modified',
             }
             for date_object in iso_values['dataset-reference-date']:
+                if (
+                    not isinstance(date_object, dict)
+                    or not 'type' in date_object
+                    or not 'value' in date_object
+                ):
+                    continue
                 if date_object['type'] in type_date_map:
                     dataset_dict.set_value(type_date_map[date_object['type']], date_object['value'])
         
@@ -159,6 +182,8 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 }
             org_couples = []
             for org_object in iso_values['responsible-organisation']:
+                if not isinstance(org_object, dict):
+                    continue
                 org_role = org_object.get('role')
                 org_name = org_object.get('organisation-name')
                 if not org_role or not org_name or (org_role, org_name) in org_couples:
@@ -181,10 +206,11 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                         continue
                 org_dict.set_value('name', org_name)
                 org_couples.append((org_role, org_name))
-                if 'contact-info' in org_object:
-                    org_dict.set_value('email', org_object['contact-info'].get('email'))
-                    online_resource = org_object['contact-info'].get('online-resource')
-                    if online_resource:
+                contact_info = org_object.get('contact-info')
+                if isinstance(contact_info, dict):
+                    org_dict.set_value('email', contact_info.get('email'))
+                    online_resource = contact_info.get('online-resource')
+                    if isinstance(online_resource, dict):
                         org_dict.set_value('url', online_resource.get('url'))
         
         # --- metadata's metadata ---
@@ -203,11 +229,14 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         # < record_contact_point >
         if iso_values.get('metadata-point-of-contact'):
             for org_object in iso_values['metadata-point-of-contact']:
+                if not isinstance(org_object, dict):
+                    continue
                 org_dict = dataset_dict.new_item('record_contact_point')
-                if 'contact-info' in org_object:
-                    org_dict.set_value('email', org_object['contact-info'].get('email'))
-                    online_resource = org_object['contact-info'].get('online-resource')
-                    if online_resource:
+                contact_info = org_object.get('contact-info')
+                if isinstance(contact_info, dict):
+                    org_dict.set_value('email', contact_info.get('email'))
+                    online_resource = contact_info.get('online-resource')
+                    if isinstance(online_resource, dict):
                         org_dict.set_value('url', online_resource.get('url'))
                     # TODO: le numéro de téléphone n'est pas récupéré dans 'contact-info',
                     # "gmd:phone/gmd:CI_Telephone/gmd:voice/gco:CharacterString/text()"
@@ -263,12 +292,13 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                     dataset_dict.set_value('theme', theme_uri)
         
         for iso_keyword in iso_values.get('keywords', []):
-            dataset_dict.set_value('free_tags', iso_keyword.get('keyword'))
+            if isinstance(iso_keyword, dict):
+                dataset_dict.set_value('free_tags', iso_keyword.get('keyword'))
 
         words = (
             iso_themes + iso_categories
             + dataset_dict.get_values('free_tags')
-            + dataset_dict.get_values('title')
+            + dataset_dict.get_values('title_translated')
         )
         for word in words:
             category_uri = search_uri(
@@ -294,9 +324,9 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
 
         # --- spatial coverage ---
         # < bbox > and < spatial >
-        iso_bboxes = iso_values.get('bbox')
+        iso_bboxes = iso_values.get('bbox', [])
         for iso_bbox in iso_bboxes:
-            if iso_bbox:
+            if isinstance(iso_bbox, dict):
                 coordinates = (
                     iso_bbox.get('west'),
                     iso_bbox.get('east'),
@@ -360,7 +390,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         children_names = [
             child['aggregate-dataset-identifier']
             for child in children 
-            if child.get('aggregate-dataset-identifier')
+            if isinstance(child, dict) and child.get('aggregate-dataset-identifier')
         ]
         if not children_names:
             children_names = xml_tree.xpath(
@@ -537,6 +567,8 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
         resources_format_labels = []
         if resources_formats:
             for resource_format in resources_formats:
+                if not isinstance(resource_format, dict):
+                    continue
                 if resource_format_name := resource_format.get('name'):
                     if resource_media_type_uri := search_uri(
                         ('resource', 'media_type'), resource_format_name,
