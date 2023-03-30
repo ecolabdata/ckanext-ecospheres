@@ -34,6 +34,11 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
 
 .rights_fields: &rights_fields
   field_name: rights
+  rdf_path:
+    - dct:rights
+    - dct:RightsStatement
+    - rdfs:label
+    - rdf:langString
   label:
     fr:  Autre mention juridique
     en:  Rights
@@ -53,6 +58,9 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
   #   défini, l'exposition utilise un noeud anonyme de classe
   #   dct:RightsStatement 
   field_name: access_rights
+  rdf_path:
+    - dct:accessRights
+    - dct:RightsStatement
   label: 
     fr: Conditions d'accès
     en: Access conditions
@@ -74,6 +82,9 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
     # > rdfs:label
     # [+ GeoDCAT-AP]
     - field_name: label
+      rdf_path:
+        - rdfs:label
+        - rdf:langString
       label: 
         fr: Mention
         en: Mention
@@ -101,6 +112,9 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
     # > rdfs:label
     # [+ GeoDCAT-AP]
     - field_name: label
+      rdf_path:
+        - rdfs:label
+        - rdf:langString
       label:
         fr: Nom
         en: Name
@@ -112,6 +126,9 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
     # > foaf:name
     # [+ DCAT-AP]
     - field_name: name
+      rdf_path:
+        - foaf:name
+        - rdf:langString
       label: 
         fr: Nom
         en: Name
@@ -123,6 +140,9 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
     # [+ DCAT-AP]
     # - stockage et exposition sous forme d'URI
     - field_name: type
+      rdf_path:
+        - dct:type
+        - skos:Concept
       label: 
         fr: Type
         en: Type
@@ -137,6 +157,9 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
     # - stockage et exposition sous forme d'URI
     # - affichage sans préfixe 'mailto:'
     - field_name: email
+      rdf_path:
+        - foaf:mbox
+        - owl:Thing
       label:
         fr: Courriel
         en: Mail
@@ -148,6 +171,9 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
     # - stockage et exposition sous forme d'URI
     # - affichage sans préfixe 'tel:'
     - field_name: phone
+      rdf_path:
+        - foaf:phone
+        - owl:Thing
       label:
         fr: Téléphone
         en: Phone
@@ -160,6 +186,9 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
     # - stockage et exposition sous forme d'URI
     # - affichage de l'URL complète avec hyperlien
     - field_name: url
+      rdf_path:
+        - foaf:workplaceHomepage
+        - foaf:Document
       label:
         fr: Site internet
         en: Website
@@ -169,6 +198,11 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
     # > org:memberOf [-> org:Organization] / foaf:name
     # [+ GeoDCAT-AP]
     - field_name: affiliation
+      rdf_path:
+        - org:memberOf
+        - org:Organization
+        - foaf:name
+        - rdf:langString
       label: 
         fr: Appartient à
         en: Belongs to
@@ -206,6 +240,9 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
     # [+ GeoDCAT-AP]
     # > vcard:fn
     - field_name: name
+      rdf_path:
+        - vcard:fn
+        - rdf:langString
       label:
         fr: Nom
         en: Name
@@ -216,17 +253,21 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
     # > vcard:hasEmail
     # [+ GeoDCAT-AP]
     - field_name: email
+      rdf_path:
+        - vcard:hasEmail
+        - owl:Thing
       label:
         fr: Courriel
         en: Mail
       display_snippet: email.html
       value_type: uri
-      # TODO: ajouter un display_snippet pour l'hyperlien + suppression
-      # du préfixe à l'affichage.
     # PHONE
     # > vcard:hasTelephone
     # [+ GeoDCAT-AP]
     - field_name: phone
+      rdf_path:
+        - vcard:hasTelephone
+        - owl:Thing
       label: 
         fr: Téléphone
         en: Phone
@@ -237,6 +278,9 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
     # > vcard:hasURL
     # [+ GeoDCAT-AP]
     - field_name: url
+      rdf_path:
+        - vcard:hasURL
+        - owl:Thing
       label: 
         fr: Site internet
         en: Website
@@ -246,6 +290,9 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
     # > vcard:organization-name
     # [+ GeoDCAT-AP]
     - field_name: affiliation
+      rdf_path:
+        - vcard:organization-name
+        - rdf:langString
       label: 
         fr: Appartient à
         en: Belongs to
@@ -253,6 +300,7 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
       value_type: literal
       translatable_values: True
     # ACRONYM {*}
+    # > non exposé
     - field_name: acronym
       label: 
         fr: Sigle
@@ -287,6 +335,9 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
     # > dct:title
     # [+ GeoDCAT-AP]
     - field_name: title
+      rdf_path:
+        - dct:title
+        - rdf:langString
       label: 
         fr: Libellé
         en: Label
@@ -331,6 +382,9 @@ dataset_fields:
 #   jeu de données et non de l'identifiant de la fiche de métadonnées
 #   (cf. propriété "is_primary_topic_of")
 - field_name: identifier
+  rdf_path:
+    - dct:identifier
+    - xsd:string
   label:
     fr: Identifiant du jeu de données
     en: Dataset identifier
@@ -342,6 +396,8 @@ dataset_fields:
 # > dct:title
 # - pour les métadonnées INSPIRE, on utilisera le titre alternatif
 #   si et seulement si le titre n'est pas renseigné
+# - le champ "title" est utilisé pour l'affichage,
+#   "title_translated" pour l'exposition.
 - field_name: title
   label: 
     fr: Titre
@@ -349,10 +405,23 @@ dataset_fields:
   preset: title
   help_text: Libellé du jeu de données.
   value_type: literal
+
+- field_name: title_translated
+  rdf_path:
+    - dct:title
+    - rdf:langString
+  label: 
+    en: Titre (translation)
+    fr: Title (traduction)
+  help_text: Libellé multilingue du jeu de données.
+  preset: fluent_core_translated
+  value_type: literal
   translatable_values: True
 
 # NOTES {*}
 # > dct:description
+# - le champ "notes" est utilisé pour l'affichage,
+#   "notes_translated" pour l'exposition.
 - field_name: notes
   label: 
     en: Description
@@ -360,9 +429,11 @@ dataset_fields:
   help_text: Description du jeu de données.
   preset: markdown
   value_type: literal
-  # translatable_values: True
 
 - field_name: notes_translated
+  rdf_path:
+    - dct:description
+    - rdf:langString
   label: 
     en: Description (translation)
     fr: Description (traduction)
