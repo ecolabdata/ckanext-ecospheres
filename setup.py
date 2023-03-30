@@ -85,18 +85,14 @@ setup(
     entry_points='''
         [ckan.plugins]
         ecospheres=ckanext.ecospheres.plugin_main:EcospheresPlugin
-        
         dcat_ecospheres_harvester=ckanext.ecospheres.dcat.harvester:DCATfrRDFHarvester
-        dcat_ecospheres_plugin=ckanext.ecospheres.dcat.plugin:DcatFrenchPlugin
-        
+        dcat_ecospheres_plugin=ckanext.ecospheres.dcat.plugin:DcatFrenchPlugin        
         spatial_ecospheres_harvester=ckanext.ecospheres.spatial.harvester:FrSpatialHarvester
         spatial_ecospheres_template=ckanext.ecospheres.spatial.template:FrSpatialTemplate
 
-
         [ckan.rdf.profiles]
-        fr_dcat_ap=ckanext.ecospheres.dcat.profiles:FranchDCATAPProfile
-        euro_dcat_ap=ckanext.dcat.profiles:EuropeanDCATAPProfile
-        
+        fr_dcat_ap=ckanext.ecospheres.dcat.profiles:EcospheresDCATAPProfile
+        ecospheres_dcat_ap=ckanext.ecospheres.dcat.profiles:EcospheresDCATAPProfile
         
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
