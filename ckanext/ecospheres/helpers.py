@@ -22,6 +22,8 @@ LANGUAGES = {'fr', 'en'}
 TERRITORY = 'Territoire'
 
 def validate_dateformat(date_string, date_format):
+    # TODO à supprimer [LL-2023.03.23]
+    # si sert quelque part, c'est qu'il manque un validateur...
     try:
         date = datetime.datetime.strptime(date_string, date_format)
         return date
@@ -30,6 +32,7 @@ def validate_dateformat(date_string, date_format):
         return None
 
 def json_string_to_object_aggregated_ressources(json_string): 
+    # TODO à supprimer [LL-2023.03.23]
     try:
         data= json.loads(json_string)
         return data["data"]
@@ -38,6 +41,7 @@ def json_string_to_object_aggregated_ressources(json_string):
         return None
 
 def aggregated_package_name_to_title(row_data):
+    # TODO à supprimer [LL-2023.03.23]
     name=row_data["identifier"]
     package = model.Package.by_name(name)
     if package is not None:
@@ -49,6 +53,7 @@ def aggregated_package_name_to_title(row_data):
 def get_localized_value_from_dict(value, lang_code, default=''):
     """localizes language dict and
     returns value if it is not a language dict"""
+    # TODO à supprimer [LL-2023.03.23]
     if not isinstance(value, dict):
         return value
     elif not LANGUAGES.issubset(set(value.keys())):
@@ -59,6 +64,9 @@ def get_localized_value_from_dict(value, lang_code, default=''):
     return localize_by_language_order(value, default)
 
 def get_localized_value_for_display(value):
+    # TODO à supprimer [LL-2023.03.23]
+    # utilisé par le template package/read.html
+    # de ckanext-dsfr
     lang_code = lang()
     if isinstance(value, dict):
         return get_localized_value_from_dict(value, lang_code)
@@ -70,6 +78,7 @@ def get_localized_value_for_display(value):
 
 def localize_by_language_order(multi_language_field, default=''):
     """localizes language dict if no language is specified"""
+    # TODO à supprimer [LL-2023.03.23]
     if multi_language_field.get('fr'):
         return multi_language_field['fr']
     elif multi_language_field.get('en'):
@@ -86,6 +95,9 @@ def get_localized_date(date_string):
     the year is between 50 years ago and 49 years in the future. This means
     that '01.01.60' => 01.01.2060, and '01.01.90' => 01.01.1990).
     """
+    # TODO: si réellement utile, à préfixer par "ecospheres"
+    # + probablement du code récupéré dont il faudrait retrouver
+    # et créditer l'auteur [LL-2023.03.30]
     try:
         dt = parse(date_string, dayfirst=True)
         return localised_nice_date(dt, show_date=True, with_hours=False)
@@ -107,6 +119,8 @@ def parse_territories(raw_territories):
         empty list if the parsing failed for some reason.
     
     """
+    # TODO: si réellement utile, à préfixer par "ecospheres"
+    # [LL-2023.03.30]
     if not raw_territories:
         return []
     if isinstance(raw_territories, list):
@@ -141,6 +155,8 @@ def get_territories_label(raw_territories, lang=None):
     return territory_labels
 
 def get_type_adminstration_label_by_acronym(acronym):
+    # TODO: si réellement utile, à préfixer par "ecospheres"
+    # [LL-2023.03.30]
     label = TYPE_ADMINISTRATION.get(acronym, '')
     if not label:
         logger.warning(f'Unknown organization code "{acronym}"')
@@ -306,6 +322,10 @@ def ecospheres_get_package_title(name_or_id):
         package_dict = toolkit.get_action('package_show')(
             None, {'id': name_or_id}
         )
+        if title_translated := package_dict.get('title_translated'):
+            return title_translated
+        # TODO: nettoyer ce qui suit une fois tous les
+        # moissonnages re-exécutés [LL-2023.03.30]
         if title_raw := package_dict.get('title'):
             if isinstance(title_raw, str):
                 return json.loads(title_raw)
