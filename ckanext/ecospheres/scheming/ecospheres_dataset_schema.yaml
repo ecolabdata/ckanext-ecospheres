@@ -458,6 +458,9 @@ dataset_fields:
 # TEMPORAL [{}]
 # > dct:temporal -> dct:PeriodOfTime
 - field_name: temporal
+  rdf_path:
+    - dct:temporal
+    - dct:PeriodOfTime
   label: 
     fr: Couverture temporelle
     en: Temporal coverage
@@ -467,6 +470,9 @@ dataset_fields:
     # START_DATE
     # > dcat:startDate
     - field_name: start_date
+      rdf_path:
+        - dcat:startDate
+        - xsd:date
       preset: fr_date
       label: 
         fr: Date de début
@@ -475,6 +481,9 @@ dataset_fields:
     # END_DATE
     # > dcat:endDate
     - field_name: end_date
+      rdf_path:
+        - dcat:endDate
+        - xsd:date
       preset: fr_date
       label:
         fr: Date de fin
@@ -484,6 +493,9 @@ dataset_fields:
 # MODIFIED
 # > dct:modified
 - field_name: modified
+  rdf_path:
+    - dct:modified
+    - xsd:date
   label: 
     fr: Date de modification
     en: Modification date
@@ -494,6 +506,9 @@ dataset_fields:
 # CREATED
 # > dct:created
 - field_name: created
+  rdf_path:
+    - dct:created
+    - xsd:date
   label:
     fr: Date de création
     en: Creation date
@@ -505,6 +520,9 @@ dataset_fields:
 # ISSUED
 # > dct:issued
 - field_name: issued
+  rdf_path:
+    - dct:issued
+    - xsd:date
   label: 
     fr: Date de publication
     en: Release date
@@ -522,6 +540,9 @@ dataset_fields:
 #   foaf:Agent, avec des propriétés équivalentes - même stockage - mais
 #   qui portent d'autres noms)
 - field_name: contact_point
+  rdf_path:
+    - dcat:contactPoint 
+    - vcard:Kind
   label: 
     fr: Points de contact
     en: Contact point
@@ -534,6 +555,9 @@ dataset_fields:
 # PUBLISHER [{}]
 # > dct:publisher -> foaf:Organization
 - field_name: publisher
+  rdf_path:
+    - dct:publisher
+    - foaf:Organization
   label: 
     fr: Éditeur
     en: Publisher
@@ -545,6 +569,9 @@ dataset_fields:
 # CREATOR [{}]
 # > dct:creator -> foaf:Organization
 - field_name: creator
+  rdf_path:
+    - dct:creator
+    - foaf:Organization
   label:
     fr: Auteur
     en: Creator
@@ -557,6 +584,9 @@ dataset_fields:
 # dct:rightsHolder -> foaf:Organization
 # [+ GeoDCAT-AP]
 - field_name: rights_holder
+  rdf_path:
+    - dct:rights_holder
+    - foaf:Organization
   label:
     fr: Propriétaires
     en: Holder
@@ -574,6 +604,9 @@ dataset_fields:
 # geodcat:principalInvestigator, geodcat:processor, 
 # geodcat:resourceProvider et geodcat:user
 - field_name: qualified_attribution
+  rdf_path:
+    - prov:qualifiedAttribution
+    - prov:Attribution
   label: 
     fr: Autres organisations responsables
     en: Other responsible organization
@@ -587,6 +620,9 @@ dataset_fields:
     # HAD_ROLE {}
     # > dcat:hadRole
     - field_name: had_role
+      rdf_path:
+        - dcat:hadRole
+        - dcat:Role
       label: 
         fr: Rôle
         en: Role
@@ -605,6 +641,9 @@ dataset_fields:
     # AGENT [{}]
     # > prov:agent -> prov:Agent
     - field_name: agent
+      rdf_path:
+        - prov:agent
+        - prov:Agent
       label: 
         fr: Organisation
         en: Organization
@@ -613,6 +652,9 @@ dataset_fields:
         # NAME {*}
         # > foaf:givenName
         - field_name: name
+          rdf_path:
+            - foaf:givenName
+            - rdf:langString
           label: 
             fr: Nom
             en: Name
@@ -622,6 +664,9 @@ dataset_fields:
         # EMAIL
         # > foaf:mbox 
         - field_name: email
+          rdf_path:
+            - foaf:mbox
+            - owl:Thing
           label:
             fr: Courriel
             en: Mail
@@ -630,6 +675,9 @@ dataset_fields:
         # URI
         # > foaf:homePage
         - field_name: url
+          rdf_path:
+            - foaf:homePage
+            - foaf:Document
           label: 
             fr: Site internet
             en: Website
@@ -648,6 +696,9 @@ dataset_fields:
 # - pour l'exposition DCAT, on récupère l'URI (champ "uri") du dataset
 #   correspondant s'il existe, sinon la valeur est ignorée.
 - field_name: in_series
+  rdf_path:
+    - dcat:inSeries
+    - dcat:DatasetSeries
   label: 
     fr: Inclus dans les séries de données
     en: Included in data series
@@ -673,6 +724,9 @@ dataset_fields:
 # - pour l'exposition DCAT, on récupère l'URI (champ "uri") du dataset
 #   correspondant s'il existe, sinon la valeur est ignorée.
 - field_name: series_member
+  rdf_path:
+    - dcat:seriesMember
+    - dcat:Dataset
   label:
     fr: Jeux de données de la série
     en: Series datasets
@@ -690,9 +744,12 @@ dataset_fields:
 # ------ Références ------
 
 # LANDING_PAGE
-# > dcat:landingPage
+# > dcat:landingPage -> foaf:Document
 # pour l'URL de la fiche sur le catalogue source
 - field_name: landing_page
+  rdf_path:
+    - dcat:landingPage
+    - foaf:Document
   label:
     fr: Accès à la fiche sur le catalogue source
     en: Access to the record from source catalog
@@ -700,10 +757,13 @@ dataset_fields:
   value_type: uri
 
 # ATTRIBUTE_PAGE
-# > foaf:page
+# > foaf:page -> foaf:Document
 # [+ DCAT-AP]
 # pour le lien vers le catalogue d'attribut
 - field_name: attributes_page
+  rdf_path:
+    - foaf:page
+    - foaf:Document
   label:
     fr: Catalogue d'attributs
     en: Attributes Catalog
@@ -722,6 +782,9 @@ dataset_fields:
 # - le champ "uri" correspond à l'objet du triplet <uri> foaf:page <uri>,
 #   s'il n'est pas défini, l'exposition utilise un noeud anonyme
 - field_name: page
+  rdf_path:
+    - foaf:page
+    - foaf:Document
   label:
     fr:  Documentation
     en:  Documentation
@@ -739,6 +802,9 @@ dataset_fields:
     # > dct:title
     # [+ GeoDCAT-AP]
     - field_name: title
+      rdf_path:
+        - dct:title
+        - rdf:langString
       label: 
         fr: Titre
         en: Title
@@ -749,6 +815,9 @@ dataset_fields:
     # > dct:description
     # [+ GeoDCAT-AP]
     - field_name: description
+      rdf_path:
+        - dct:description
+        - rdf:langString
       label: 
         fr: Description
         en: Description
@@ -756,10 +825,13 @@ dataset_fields:
       value_type: literal
       translatable_values: True
     # URL 
-    # > dcat:accessURL
+    # > dcat:accessURL -> rdfs:Resource
     # [X]
     # hors standards DCAT
     - field_name: url
+      rdf_path:
+        - dcat:accessURL
+        - rdfs:Resource
       label: 
         fr: URL d'accès
         en: Access URL
@@ -772,6 +844,9 @@ dataset_fields:
     # [X]
     # disponible dans Dido, hors standards DCAT
     - field_name: modified
+      rdf_path:
+        - dct:modified
+        - xsd:date
       label:
         fr: Date de modification
         en: Modified date
@@ -783,6 +858,9 @@ dataset_fields:
     # [X]
     # disponible dans Dido, hors standards DCAT
     - field_name: created
+      rdf_path:
+        - dct:created
+        - xsd:date
       label: 
         fr: Date de création
         en: Creation Date
@@ -794,6 +872,9 @@ dataset_fields:
     # [X]
     # disponible dans Dido, hors standards DCAT
     - field_name: issued
+      rdf_path:
+        - dct:issued
+        - xsd:date
       label: 
         fr: Date de publication
         en: Issued date 
