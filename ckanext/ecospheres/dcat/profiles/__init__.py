@@ -1,5 +1,5 @@
 
-import logging
+import logging, datetime, re
 
 from rdflib import Literal, BNode
 from rdflib.util import from_n3
@@ -7,6 +7,8 @@ from rdflib.namespace import Namespace
 
 import ckan.plugins.toolkit as toolkit
 from ckanext.dcat.profiles import RDFProfile, CleanedURIRef
+
+from ckanext.ecospheres.helpers import ecospheres_get_package_uri
 
 from .dataset.parse_dataset import parse_dataset as _parse_dataset
 from .graph.graph_from_catalog import graph_from_catalog as _graph_from_catalog
@@ -87,6 +89,38 @@ def clean_empty_data(data):
         return not bool(data)
     else:
         return data is None
+
+class WiserLiteral(Literal):
+    '''Extend Literal to choose wisely the datatype argument.
+    
+    At this point, the constructor simply allow switching between
+    the types of literal values ``xsd:date`` et ``xsd:dateTime``.
+
+    '''
+    def __new__(cls, value, datatype=None, lang=None):
+        # TODO: ajouter de la validation selon le type. [LL-2023.03.31]
+        if datatype in (XSD.date, XSD.dateTime):
+            if isinstance(value, datetime.date):
+                return super().__new__(cls, value, datatype=XSD.date)
+            if isinstance(value, datetime.datetime):
+                return super().__new__(cls, value, datatype=XSD.dateTime)
+            if isinstance(value, str):
+                if re.match(
+                    '^(?:[1-9][0-9]{3}|0[0-9]{3})'
+                    '[-](?:0[1-9]|1[0-2])'
+                    '[-](?:0[1-9]|[12][0-9]|3[01])$',
+                    value
+                ):
+                    return super().__new__(cls, value, datatype=XSD.date)
+                if re.match(
+                    '^(?:[1-9][0-9]{3}|0[0-9]{3})'
+                    '[-](?:0[1-9]|1[0-2])'
+                    '[-](?:0[1-9]|[12][0-9]|3[01])'
+                    r'(?:[T\s](([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]|(24:00:00)))?',
+                    value
+                ):
+                    return super().__new__(cls, value, datatype=XSD.dateTime)
+        return super().__new__(cls, value, datatype=datatype, lang=lang)
 
 class EcospheresDCATAPProfile(RDFProfile):
 
@@ -205,16 +239,29 @@ class EcospheresDCATAPProfile(RDFProfile):
             
             value_type = field_schema.get('value_type')
 
-            rdf_path = field_schema.get('rdf_path')
             # création des parents implicites
+            rdf_path = field_schema.get('rdf_path')
             if not rdf_path:
                 continue
             subject, property, rdftype = self._read_rdf_path(
                 rdf_path, subject
             )
 
+            # cas particuliers
+            if property == DCAT.inSeries and isinstance(value, list):
+                for parent in value:
+                    parent_uri = ecospheres_get_package_uri(parent)
+                    if parent_uri:
+                        self.g.add((subject, property, CleanedURIRef(parent_uri)))
+            elif property == DCAT.seriesMember and value and isinstance(value, list):
+                for child in value:
+                    child_uri = ecospheres_get_package_uri(child)
+                    if child_uri:
+                        self.g.add((subject, property, CleanedURIRef(child_uri)))
+                self.g.add((subject, RDF.type, DCAT.DatasetSeries))
+
             # noeud anonyme et noeud anonyme/URI
-            if (
+            elif (
                 value_type in ('node or uri', 'node')
                 and isinstance(value, list)
                 and value
@@ -229,10 +276,11 @@ class EcospheresDCATAPProfile(RDFProfile):
                         if subkey == 'uri' and subvalue:
                             node = CleanedURIRef(subvalue)
                     self.g.add((subject, property, node))
-                    self.g.add((node, RDF.type, rdftype))
-                    self._graph_from_dataset_and_schema(
-                        subfields_data, subfields_schema, node, dataset_ref
-                    )
+                    if rdftype != SKOS.Concept:
+                        self.g.add((node, RDF.type, rdftype))
+                        self._graph_from_dataset_and_schema(
+                            subfields_data, subfields_schema, node, dataset_ref
+                        )
 
             # URI
             elif value_type == 'uri':
@@ -249,31 +297,29 @@ class EcospheresDCATAPProfile(RDFProfile):
             
             # valeur littérale
             elif value_type == 'literal':
-                if (
-                    field_schema.get('translatable_values')
-                    and isinstance(value, dict)
-                ):
-                    for language, v in value.items():
-                        if isinstance(v, list):
-                            for e in v:
-                                self.g.add((subject, property, Literal(e, lang=language)))
-                        elif v:
-                            self.g.add((subject, property, Literal(v, lang=language)))
-                if isinstance(value, list):
+                if field_schema.get('translatable_values'):
+                    if not isinstance(value, (dict, list)):
+                        return
+                    if isinstance(value, dict):
+                        value = [value]
+                    for e in value:
+                        if isinstance(e, dict):
+                            for language, v in e.items():
+                                if v:
+                                    self.g.add(
+                                        (subject, property, WiserLiteral(v, lang=language))
+                                    )
+                elif isinstance(value, list):
                     for v in value:
-                        lit = Literal(v, datatype=rdftype)
+                        lit = WiserLiteral(v, datatype=rdftype)
                         # # RDFLib 6.3.2
                         # if lit.ill_typed:
                         #     continue
                         self.g.add((subject, property, lit))
                 else:
-                    lit = Literal(value, datatype=rdftype)
+                    lit = WiserLiteral(value, datatype=rdftype)
                     # # RDFLib 6.3.2
                     # if lit.ill_typed:
                     #     continue
                     self.g.add((subject, property, lit))
-
-
-
-
 
