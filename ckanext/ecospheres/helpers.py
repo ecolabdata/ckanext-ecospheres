@@ -333,6 +333,33 @@ def ecospheres_get_package_title(name_or_id):
                 return title_raw
     except:
         return
+    
+def ecospheres_get_package_uri(name_or_id):
+    '''Return the package URI if the package exists.
+
+    Parameters
+    ----------
+    name_or_id : str or dict
+        Package name or identifier, or dictionary
+        holding the name or identifier.
+    
+    Returns
+    -------
+    str or None
+        The URI. ``None`` if the package doesn't exist
+        or (shouldn't happen) doesn't have an URI.
+
+    '''
+    if isinstance(name_or_id, dict):
+        name_or_id = name_or_id.get('name') or name_or_id.get('id')
+    try:
+        package_dict = toolkit.get_action('package_show')(
+            None, {'id': name_or_id}
+        )
+        if uri := package_dict.get('uri'):
+            return uri
+    except:
+        return
 
 def ecospheres_retrieve_uri_subfield(subfields, data_dict):
     '''If there is a URI key with a value in the data, return the corresponding subfield info.
