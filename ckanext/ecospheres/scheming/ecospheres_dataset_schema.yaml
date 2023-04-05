@@ -32,319 +32,6 @@ about_url: https://github.com/ecolabdata/ckanext-ecospheres
 # ---------------------------------- Variables communes ----------------------------------
 # ----------------------------------------------------------------------------------------
 
-.rights_fields: &rights_fields
-  field_name: rights
-  rdf_path:
-    - dct:rights
-    - dct:RightsStatement
-    - rdfs:label
-    - rdf:langString
-  label:
-    fr:  Autre mention juridique
-    en:  Rights
-  help_text: > 
-    Autre mention à caractères juridique, par exemple rappelant les
-    droits de propriété intellectuelle sur les données, à faire apparaître
-    en cas de réutilisation.
-  preset: ecospheres_multiple_multilingual_markdown
-  tag_validators: remove_whitespace
-  translatable_values: True
-  multiple_values: True
-  value_type: literal
-
-.rights_fields: &access_rights_fields
-  # - le champ "uri" correspond à l'objet du triplet
-  #   <uri> dct:accessRights <uri>, s'il n'est pas
-  #   défini, l'exposition utilise un noeud anonyme de classe
-  #   dct:RightsStatement 
-  field_name: access_rights
-  rdf_path:
-    - dct:accessRights
-    - dct:RightsStatement
-  label: 
-    fr: Conditions d'accès
-    en: Access conditions
-  help_text: Contraintes réglementaires limitant l'accès au jeu de données.
-  value_type: node or uri
-  repeating_subfields:
-    # URI
-    - field_name: uri
-      label: 
-        fr: URL
-        en: URL
-      value_type: uri
-      known_values: require
-      vocabularies:
-        - inspire_limitation_on_public_access
-        - eu_access_right
-      display_snippet: ecospheres_vocabulary_uri.html
-    # LABEL {*}
-    # > rdfs:label
-    # [+ GeoDCAT-AP]
-    - field_name: label
-      rdf_path:
-        - rdfs:label
-        - rdf:langString
-      label: 
-        fr: Mention
-        en: Mention
-      help_text: >
-        Description des contraintes réglementaires qui limitent l'accès
-        aux données et des modalités pratiques pour les obtenir.
-      translatable_values: True
-      preset: multilingual_text
-      value_type: literal
-
-.format_fields: &format_fields
-  repeating_subfields: 
-    # URI
-    - field_name: uri
-      label:
-        fr:  URI
-        en:  URI
-      value_type: uri
-      known_values: require
-      vocabularies:
-        - eu_file_type
-        - iana_media_type
-      display_snippet: ecospheres_vocabulary_uri.html
-    # LABEL
-    # > rdfs:label
-    # [+ GeoDCAT-AP]
-    - field_name: label
-      rdf_path:
-        - rdfs:label
-        - rdf:langString
-      label:
-        fr: Nom
-        en: Name
-      value_type: literal
-
-.common_field_agent: &common_field_agent
-  repeating_subfields:
-    # NAME {*}
-    # > foaf:name
-    # [+ DCAT-AP]
-    - field_name: name
-      rdf_path:
-        - foaf:name
-        - rdf:langString
-      label: 
-        fr: Nom
-        en: Name
-      preset: multilingual_text
-      value_type: literal
-      translatable_values: True
-    # TYPE
-    # > dct:type
-    # [+ DCAT-AP]
-    # - stockage et exposition sous forme d'URI
-    - field_name: type
-      rdf_path:
-        - dct:type
-        - skos:Concept
-      label: 
-        fr: Type
-        en: Type
-      display_snippet: ecospheres_vocabulary_uri.html
-      value_type: uri
-      known_values: require
-      vocabularies:
-        - adms_publisher_type
-    # EMAIL
-    # > foaf:mbox
-    # [+ GeoDCAT-AP]
-    # - stockage et exposition sous forme d'URI
-    # - affichage sans préfixe 'mailto:'
-    - field_name: email
-      rdf_path:
-        - foaf:mbox
-        - owl:Thing
-      label:
-        fr: Courriel
-        en: Mail
-      value_type: uri
-      display_snippet: email.html
-    # PHONE
-    # > foaf:phone
-    # [+ GeoDCAT-AP]
-    # - stockage et exposition sous forme d'URI
-    # - affichage sans préfixe 'tel:'
-    - field_name: phone
-      rdf_path:
-        - foaf:phone
-        - owl:Thing
-      label:
-        fr: Téléphone
-        en: Phone
-      value_type: uri
-      # TODO: ajouter un display_snippet pour l'hyperlien + suppression
-      # du préfixe à l'affichage.
-    # URL
-    # > foaf:workplaceHomepage
-    # [+ GeoDCAT-AP]
-    # - stockage et exposition sous forme d'URI
-    # - affichage de l'URL complète avec hyperlien
-    - field_name: url
-      rdf_path:
-        - foaf:workplaceHomepage
-        - foaf:Document
-      label:
-        fr: Site internet
-        en: Website
-      value_type: uri
-      display_snippet: link.html
-    # AFFILIATION {*}
-    # > org:memberOf [-> org:Organization] / foaf:name
-    # [+ GeoDCAT-AP]
-    - field_name: affiliation
-      rdf_path:
-        - org:memberOf
-        - org:Organization
-        - foaf:name
-        - rdf:langString
-      label: 
-        fr: Appartient à
-        en: Belongs to
-      preset: multilingual_text
-      value_type: literal
-      translatable_values: True
-    # ACRONYM {*}
-    # - non exposé pour l'heure
-    # - information fournie par Dido uniquement
-    # TODO: confirmer l'intérêt de l'afficher, considérant que les noms
-    # d'organisation de Dido semblent spécifier le sigle entre parenthèses
-    - field_name: acronym
-      label: 
-        fr: Sigle
-        en: Abbreviations
-      preset: multilingual_text
-      value_type: literal
-      translatable_values: True
-    # COMMENT {*}
-    # - non exposé pour l'heure
-    # - information fournie par Dido uniquement
-    - field_name: comment
-      label: 
-        fr: Commentaire
-        en: Comment
-      help_text: Description ou autre information relative à l'organisation.
-      preset: multilingual_text
-      value_type: literal
-      translatable_values: True
-
-.common_contact_fields: &common_contact_fields
-  repeating_subfields: 
-    # NAME {*}
-    # > vcard:fn
-    # [+ GeoDCAT-AP]
-    # > vcard:fn
-    - field_name: name
-      rdf_path:
-        - vcard:fn
-        - rdf:langString
-      label:
-        fr: Nom
-        en: Name
-      preset: multilingual_text
-      value_type: literal
-      translatable_values: True
-    # EMAIL
-    # > vcard:hasEmail
-    # [+ GeoDCAT-AP]
-    - field_name: email
-      rdf_path:
-        - vcard:hasEmail
-        - owl:Thing
-      label:
-        fr: Courriel
-        en: Mail
-      display_snippet: email.html
-      value_type: uri
-    # PHONE
-    # > vcard:hasTelephone
-    # [+ GeoDCAT-AP]
-    - field_name: phone
-      rdf_path:
-        - vcard:hasTelephone
-        - owl:Thing
-      label: 
-        fr: Téléphone
-        en: Phone
-      value_type: uri
-      # TODO: ajouter un display_snippet pour l'hyperlien + suppression
-      # du préfixe à l'affichage.
-    # URL 
-    # > vcard:hasURL
-    # [+ GeoDCAT-AP]
-    - field_name: url
-      rdf_path:
-        - vcard:hasURL
-        - owl:Thing
-      label: 
-        fr: Site internet
-        en: Website
-      display_snippet: link.html
-      value_type: uri
-    # AFFILIATION {*}
-    # > vcard:organization-name
-    # [+ GeoDCAT-AP]
-    - field_name: affiliation
-      rdf_path:
-        - vcard:organization-name
-        - rdf:langString
-      label: 
-        fr: Appartient à
-        en: Belongs to
-      preset: multilingual_text
-      value_type: literal
-      translatable_values: True
-    # ACRONYM {*}
-    # > non exposé
-    - field_name: acronym
-      label: 
-        fr: Sigle
-        en: Abbreviations
-      preset: multilingual_text
-      value_type: literal
-      translatable_values: True
-    # COMMENT {*}
-    - field_name: comment
-      label: 
-        fr: Commentaire
-        en: Comment
-      help_text: Description ou autre information relative à l'organisation.
-      preset: multilingual_text
-      value_type: literal
-      translatable_values: True
-
-.standard_fields: &standard_fields
-  repeating_subfields:
-    # URI
-    - field_name: uri
-      label: 
-        fr: URL
-        en: URL
-      value_type: uri
-      known_values: allow
-      vocabularies:
-        - plume_data_service_standard
-        # - ecospheres_data_standard
-      display_snippet: ecospheres_vocabulary_linked_uri.html
-    # TITLE {*}
-    # > dct:title
-    # [+ GeoDCAT-AP]
-    - field_name: title
-      rdf_path:
-        - dct:title
-        - rdf:langString
-      label: 
-        fr: Libellé
-        en: Label
-      value_type: literal
-      preset: multilingual_text
-      translatable_values: True
-
 # # ------------------------------------------------------------------------------------
 # # ---------------------------------- JEU DE DONNEES ----------------------------------
 # # ------------------------------------------------------------------------------------
@@ -550,7 +237,90 @@ dataset_fields:
   help_text: Entité à contacter pour obtenir des informations sur les données.
   value_type: node
   tab: *tab_contacts
-  <<: *common_contact_fields
+  repeating_subfields: &contact_fields
+    # NAME {*}
+    # > vcard:fn
+    # [+ GeoDCAT-AP]
+    # > vcard:fn
+    - field_name: name
+      rdf_path:
+        - vcard:fn
+        - rdf:langString
+      label:
+        fr: Nom
+        en: Name
+      preset: multilingual_text
+      value_type: literal
+      translatable_values: True
+    # EMAIL
+    # > vcard:hasEmail
+    # [+ GeoDCAT-AP]
+    - field_name: email
+      rdf_path:
+        - vcard:hasEmail
+        - owl:Thing
+      label:
+        fr: Courriel
+        en: Mail
+      preset: ecospheres_email
+      value_type: uri
+    # PHONE
+    # > vcard:hasTelephone
+    # [+ GeoDCAT-AP]
+    - field_name: phone
+      rdf_path:
+        - vcard:hasTelephone
+        - owl:Thing
+      label: 
+        fr: Téléphone
+        en: Phone
+      value_type: uri
+      preset: ecospheres_phone
+      # TODO: ajouter un display_snippet pour l'hyperlien + suppression
+      # du préfixe à l'affichage.
+    # URL 
+    # > vcard:hasURL
+    # [+ GeoDCAT-AP]
+    - field_name: url
+      rdf_path:
+        - vcard:hasURL
+        - owl:Thing
+      label: 
+        fr: Site internet
+        en: Website
+      display_snippet: link.html
+      value_type: uri
+    # AFFILIATION {*}
+    # > vcard:organization-name
+    # [+ GeoDCAT-AP]
+    - field_name: affiliation
+      rdf_path:
+        - vcard:organization-name
+        - rdf:langString
+      label: 
+        fr: Appartient à
+        en: Belongs to
+      preset: multilingual_text
+      value_type: literal
+      translatable_values: True
+    # ACRONYM {*}
+    # > non exposé
+    - field_name: acronym
+      label: 
+        fr: Sigle
+        en: Abbreviations
+      preset: multilingual_text
+      value_type: literal
+      translatable_values: True
+    # COMMENT {*}
+    - field_name: comment
+      label: 
+        fr: Commentaire
+        en: Comment
+      help_text: Description ou autre information relative à l'organisation.
+      preset: multilingual_text
+      value_type: literal
+      translatable_values: True
 
 # PUBLISHER [{}]
 # > dct:publisher -> foaf:Organization
@@ -564,7 +334,118 @@ dataset_fields:
   help_text: Organisme ou personne qui assure la publication des données.
   value_type: node
   tab: *tab_contacts
-  <<: *common_field_agent
+  repeating_subfields: &agent_fields
+    # NAME {*}
+    # > foaf:name
+    # [+ DCAT-AP]
+    - field_name: name
+      rdf_path:
+        - foaf:name
+        - rdf:langString
+      label: 
+        fr: Nom
+        en: Name
+      preset: multilingual_text
+      value_type: literal
+      translatable_values: True
+    # TYPE
+    # > dct:type
+    # [+ DCAT-AP]
+    # - stockage et exposition sous forme d'URI
+    - field_name: type
+      rdf_path:
+        - dct:type
+        - skos:Concept
+      label: 
+        fr: Type
+        en: Type
+      display_snippet: ecospheres_vocabulary_uri.html
+      value_type: uri
+      known_values: require
+      vocabularies:
+        - adms_publisher_type
+    # EMAIL
+    # > foaf:mbox
+    # [+ GeoDCAT-AP]
+    # - stockage et exposition sous forme d'URI
+    # - affichage sans préfixe 'mailto:'
+    - field_name: email
+      rdf_path:
+        - foaf:mbox
+        - owl:Thing
+      label:
+        fr: Courriel
+        en: Mail
+      value_type: uri
+      preset: ecospheres_email
+    # PHONE
+    # > foaf:phone
+    # [+ GeoDCAT-AP]
+    # - stockage et exposition sous forme d'URI
+    # - affichage sans préfixe 'tel:'
+    - field_name: phone
+      rdf_path:
+        - foaf:phone
+        - owl:Thing
+      label:
+        fr: Téléphone
+        en: Phone
+      value_type: uri
+      preset: ecospheres_phone
+      # TODO: ajouter un display_snippet pour l'hyperlien + suppression
+      # du préfixe à l'affichage.
+    # URL
+    # > foaf:workplaceHomepage
+    # [+ GeoDCAT-AP]
+    # - stockage et exposition sous forme d'URI
+    # - affichage de l'URL complète avec hyperlien
+    - field_name: url
+      rdf_path:
+        - foaf:workplaceHomepage
+        - foaf:Document
+      label:
+        fr: Site internet
+        en: Website
+      value_type: uri
+      display_snippet: link.html
+    # AFFILIATION {*}
+    # > org:memberOf [-> org:Organization] / foaf:name
+    # [+ GeoDCAT-AP]
+    - field_name: affiliation
+      rdf_path:
+        - org:memberOf
+        - org:Organization
+        - foaf:name
+        - rdf:langString
+      label: 
+        fr: Appartient à
+        en: Belongs to
+      preset: multilingual_text
+      value_type: literal
+      translatable_values: True
+    # ACRONYM {*}
+    # - non exposé pour l'heure
+    # - information fournie par Dido uniquement
+    # TODO: confirmer l'intérêt de l'afficher, considérant que les noms
+    # d'organisation de Dido semblent spécifier le sigle entre parenthèses
+    - field_name: acronym
+      label: 
+        fr: Sigle
+        en: Abbreviations
+      preset: multilingual_text
+      value_type: literal
+      translatable_values: True
+    # COMMENT {*}
+    # - non exposé pour l'heure
+    # - information fournie par Dido uniquement
+    - field_name: comment
+      label: 
+        fr: Commentaire
+        en: Comment
+      help_text: Description ou autre information relative à l'organisation.
+      preset: multilingual_text
+      value_type: literal
+      translatable_values: True
 
 # CREATOR [{}]
 # > dct:creator -> foaf:Organization
@@ -578,7 +459,7 @@ dataset_fields:
   help_text: Principal responsable de la production des données.
   value_type: node
   tab: *tab_contacts
-  <<: *common_field_agent
+  repeating_subfields: *agent_fields
 
 # RIGHTS_HOLDER [{}]
 # dct:rightsHolder -> foaf:Organization
@@ -594,7 +475,7 @@ dataset_fields:
   help_text: Organisme ou personne qui détient des droits sur les données.
   value_type: node
   tab: *tab_contacts
-  <<: *common_field_agent
+  repeating_subfields: *agent_fields
 
 # QUALIFIED_ATTRIBUTION [{}]
 # > prov:qualifiedAttribution -> prov:Attribution
@@ -671,7 +552,7 @@ dataset_fields:
             fr: Courriel
             en: Mail
           value_type: uri
-          display_snippet: email.html
+          preset: ecospheres_email
         # URI
         # > foaf:homePage
         - field_name: url
@@ -891,6 +772,9 @@ dataset_fields:
 # - stockage sous forme d'une liste d'URI (appartenant au registre
 #   du guichet)
 - field_name: category
+  rdf_path:
+    - dcat:theme
+    - skos:Concept
   label: 
     fr: Thèmes
     en: Topic
@@ -916,6 +800,9 @@ dataset_fields:
 #   pour les catégories ISO)
 # - stockage sous la forme d'une liste d'URI
 - field_name: theme
+  rdf_path:
+    - dcat:theme
+    - skos:Concept
   label:
     fr: Autres thèmes
     en: Other theme
@@ -939,6 +826,9 @@ dataset_fields:
 # > dcat:keyword
 # - pour les mots-clés libres
 - field_name: free_tags
+  rdf_path:
+    - dcat:keyword
+    - rdf:langString
   label: 
     fr: Mots-clés
     en: Keywords
@@ -952,103 +842,133 @@ dataset_fields:
 
 # # ------ Métadonnées sur les métadonnées ------
 
-# RECORD_IN_CATALOG [{}]
-# > foaf:isPrimaryTopicOf [-> dcat:CatalogRecord] / dcat:inCatalog -> dcat:Catalog
-- field_name: record_in_catalog
+# CATALOG_RECORD
+# > foaf:isPrimaryTopicOf [-> dcat:CatalogRecord]
+- field_name: catalog_record
+  rdf_path:
+    - foaf:isPrimaryTopicOf
+    - dcat:CatalogRecord
   label:
-    fr: Catalogue source
-    en: Source catalog
+    fr: Fiche de métadonnées source
+    en: Source record
+  flatten_subfields: True
   value_type: node
   tab: *tab_catalog
   repeating_subfields:
-    # TITLE {*}
-    # > dct:title
-    - field_name: title
+
+    # RECORD_IN_CATALOG [{}]
+    # > dcat:inCatalog -> dcat:Catalog
+    - field_name: record_in_catalog
+      rdf_path:
+        - dcat:inCatalog
+        - dcat:Catalog
       label:
-        fr: Nom
-        en: Name
+        fr: Catalogue source
+        en: Source catalog
+      value_type: node
+      repeating_subfields:
+        # TITLE {*}
+        # > dct:title
+        - field_name: title
+          rdf_path:
+            - dct:title
+            - rdf:langString
+          label:
+            fr: Nom
+            en: Name
+          preset: multilingual_text
+          value_type: literal
+          translatable_values: True
+        # HOMEPAGE
+        # > foaf:homepage
+        - field_name: homepage
+          rdf_path:
+            - foaf:homepage
+            - foaf:Document
+          label:
+            fr: URL
+            en: URL
+          value_type: uri
+          display_snippet: link.html
+
+    # RECORD IDENTIFIER 
+    # > dct:identifier
+    - field_name: record_identifier
+      rdf_path:
+        - dct:identifier
+        - xsd:string
+      label:
+        fr: Identifiant de la fiche de métadonnées
+        en: Metadata record identifier
+      display_snippet: null
+      help_text: Identifiant de la fiche de métadonnées.
       value_type: literal
-      translatable_values: True
-      preset: multilingual_text
-    # HOMEPAGE
-    # > foaf:homepage
-    - field_name: homepage
-      label:
-        fr: URL
-        en: URL
-      value_type: uri
-      display_snippet: link.html
+      tab: *tab_catalog
 
-# RECORD IDENTIFIER 
-# > foaf:isPrimaryTopicOf [-> dcat:CatalogRecord] / dct:identifier
-- field_name: record_identifier
-  label:
-    fr: Identifiant de la fiche de métadonnées
-    en: Metadata record identifier
-  display_snippet: null
-  help_text: Identifiant de la fiche de métadonnées.
-  value_type: literal
-  tab: *tab_catalog
-
-# RECORD MODIFIED
-# > foaf:isPrimaryTopicOf [-> dcat:CatalogRecord] / dct:modified
-- field_name: record_modified
-  label: 
-    fr: Date de modification de la fiche
-    en : Record modified
-  preset: datetime_tz
-  help_text: Date de dernière modification des métadonnées dans le catalogue d'origine.
-  value_type: literal
-  tab: *tab_catalog
-
-# RECORD HARVESTED
-# - hors DCAT, affiché dans CKAN mais non exposé
-- field_name: record_harvested
-  label: 
-    fr: Date de moissonnage de la fiche
-    en : Harvest date
-  preset: datetime_tz
-  help_text: Date du dernier moissonnage de la fiche de métadonnées.
-  value_type: literal
-  tab: *tab_catalog
-
-# RECORD LANGUAGE {}
-# > foaf:isPrimaryTopicOf [-> dcat:CatalogRecord] / dct:language
-# [+ DCAT-AP]
-# - stockage et exposition sous la forme d'une liste d'URI
-# - affichage des étiquettes, obtenues en interrogeant les URI,
-#   qui sont présumées pointer sur un registre RDF.
-- field_name: record_language
-  label: 
-    fr: Langues des métadonnées
-    en: Metadata languages
-  help_text: Langues de rédaction des métadonnées.
-  multiple_values: True
-  value_type: uri
-  tab: *tab_catalog
-  repeating_subfields:
-    # URI
-    - field_name: uri
+    # RECORD MODIFIED
+    # > dct:modified
+    - field_name: record_modified
+      rdf_path:
+        - dct:modified
+        - xsd:dateTime
       label: 
-        fr: URI
-        en: URI
-      value_type: uri
-      known_values: require
-      vocabularies:
-        - eu_language
-      display_snippet: ecospheres_vocabulary_uri.html
+        fr: Date de modification de la fiche
+        en : Record modified
+      preset: datetime_tz
+      help_text: Date de dernière modification des métadonnées dans le catalogue d'origine.
+      value_type: literal
 
-# RECORD CONTACT_POINT [{}]
-# > foaf:isPrimaryTopicOf [-> dcat:CatalogRecord] / dcat:contactPoint -> vcard:Kind
-- field_name: record_contact_point
-  label:
-    fr: Points de contact pour les métadonnées
-    en: Metadata contact point
-  repeating_label: Point de contact
-  help_text: Entité à contacter pour obtenir des informations sur les métadonnées.
-  value_type: node
-  tab: *tab_catalog
-  <<: *common_contact_fields
+    # RECORD HARVESTED
+    # - hors DCAT, affiché dans CKAN mais non exposé
+    - field_name: record_harvested
+      label: 
+        fr: Date de moissonnage de la fiche
+        en : Harvest date
+      preset: datetime_tz
+      help_text: Date du dernier moissonnage de la fiche de métadonnées.
+      value_type: literal
+
+    # RECORD LANGUAGE {}
+    # > dct:language
+    # [+ DCAT-AP]
+    # - stockage et exposition sous la forme d'une liste d'URI
+    # - affichage des étiquettes, obtenues en interrogeant les URI,
+    #   qui sont présumées pointer sur un registre RDF.
+    - field_name: record_language
+      rdf_path:
+        - dct:language
+        - dct:LinguisticSystem
+      label: 
+        fr: Langues des métadonnées
+        en: Metadata languages
+      help_text: Langues de rédaction des métadonnées.
+      multiple_values: True
+      value_type: uri
+      repeating_subfields:
+        # URI
+        - field_name: uri
+          label: 
+            fr: URI
+            en: URI
+          value_type: uri
+          known_values: require
+          vocabularies:
+            - eu_language
+          display_snippet: ecospheres_vocabulary_uri.html
+
+    # RECORD CONTACT_POINT [{}]
+    # > dcat:contactPoint -> vcard:Kind
+    - field_name: record_contact_point
+      rdf_path:
+        - dcat:contactPoint
+        - vcard:Kind
+      label:
+        fr: Points de contact pour les métadonnées
+        en: Metadata contact point
+      repeating_label: Point de contact
+      help_text: Entité à contacter pour obtenir des informations sur les métadonnées.
+      value_type: node
+      repeating_subfields: *contact_fields
 
 # # ------ Couverture spatiale ------
 
@@ -1193,8 +1113,48 @@ dataset_fields:
 
 # ACCESS_RIGHTS [{}]
 # > dct:accessRights -> dct:RightsStatement
+# - le champ "uri" correspond à l'objet du triplet
+#   <uri> dct:accessRights <uri>, s'il n'est pas
+#   défini, l'exposition utilise un noeud anonyme de classe
+#   dct:RightsStatement 
 - tab: *tab_details
-  <<: *access_rights_fields
+  field_name: access_rights
+  rdf_path:
+    - dct:accessRights
+    - dct:RightsStatement
+  label: 
+    fr: Conditions d'accès
+    en: Access conditions
+  help_text: Contraintes réglementaires limitant l'accès au jeu de données.
+  value_type: node or uri
+  repeating_subfields: &access_rights_fields
+    # URI
+    - field_name: uri
+      label: 
+        fr: URL
+        en: URL
+      value_type: uri
+      known_values: require
+      vocabularies:
+        - inspire_limitation_on_public_access
+        - eu_access_right
+      display_snippet: ecospheres_vocabulary_uri.html
+    # LABEL {*}
+    # > rdfs:label
+    # [+ GeoDCAT-AP]
+    - field_name: label
+      rdf_path:
+        - rdfs:label
+        - rdf:langString
+      label: 
+        fr: Mention
+        en: Mention
+      help_text: >
+        Description des contraintes réglementaires qui limitent l'accès
+        aux données et des modalités pratiques pour les obtenir.
+      translatable_values: True
+      preset: multilingual_text
+      value_type: literal
 
 # RESTRICTED_ACCESS
 # - non exposé dans l'export DCAT, utilisé pour l'élément
@@ -1209,7 +1169,24 @@ dataset_fields:
 # RIGHTS {*}
 # > dct:rights [-> dct:RightsStatement] / rdfs:label
 - tab: *tab_details
-  <<: *rights_fields
+  field_name: rights
+  rdf_path:
+    - dct:rights
+    - dct:RightsStatement
+    - rdfs:label
+    - rdf:langString
+  label:
+    fr:  Autre mention juridique
+    en:  Rights
+  help_text: > 
+    Autre mention à caractères juridique, par exemple rappelant les
+    droits de propriété intellectuelle sur les données, à faire apparaître
+    en cas de réutilisation.
+  preset: ecospheres_multiple_multilingual_markdown
+  tag_validators: remove_whitespace
+  translatable_values: True
+  multiple_values: True
+  value_type: literal
 
 # CRS {}
 # > dct:conformsTo
@@ -1251,7 +1228,31 @@ dataset_fields:
   value_type: node or uri
   tab: *tab_details
   display_snippet: conforms_to.html
-  <<: *standard_fields
+  repeating_subfields: &standard_fields
+    # URI
+    - field_name: uri
+      label: 
+        fr: URL
+        en: URL
+      value_type: uri
+      known_values: allow
+      vocabularies:
+        - plume_data_service_standard
+        # - ecospheres_data_standard
+      display_snippet: ecospheres_vocabulary_linked_uri.html
+    # TITLE {*}
+    # > dct:title
+    # [+ GeoDCAT-AP]
+    - field_name: title
+      rdf_path:
+        - dct:title
+        - rdf:langString
+      label: 
+        fr: Libellé
+        en: Label
+      value_type: literal
+      preset: multilingual_text
+      translatable_values: True
 
 # ACCRUAL_PERIODICITY
 # > dct:accrualPeriodicity
@@ -1292,6 +1293,9 @@ dataset_fields:
 # - stockage et exposition sous forme d'une liste d'URI
 # - affichage des étiquettes récupérées par interrogation des URI
 - field_name: language
+  rdf_path:
+    - dct:language
+    - dct:LinguisticSystem
   label: 
     fr: Langues des données
     en: Data language
@@ -1435,7 +1439,29 @@ dataset_fields:
         fr: Format
         en: Format
       value_type: node or uri
-      <<: *format_fields
+      repeating_subfields: &format_fields
+        # URI
+        - field_name: uri
+          label:
+            fr:  URI
+            en:  URI
+          value_type: uri
+          known_values: require
+          vocabularies:
+            - eu_file_type
+            - iana_media_type
+          display_snippet: ecospheres_vocabulary_uri.html
+        # LABEL
+        # > rdfs:label
+        # [+ GeoDCAT-AP]
+        - field_name: label
+          rdf_path:
+            - rdfs:label
+            - rdf:langString
+          label:
+            fr: Nom
+            en: Name
+          value_type: literal
     # DOWNLOAD_URI
     - field_name: download_url
       label:
@@ -1533,7 +1559,7 @@ resource_fields:
     fr: Format
     en: Format
   value_type: node or uri
-  <<: *format_fields
+  repeating_subfields: *format_fields
 
 # FORMAT []
 # on mappe dans le champ "format" natif les étiquettes
@@ -1559,15 +1585,45 @@ resource_fields:
     le service qui met à disposition la ressource.
   value_type: node or uri
   display_snippet: service_conforms_to.html
-  <<: *standard_fields
+  repeating_subfields: *standard_fields
 
 # ACCESS_RIGHTS [{}]
 # > dct:accessRights -> dct:RightsStatement
-- <<: *access_rights_fields 
+# - le champ "uri" correspond à l'objet du triplet
+#   <uri> dct:accessRights <uri>, s'il n'est pas
+#   défini, l'exposition utilise un noeud anonyme de classe
+#   dct:RightsStatement 
+- field_name: access_rights
+  rdf_path:
+    - dct:accessRights
+    - dct:RightsStatement
+  label: 
+    fr: Conditions d'accès
+    en: Access conditions
+  help_text: Contraintes réglementaires limitant l'accès au jeu de données.
+  value_type: node or uri
+  repeating_subfields: *access_rights_fields
 
 # RIGHTS {*}
 # > dct:rights [-> dct:RightsStatement] / rdfs:label
-- <<: *rights_fields
+- field_name: rights
+  rdf_path:
+    - dct:rights
+    - dct:RightsStatement
+    - rdfs:label
+    - rdf:langString
+  label:
+    fr:  Autre mention juridique
+    en:  Rights
+  help_text: > 
+    Autre mention à caractères juridique, par exemple rappelant les
+    droits de propriété intellectuelle sur les données, à faire apparaître
+    en cas de réutilisation.
+  preset: ecospheres_multiple_multilingual_markdown
+  tag_validators: remove_whitespace
+  translatable_values: True
+  multiple_values: True
+  value_type: literal
 
 # LICENSE [{}]
 # > dct:license -> dct:LicenseDocument
