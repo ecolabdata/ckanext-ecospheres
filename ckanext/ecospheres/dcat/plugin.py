@@ -16,6 +16,8 @@ from ckanext.ecospheres.vocabulary.loader import load_vocab as load_all_vocab
 from ckanext.ecospheres.views import organizations_by_admin_type
 
 
+#TODO: use blanket to declare validators, helpers, etc.
+# https://docs.ckan.org/en/latest/extensions/plugins-toolkit.html#ckan.plugins.toolkit.ckan.plugins.toolkit.blanket
 class DcatFrenchPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IValidators)
     plugins.implements(plugins.ITemplateHelpers)
@@ -32,7 +34,6 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
     
     # ------------- IConfigurer ---------------#
     def get_helpers(self):
-
         '''
         Enregistrement des fonctions comme helpers functions utilisé dasn la partie front.
         l'appel à ses fonction se fait de la manière suivante: 
@@ -40,7 +41,6 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         {{ h.function_name( param1=value1,param1=value2) }}
 
         '''
-
         return {
                 'fr_dcat_json_string_to_object_aggregated_ressources': helpers.json_string_to_object_aggregated_ressources,
                 'fr_dcat_aggregated_package_name_to_title': helpers.aggregated_package_name_to_title,
@@ -66,8 +66,11 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
         return {
             'timestamp_to_datetime': v.timestamp_to_datetime,
             'multilingual_text_output': v.multilingual_text_output,
+            'ecospheres_email': v.ecospheres_email,
+            'ecospheres_email_output': v.ecospheres_email_output,
+            'ecospheres_phone': v.ecospheres_phone,
+            'ecospheres_phone_output': v.ecospheres_phone_output
         }
-
 
     # ------------- IFacets ---------------#
 
