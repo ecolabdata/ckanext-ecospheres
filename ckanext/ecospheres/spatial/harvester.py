@@ -214,24 +214,24 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                         org_dict.set_value('url', online_resource.get('url'))
         
         # --- metadata's metadata ---
-        # < record_harvested >, < record_modified > and < record_identifier >
-        dataset_dict.set_value('record_harvested', datetime.now().astimezone().isoformat())
-        dataset_dict.set_value('record_modified', iso_values.get('metadata-date'))
-        dataset_dict.set_value('record_identifier', name)
+        # < catalog_record >
 
-        # < record_language >
+        record_dict = dataset_dict.new_item('catalog_record')
+        record_dict.set_value('record_harvested', datetime.now().astimezone().isoformat())
+        record_dict.set_value('record_modified', iso_values.get('metadata-date'))
+        record_dict.set_value('record_identifier', name)
+
         meta_language = iso_values.get('metadata-language')
         if meta_language:
-            meta_language_uri =  search_uri('record_language', meta_language)
+            meta_language_uri =  search_uri(('catalog_record', 'record_language'), meta_language)
             if meta_language_uri:
-                dataset_dict.set_value('record_language', meta_language_uri)
+                record_dict.set_value('record_language', meta_language_uri)
 
-        # < record_contact_point >
         if iso_values.get('metadata-point-of-contact'):
             for org_object in iso_values['metadata-point-of-contact']:
                 if not isinstance(org_object, dict):
                     continue
-                org_dict = dataset_dict.new_item('record_contact_point')
+                org_dict = record_dict.new_item('record_contact_point')
                 contact_info = org_object.get('contact-info')
                 if isinstance(contact_info, dict):
                     org_dict.set_value('email', contact_info.get('email'))
@@ -242,7 +242,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                     # "gmd:phone/gmd:CI_Telephone/gmd:voice/gco:CharacterString/text()"
 
         # < record_in_catalog >
-        catalog_dict = dataset_dict.new_item('record_in_catalog')
+        catalog_dict = record_dict.new_item('record_in_catalog')
 
         for elem in package_dict['extras']:
         # the following are "default extras" from the
@@ -524,7 +524,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                 registered = True
                 if access_rights_uri in RESTRICTED_ACCESS_URIS:
                     restricted_access = True
-                break
+                continue
             elif not resource_license_uri:
                 if license_uri := search_uri(
                     'license', rights_statement, warn_if_not_found=False,
@@ -533,7 +533,7 @@ class FrSpatialHarvester(plugins.SingletonPlugin):
                     dataset_dict.set_value('license', license_uri)
                     resource_license_uri = license_uri
                     registered = True
-                    break
+                    continue
 
             for statement_terms, field in RIGHTS_STATEMENT_MAP.items():
                 if all(
