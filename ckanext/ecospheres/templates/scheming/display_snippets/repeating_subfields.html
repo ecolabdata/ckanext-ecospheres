@@ -33,12 +33,14 @@
               {% for subfield in field.repeating_subfields %}
                 {%- if not h.ecospheres_is_empty(field_data, subfield) -%}
                   {% if subfield.field_name in ('label', 'title', 'name') %}
-                    {%- snippet 'scheming/snippets/display_field.html',
-                      field=subfield,
-                      data=field_data,
-                      entity_type=entity_type,
-                      object_type=object_type
-                    -%}
+                    <div style="display:flex;">
+                      {%- snippet 'scheming/snippets/display_field.html',
+                        field=subfield,
+                        data=field_data,
+                        entity_type=entity_type,
+                        object_type=object_type
+                      -%}
+                    </div>
                   {% else %}
                     <div style="display:flex;">
                       <dt class="dataset-label" style="font-weight:bold;">
