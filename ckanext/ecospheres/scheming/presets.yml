@@ -48,6 +48,7 @@ presets:
     validators: fluent_tags
     output_validators: fluent_tags_output
   # add "tag_validators: remove_whitespace" in the schema
+  # along with this preset
   
 - preset_name: ecospheres_multilingual_list
   values:
@@ -55,3 +56,15 @@ presets:
     validators: fluent_tags
     output_validators: fluent_tags_output
   # add "tag_validators: remove_whitespace" in the schema
+  # along with this preset
+
+- preset_name: ecospheres_email
+  values:
+    display_snippet: email.html
+    validators: ecospheres_email
+    output_validators: ecospheres_email_output
+
+- preset_name: ecospheres_phone
+  values:
+    validators: ecospheres_phone
+    output_validators: ecospheres_phone_output
