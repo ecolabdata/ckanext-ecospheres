@@ -1,5 +1,5 @@
 
-import logging, datetime, re
+import logging, datetime, re, json
 
 from rdflib import Literal, BNode
 from rdflib.util import from_n3
@@ -298,17 +298,16 @@ class EcospheresDCATAPProfile(RDFProfile):
             # valeur littérale
             elif value_type == 'literal':
                 if field_schema.get('translatable_values'):
-                    if not isinstance(value, (dict, list)):
+                    if not isinstance(value, dict):
                         return
-                    if isinstance(value, dict):
-                        value = [value]
-                    for e in value:
-                        if isinstance(e, dict):
-                            for language, v in e.items():
-                                if v:
-                                    self.g.add(
-                                        (subject, property, WiserLiteral(v, lang=language))
-                                    )
+                    for language, e in value.items():
+                        if not isinstance(e, list):
+                            e = [e]
+                    for v in e:
+                        if v:
+                            self.g.add(
+                                (subject, property, WiserLiteral(v, lang=language))
+                            )
                 elif isinstance(value, list):
                     for v in value:
                         lit = WiserLiteral(v, datatype=rdftype)
