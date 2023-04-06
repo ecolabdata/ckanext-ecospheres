@@ -975,10 +975,15 @@ dataset_fields:
 # BBOX
 # > dct:spatial [-> dct:Location] / dcat:bbox
 # pour l'emprise du jeu de données
-# - stockage et exposition sous l GML, comme
+# - stockage et exposition sous forme de littéral GML ou WKT, comme
 #   il convient pour cette propriété
 # - calculé à partir de "spatial" pour les métadonnées INSPIRE
 - field_name: bbox
+  rdf_path:
+    - dct:spatial
+    - dct:Location
+    - dcat:bbox
+    - gsp:wktLiteral
   label: 
     fr: Rectangle d'emprise
     en: Bounding box
@@ -992,6 +997,9 @@ dataset_fields:
 #   s'il n'est pas défini, l'exposition utilise un noeud anonyme
 #   de classe dct:Location 
 - field_name: spatial_coverage
+  rdf_path:
+    - dct:spatial
+    - dct:Location
   label:
     fr: Couverture géographique
     en: Spatial coverage
@@ -1015,6 +1023,9 @@ dataset_fields:
     # > skos:inScheme
     # [+ GeoDCAT-AP]
     - field_name: in_scheme
+      rdf_path:
+        - skos:inScheme
+        - skos:ConceptScheme
       label: 
         fr: Index géographique
         en: Gazetteer
@@ -1028,6 +1039,9 @@ dataset_fields:
     # > dct:identifier
     # [+ GeoDCAT-AP]
     - field_name: identifier
+      rdf_path:
+        - dct:identifier
+        - xsd:string
       label: 
         fr: Code géographique
         en: Geographic identifier
@@ -1037,6 +1051,9 @@ dataset_fields:
     # > skos:prefLabel
     # [+ GeoDCAT-AP]
     - field_name: label
+      rdf_path:
+        - skos:prefLabel
+        - rdf:langString
       label:
         fr:  Libellé
         en:  Geographic name
@@ -1194,6 +1211,9 @@ dataset_fields:
 # - stockage et exposition sous forme d'une liste d'URI
 # - affichage de l'étiquette, récupérée en interrogeant l'URI
 - field_name: crs
+  rdf_path:
+    - dct:conformsTo
+    - dct:Standard
   label: 
     fr: Référentiels de coordonnées
     en: Coordinate Reference System
@@ -1221,6 +1241,9 @@ dataset_fields:
 #   défini, l'exposition utilise un noeud anonyme de classe
 #   dct:Standard 
 - field_name: conforms_to
+  rdf_path:
+    - dct:conformsTo
+    - dct:Standard
   label: 
     fr: Standard
     en: Standard
@@ -1259,6 +1282,9 @@ dataset_fields:
 # - stockage et exposition sous forme d'URI
 # - affichage de l'étiquette récupérée par interrogation de l'URI
 - field_name: accrual_periodicity
+  rdf_path:
+    - dct:accrualPeriodicity
+    - dct:Frequency
   label:
     fr:  Fréquence de mise à jour
     en:  Update frequency
@@ -1276,6 +1302,9 @@ dataset_fields:
 # - stockage et exposition sous forme d'URI
 # - affichage de l'étiquette récupérée par interrogation de l'URI
 - field_name: status
+  rdf_path:
+    - adms:status
+    - skos:Concept
   label:
     fr:  Maturité
     en:  Dataset status
@@ -1320,6 +1349,11 @@ dataset_fields:
 # TODO: meilleur preset, qui respecte la multiplicité,
 # mais reconnaît le Markdown
 - field_name: provenance
+  rdf_path:
+    - dct:provenance
+    - dct:ProvenanceStatement
+    - rdfs:label
+    - rdf:langString
   label: 
     fr: Généalogie
     en: Genealogy
@@ -1334,6 +1368,9 @@ dataset_fields:
 # VERSION
 # > owl:versionInfo
 - field_name: version
+  rdf_path:
+    - owl:versionInfo
+    - xsd:string
   label: 
     fr: Version
     en: Version
@@ -1344,6 +1381,9 @@ dataset_fields:
 # VERSION_NOTES {*}
 # > adms:versionNotes
 - field_name: version_notes
+  rdf_path:
+    - adms:versionNotes
+    - rdf:langString
   label: 
     fr: Notes de version
     en: Release Notes
@@ -1357,6 +1397,9 @@ dataset_fields:
 # > dcat:temporalResolution
 # - stockage et exposition sous forme standardisée (ex: 'P2HT30M' pour 2h30)
 - field_name: temporal_resolution
+  rdf_path:
+    - dcat:temporalResolution
+    - xsd:duration
   label: 
     fr: Résolution temporelle
     en: Temporal resolution
@@ -1369,6 +1412,9 @@ dataset_fields:
 # SPATIAL_RESOLUTION
 # > dcat:spatialResolutionInMeters
 - field_name: spatial_resolution
+  rdf_path:
+      - dcat:spatialResolutionInMeters
+      - xsd:decimal
   label: 
     fr: Résolution spatiale en mètres
     en: Spatial resolution in meters
@@ -1500,6 +1546,9 @@ resource_fields:
 # URL 
 # > dcat:accessURL
 - field_name: url
+  rdf_path:
+    - dcat:accessURL
+    - rdfs:Resource
   label: 
     fr: URL d'accès
     en: Access URL
@@ -1511,6 +1560,9 @@ resource_fields:
 # DOWNLOAD_URL 
 # > dcat:downloadURL
 - field_name: download_url
+  rdf_path:
+    - dcat:downloadURL
+    - rdfs:Resource
   label:
     fr:  Téléchargement
     en:  Download URL
@@ -1521,6 +1573,9 @@ resource_fields:
 # TITLE {*}
 # > dct:title
 - field_name: name
+  rdf_path:
+    - dct:title
+    - rdf:langString
   label:
     fr: Nom
     en: Name
@@ -1531,6 +1586,9 @@ resource_fields:
 # DESCRIPTION {*}
 # > dct:description
 - field_name: description
+  rdf_path:
+    - dct:description
+    - rdf:langString
   label: 
     fr: Description
     en: Description
@@ -1541,6 +1599,9 @@ resource_fields:
 # MEDIA_TYPE [{}]
 # > dcat:mediaType -> dct:MediaType
 - field_name: media_type
+  rdf_path:
+    - dcat:mediaType
+    - dct:MediaType
   label: 
     fr: Format
     en: Format
@@ -1555,6 +1616,9 @@ resource_fields:
 # OTHER_FORMAT [{}]
 # > dct:format -> dct:MediaTypeOrExtent
 - field_name: other_format
+  rdf_path:
+    - dct:format
+    - dct:MediaTypeOrExtent
   label: 
     fr: Format
     en: Format
@@ -1577,6 +1641,11 @@ resource_fields:
 # - pour spécifier le protocole/standard auquel se conforme le
 #   service qui met à disposition la ressource, le cas échéant
 - field_name: service_conforms_to
+  rdf_path:
+    - dcat:accessService
+    - dcat:DataService
+    - dct:conformsTo
+    - dct:Standard
   label: 
     fr: Service
     en: Service
@@ -1631,6 +1700,9 @@ resource_fields:
 #   s'il n'est pas défini, l'exposition utilise un noeud anonyme
 #   de classe dct:LicenseDocument 
 - field_name: license
+  rdf_path:
+    - dct:license
+    - dct:LicenseDocument
   label: 
     fr: Licence
     en: Licence
@@ -1652,6 +1724,9 @@ resource_fields:
     # > dct:type
     # [+ DCAT-AP]
     - field_name: type
+      rdf_path:
+        - dct:type
+        - skos:Concept
       label: 
         fr: Type
         en: Type
@@ -1666,6 +1741,9 @@ resource_fields:
     # > rdfs:label
     # [+ GeoDCAT-AP]
     - field_name: label
+      rdf_path:
+        - rdfs:label
+        - rdf:langString
       label: 
         fr: Termes
         en: Terms
@@ -1677,6 +1755,9 @@ resource_fields:
 # ISSUED
 # > dct:issued
 - field_name: resource_issued
+  rdf_path:
+    - dct:issued
+    - xsd:date
   label:
     fr: Date de publication
     en: Issued Date
