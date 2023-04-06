@@ -1,5 +1,7 @@
 
-import logging, datetime, re, json
+import logging
+import datetime
+import re
 
 from rdflib import Literal, BNode
 from rdflib.util import from_n3
@@ -94,11 +96,13 @@ class WiserLiteral(Literal):
     '''Extend Literal to choose wisely the datatype argument.
     
     At this point, the constructor simply allow switching between
-    the types of literal values ``xsd:date`` et ``xsd:dateTime``.
+    the types of literal values ``xsd:date`` and ``xsd:dateTime``,
+    and between ``gsp:wktLiteral`` and ``gsp:gmlLiteral``.
 
     '''
     def __new__(cls, value, datatype=None, lang=None):
         # TODO: ajouter de la validation selon le type. [LL-2023.03.31]
+
         if datatype in (XSD.date, XSD.dateTime):
             if isinstance(value, datetime.date):
                 return super().__new__(cls, value, datatype=XSD.date)
@@ -120,6 +124,14 @@ class WiserLiteral(Literal):
                     value
                 ):
                     return super().__new__(cls, value, datatype=XSD.dateTime)
+        
+        if datatype in (GSP.wktLiteral, GSP.gmlLiteral):
+            # very basic way to recognize GML formatting
+            if '<gml' in value:
+                return super().__new__(cls, value, datatype=GSP.gmlLiteral)
+            else:
+                return super().__new__(cls, value, datatype=GSP.wktLiteral)
+
         return super().__new__(cls, value, datatype=datatype, lang=lang)
 
 class EcospheresDCATAPProfile(RDFProfile):
@@ -149,9 +161,6 @@ class EcospheresDCATAPProfile(RDFProfile):
         else:
             logger.debug('< {dataset_ref} > Skipped dataset without URI')
             return
-        # for s, p, o in self.g:
-        #     if s == dataset_ref:
-        #         self.g.remove((s, p, o))
         self.g.add((dataset_ref, RDF.type, DCAT.Dataset))
 
         # champs décrivant le jeu de données
@@ -167,14 +176,21 @@ class EcospheresDCATAPProfile(RDFProfile):
         if resources:
             for resource_dict in resources:
                 node = BNode()
-                self.g.add((dataset_ref, DCAT.distribution, node))
-                self.g.add((node, RDF.type, DCAT.Distribution))
+
+                # récupération de l'URI de la ressource,
+                # s'il y en avait un
+                if resource_uri_str := resource_dict.get('uri'):
+                    node = CleanedURIRef(resource_uri_str)
+                
                 self._graph_from_dataset_and_schema(
                     resource_dict,
                     schema.get('resource_fields'),
                     node,
                     dataset_ref
                 )
+                if (node, None, None) in self.g:
+                    self.g.add((dataset_ref, DCAT.distribution, node))
+                    self.g.add((node, RDF.type, DCAT.Distribution))
     
     def _read_rdf_path(self, rdf_path, subject):
         if len(rdf_path) == 2:
@@ -219,6 +235,8 @@ class EcospheresDCATAPProfile(RDFProfile):
 
         for field, value in fields_data.items():
 
+            field_subject = subject
+
             if (
                 field in ('uri', 'resources')
                 or value in (None, '', [], {})
@@ -243,8 +261,8 @@ class EcospheresDCATAPProfile(RDFProfile):
             rdf_path = field_schema.get('rdf_path')
             if not rdf_path:
                 continue
-            subject, property, rdftype = self._read_rdf_path(
-                rdf_path, subject
+            field_subject, property, rdftype = self._read_rdf_path(
+                rdf_path, field_subject
             )
 
             # cas particuliers
@@ -252,13 +270,13 @@ class EcospheresDCATAPProfile(RDFProfile):
                 for parent in value:
                     parent_uri = ecospheres_get_package_uri(parent)
                     if parent_uri:
-                        self.g.add((subject, property, CleanedURIRef(parent_uri)))
+                        self.g.add((field_subject, property, CleanedURIRef(parent_uri)))
             elif property == DCAT.seriesMember and value and isinstance(value, list):
                 for child in value:
                     child_uri = ecospheres_get_package_uri(child)
                     if child_uri:
-                        self.g.add((subject, property, CleanedURIRef(child_uri)))
-                self.g.add((subject, RDF.type, DCAT.DatasetSeries))
+                        self.g.add((field_subject, property, CleanedURIRef(child_uri)))
+                self.g.add((field_subject, RDF.type, DCAT.DatasetSeries))
 
             # noeud anonyme et noeud anonyme/URI
             elif (
@@ -275,25 +293,27 @@ class EcospheresDCATAPProfile(RDFProfile):
                     for subkey, subvalue in subfields_data.items():
                         if subkey == 'uri' and subvalue:
                             node = CleanedURIRef(subvalue)
-                    self.g.add((subject, property, node))
+                    self.g.add((field_subject, property, node))
                     if rdftype != SKOS.Concept:
-                        self.g.add((node, RDF.type, rdftype))
+                        l_before = len(self.g)
                         self._graph_from_dataset_and_schema(
                             subfields_data, subfields_schema, node, dataset_ref
                         )
+                        if len(self.g) > l_before:
+                            self.g.add((node, RDF.type, rdftype))
 
             # URI
             elif value_type == 'uri':
                 if isinstance(value, str):
-                    self.g.add((subject, property, CleanedURIRef(value)))
+                    self.g.add((field_subject, property, CleanedURIRef(value)))
                 elif isinstance(value, list):
                     for v in value:
                         if isinstance(v, str):
-                            self.g.add((subject, property, CleanedURIRef(v)))
+                            self.g.add((field_subject, property, CleanedURIRef(v)))
                         elif isinstance(v, dict):
                             uri = v.get('uri')
                             if uri and isinstance(uri, str):
-                                self.g.add((subject, property, CleanedURIRef(uri)))
+                                self.g.add((field_subject, property, CleanedURIRef(uri)))
             
             # valeur littérale
             elif value_type == 'literal':
@@ -306,7 +326,7 @@ class EcospheresDCATAPProfile(RDFProfile):
                     for v in e:
                         if v:
                             self.g.add(
-                                (subject, property, WiserLiteral(v, lang=language))
+                                (field_subject, property, WiserLiteral(v, lang=language))
                             )
                 elif isinstance(value, list):
                     for v in value:
@@ -314,11 +334,11 @@ class EcospheresDCATAPProfile(RDFProfile):
                         # # RDFLib 6.3.2
                         # if lit.ill_typed:
                         #     continue
-                        self.g.add((subject, property, lit))
+                        self.g.add((field_subject, property, lit))
                 else:
                     lit = WiserLiteral(value, datatype=rdftype)
                     # # RDFLib 6.3.2
                     # if lit.ill_typed:
                     #     continue
-                    self.g.add((subject, property, lit))
+                    self.g.add((field_subject, property, lit))
 
