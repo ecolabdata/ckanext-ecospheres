@@ -66,6 +66,8 @@ et :py:meth:``EcospheresObjectDict.new_item``.
 
 """
 
+from rdflib import URIRef, Literal, BNode
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -222,6 +224,12 @@ class EcospheresObjectDict(dict):
             de la liste (avec la même langue, le cas échéant). Si la
             métadonnée se trouvait n'admettre qu'une seule valeur,
             c'est la dernière de la liste qui subsistera.
+            Il est permis de fournir des arguments de type
+            :py:class:`rdflib.term.URIRef` ou
+            :py:class:`rdflib.term.Literal`. Les premiers seront traités
+            comme des chaînes de caractères, les seconds sont convertis
+            dans le type Python correspondant, et la langue récupérée
+            d'autant que de besoin.
         language : str, optional
             Le cas échéant, la langue dans laquelle est rédigée la
             valeur. On utilisera autant que possible les codes
@@ -254,6 +262,12 @@ class EcospheresObjectDict(dict):
             for v in value:
                 self.set_value(field_name, value=v, language=language)
             return
+        
+        if isinstance(value, Literal):
+            language = language or value.language
+            value = value.toPython()
+        if isinstance(value, (Literal, URIRef, BNode)):
+            value = str(value)
         
         if isinstance(value, str):
             # nettoyage des chaînes de caractères
