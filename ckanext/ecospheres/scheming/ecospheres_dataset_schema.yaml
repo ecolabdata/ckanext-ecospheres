@@ -86,6 +86,8 @@ dataset_fields:
 # - le champ "title" est utilisé pour l'affichage,
 #   "title_translated" pour l'exposition.
 - field_name: title
+  alt_rdf_paths:
+    - dct:title
   label: 
     fr: Titre
     en: Title
@@ -110,6 +112,8 @@ dataset_fields:
 # - le champ "notes" est utilisé pour l'affichage,
 #   "notes_translated" pour l'exposition.
 - field_name: notes
+  alt_rdf_paths:
+    - dct:description
   label: 
     en: Description
     fr: Description
