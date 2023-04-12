@@ -3,7 +3,7 @@ import logging
 import datetime
 import re
 
-from rdflib import Literal, BNode
+from rdflib import Literal, BNode, URIRef
 from rdflib.util import from_n3
 from rdflib.namespace import Namespace
 
@@ -11,6 +11,8 @@ import ckan.plugins.toolkit as toolkit
 from ckanext.dcat.profiles import RDFProfile, CleanedURIRef
 
 from ckanext.ecospheres.helpers import ecospheres_get_package_uri
+from ckanext.ecospheres.scheming import DATASET_SCHEMA
+from ckanext.ecospheres.spatial.utils import build_dataset_dict_from_schema
 
 from .dataset.parse_dataset import parse_dataset as _parse_dataset
 from .graph.graph_from_catalog import graph_from_catalog as _graph_from_catalog
@@ -62,12 +64,6 @@ NAMESPACES = {
     'vcard': VCARD,
     'xsd': XSD
     }
-
-def dataset_schema():
-    '''Return the schema for datasets' metadata.'''
-    return toolkit.get_action('scheming_dataset_schema_show')(
-        None, {'type': 'dataset'}
-    )
 
 def clean_empty_data(data):
     '''Recursively delete all keys without meaningful value.'''
@@ -137,12 +133,75 @@ class WiserLiteral(Literal):
 class EcospheresDCATAPProfile(RDFProfile):
 
     def parse_dataset(self, dataset_dict, dataset_ref):
-        return _parse_dataset(self, dataset_dict, dataset_ref)
-        # TODO: à réécrire [LL-2023-03-03]
+        old_dataset_dict = dataset_dict
+
+        dataset_dict = build_dataset_dict_from_schema('dataset')
+        for s in self.g.subjects(RDF.type, DCAT.Dataset):
+            if isinstance(s, URIRef):
+                dataset_ref = s
+                break
+        else:
+            logger.debug('< {dataset_ref} > Skipped dataset without URI')
+            return
+        
+        # uri
+        dataset_dict.set_value('uri', dataset_ref)
+
+        # name
+        if identifier := self.g.value(dataset_ref, DCT.identifier):
+            dataset_dict.set_value('name', identifier)
+        else:
+            fragments = re.split('[:/]', dataset_ref)
+            dataset_dict.set_value('name', fragments[-1])
+
+        # owner_org
+        dataset_dict.set_value('owner_org', old_dataset_dict.get('owner_org'))
+
+        # dataset fields
+        self._dataset_from_graph_and_schema(
+            dataset_dict,
+            DATASET_SCHEMA.get('dataset_fields'),
+            dataset_ref,
+            dataset_ref
+        )
+
+        # resources
+        for node in self.g.objects(dataset_ref, DCAT.Distribution):
+            self._dataset_from_graph_and_schema(
+                dataset_dict.new_resource(),
+                DATASET_SCHEMA.get('resource_fields'),
+                node,
+                dataset_ref
+            )
+        
+        return dataset_dict
+
+    def _dataset_from_graph_and_schema(
+        self, fields_data, fields_schema, subject, dataset_ref
+    ):
+        for field_schema in fields_schema:
+            all_rdf_paths = self.all_rdf_paths(field_schema)
+            for rdf_path in all_rdf_paths:
+                objects = self.g.objects(subject, rdf_path)
+                for object in objects:
+                    if subfields_schema := field_schema.get('repeating_subfields'):
+                        subfields_data = fields_data.new_item(field_schema.get('field_name'))
+                        if isinstance(object, URIRef):
+                            if 'uri' in subfields_schema:
+                                subfields_data.set_value('uri', object)
+                        if isinstance(object, (URIRef, BNode)):
+                            self._dataset_from_graph_and_schema(
+                                subfields_data, subfields_schema, object, dataset_ref
+                            )
+                    else:
+                        fields_data.set_value(field_schema.get('field_name'), object)
     
     def graph_from_catalog(self, catalog_dict, catalog_ref):
-        return  _graph_from_catalog(self, catalog_dict, catalog_ref)
-        # TODO: à réécrire [LL-2023-03-03]
+
+        for prefix, namespace in NAMESPACES.items():
+            self.g.namespace_manager.bind(
+                prefix, namespace, override=True, replace=True
+            )
 
     def graph_from_dataset(self, dataset_dict, dataset_ref):
 
@@ -155,7 +214,6 @@ class EcospheresDCATAPProfile(RDFProfile):
                 prefix, namespace, override=True, replace=True
             )
         
-        schema = dataset_schema()
         if dataset_ref_str := dataset_dict.get('uri'):
             dataset_ref = CleanedURIRef(dataset_ref_str)
         else:
@@ -166,7 +224,7 @@ class EcospheresDCATAPProfile(RDFProfile):
         # champs décrivant le jeu de données
         self._graph_from_dataset_and_schema(
             dataset_dict,
-            schema.get('dataset_fields'),
+            DATASET_SCHEMA.get('dataset_fields'),
             dataset_ref,
             dataset_ref
         )
@@ -184,7 +242,7 @@ class EcospheresDCATAPProfile(RDFProfile):
                 
                 self._graph_from_dataset_and_schema(
                     resource_dict,
-                    schema.get('resource_fields'),
+                    DATASET_SCHEMA.get('resource_fields'),
                     node,
                     dataset_ref
                 )
@@ -342,3 +400,41 @@ class EcospheresDCATAPProfile(RDFProfile):
                     #     continue
                     self.g.add((field_subject, property, lit))
 
+    def path_from_n3(self, path_n3):
+        """Parse a N3-encoded IRI path into an URIRef path.
+        
+        Parameters
+        ----------
+        path_n3 : str
+            N3-encoded path, with `` / `` as separator
+            (spaces don't matter).
+        
+        Returns
+        -------
+        URIRef or rdflib.paths.Path or None
+            URIRef path. ``None`` if the parsing
+            failed for some reason.
+        
+        """
+        l = re.split(r"\s*[/]\s*", path_n3)
+        path = None
+        for elem in l:
+            try:
+                iri = from_n3(elem, nsm=self.g.namespace_manager)
+            except:
+                return
+            path = (path / iri) if path else iri
+        return path
+    
+    def all_rdf_paths(self, item_schema):
+        '''Get all the RDF paths that should be parsed to the given field.'''
+        paths = []
+        rdf_path = item_schema.get('rdf_path', [])
+        alt_rdf_paths = item_schema.get('alt_rdf_paths', [])
+        if rdf_path:
+            alt_rdf_paths.append(' / '.join(rdf_path[::2]))
+        for path_n3 in alt_rdf_paths:
+            path = self.path_from_n3(path_n3)
+            if path:
+                paths.append(path)
+        return paths
