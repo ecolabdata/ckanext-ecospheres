@@ -133,26 +133,32 @@ class WiserLiteral(Literal):
 class EcospheresDCATAPProfile(RDFProfile):
 
     def parse_dataset(self, dataset_dict, dataset_ref):
+        '''
+        Extends :py:meth:`ckanext.dcat.profiles.RDFProfile.parse_dataset`.
+
+        Creates a CKAN dataset dict from the RDF graph
+        The `dataset_dict` is passed to all the loaded profiles before being
+        yielded, so it can be further modified by each one of them.
+        `dataset_ref` is an rdflib URIRef object
+        that can be used to reference the dataset when querying the graph.
+        Returns a dataset dict that can be passed to eg `package_create`
+        or `package_update`
+        '''
         old_dataset_dict = dataset_dict
 
         dataset_dict = build_dataset_dict_from_schema('dataset')
-        for s in self.g.subjects(RDF.type, DCAT.Dataset):
-            if isinstance(s, URIRef):
-                dataset_ref = s
-                break
-        else:
-            logger.debug('< {dataset_ref} > Skipped dataset without URI')
-            return
         
         # uri
         dataset_dict.set_value('uri', dataset_ref)
 
         # name
-        if identifier := self.g.value(dataset_ref, DCT.identifier):
-            dataset_dict.set_value('name', identifier)
-        else:
-            fragments = re.split('[:/]', dataset_ref)
-            dataset_dict.set_value('name', fragments[-1])
+        identifier = (
+            self.g.value(dataset_ref, DCT.identifier)
+            or old_dataset_dict.get('guid')
+            or dataset_ref
+        )
+        fragments = re.split('[:/]', identifier)
+        dataset_dict.set_value('name', fragments[-1])
 
         # owner_org
         dataset_dict.set_value('owner_org', old_dataset_dict.get('owner_org'))
@@ -174,7 +180,12 @@ class EcospheresDCATAPProfile(RDFProfile):
                 dataset_ref
             )
         
-        return dataset_dict
+        # what is returned by this method doesn't matter for 
+        # :py:meth:`ckanext.dcat.processors.RDFParser.datasets`,
+        # it should modify the dictionary provided as argument 
+        old_dataset_dict.clear()
+        old_dataset_dict.update(dataset_dict.flat())
+        return old_dataset_dict
 
     def _dataset_from_graph_and_schema(
         self, fields_data, fields_schema, subject, dataset_ref
