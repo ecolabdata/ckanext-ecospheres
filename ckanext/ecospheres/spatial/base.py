@@ -66,9 +66,11 @@ et :py:meth:``EcospheresObjectDict.new_item``.
 
 """
 
+import datetime
+import logging
+
 from rdflib import URIRef, Literal, BNode
 
-import logging
 logger = logging.getLogger(__name__)
 
 MAIN_LANGUAGE = 'fr'
@@ -216,7 +218,7 @@ class EcospheresObjectDict(dict):
             Nom d'un champ (une clé) du dictionnaire présumé
             être référencé, sans quoi la méthode n'aura
             silencieusement aucun effet.
-        value : str or int or float or list(str or int or float)
+        value : str or int or float or date or datetime or time
             La valeur du champ. Le type n'est pas contrôlé, mais il
             devrait tout au moins s'agir d'une valeur litérale ou
             d'une liste de valeurs litérales. Dans ce dernier cas,
@@ -269,6 +271,9 @@ class EcospheresObjectDict(dict):
         if isinstance(value, (Literal, URIRef, BNode)):
             value = str(value)
         
+        if isinstance(value, (datetime.date, datetime.datetime)):
+            value = value.isoformat()
+
         if isinstance(value, str):
             # nettoyage des chaînes de caractères
             value = value.strip(' \r\n') or None
