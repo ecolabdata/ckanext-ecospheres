@@ -1,5 +1,8 @@
 import datetime
 import json
+import re
+
+import ckantoolkit as toolkit
 
 def timestamp_to_datetime(value):
     """
@@ -26,6 +29,40 @@ def multilingual_text_output(value):
     if isinstance(value, dict):
         return value
     return parse_json(value)
+
+
+date_regexp = re.compile(
+        '^-?([1-9][0-9]{3,}|0[0-9]{3})'
+        '-(0[1-9]|1[0-2])'
+        '-(0[1-9]|[12][0-9]|3[01])'
+        r'(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?$'
+    )
+datetime_regexp = re.compile(
+        '^-?([1-9][0-9]{3,}|0[0-9]{3})'
+        '-(0[1-9]|1[0-2])'
+        '-(0[1-9]|[12][0-9]|3[01])'
+        r'T(([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?|(24:00:00(\.0+)?))'
+        r'(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?$'
+    )
+def ecospheres_iso_date_or_datetime(value):
+    '''Ensure that value is a proper date or datetime string.
+
+    Time zone fragments are allowed, both for date and datetime.
+
+    The validation uses the regular expressions from the
+    W3C XML Schema Definition Language (XSD) 1.1 Part 2: Datatypes.
+
+    '''
+    if not value:
+        return
+    if isinstance(value, (datetime.date, datetime.datetime)):
+        value = value.isoformat()
+    else:
+        value = str(value)
+    if re.match(date_regexp, value) or re.match(datetime_regexp, value):
+        return value
+    else:
+        raise toolkit.Invalid(f'Ill-formatted date or datetime object "value"')
 
 def ecospheres_email(value):
     '''Make sure the value is stored with the email namespace.
@@ -124,3 +161,14 @@ def ecospheres_phone_output(value):
         return value[4:]
     return value
 
+def ecospheres_ckan_api_show(key, data, errors, context):
+    '''Add the CKAN API request URL to access a dataset metadata.
+    
+    '''
+    if not data.get(key):
+        if not data.get(('name',)):
+            raise toolkit.Invalid(f'No name to create an API package show request')
+        data[key] = toolkit.url_for(
+            'api.action', ver=3, logic_function='package_show',
+            id=data[('name',)], _external=True
+        )
