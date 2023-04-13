@@ -7,11 +7,10 @@ from rdflib import Literal, BNode, URIRef
 from rdflib.util import from_n3
 from rdflib.namespace import Namespace
 
-import ckan.plugins.toolkit as toolkit
 from ckanext.dcat.profiles import RDFProfile, CleanedURIRef
 
 from ckanext.ecospheres.helpers import ecospheres_get_package_uri
-from ckanext.ecospheres.scheming import DATASET_SCHEMA
+from ckanext.ecospheres.scheming import EcospheresSchemas
 from ckanext.ecospheres.spatial.utils import build_dataset_dict_from_schema
 
 from .dataset.parse_dataset import parse_dataset as _parse_dataset
@@ -166,7 +165,7 @@ class EcospheresDCATAPProfile(RDFProfile):
         # dataset fields
         self._dataset_from_graph_and_schema(
             dataset_dict,
-            DATASET_SCHEMA.get('dataset_fields'),
+            EcospheresSchemas.dataset.get('dataset_fields'),
             dataset_ref,
             dataset_ref
         )
@@ -175,7 +174,7 @@ class EcospheresDCATAPProfile(RDFProfile):
         for node in self.g.objects(dataset_ref, DCAT.Distribution):
             self._dataset_from_graph_and_schema(
                 dataset_dict.new_resource(),
-                DATASET_SCHEMA.get('resource_fields'),
+                EcospheresSchemas.dataset.get('resource_fields'),
                 node,
                 dataset_ref
             )
@@ -235,7 +234,7 @@ class EcospheresDCATAPProfile(RDFProfile):
         # champs décrivant le jeu de données
         self._graph_from_dataset_and_schema(
             dataset_dict,
-            DATASET_SCHEMA.get('dataset_fields'),
+            EcospheresSchemas.dataset.get('dataset_fields'),
             dataset_ref,
             dataset_ref
         )
@@ -253,7 +252,7 @@ class EcospheresDCATAPProfile(RDFProfile):
                 
                 self._graph_from_dataset_and_schema(
                     resource_dict,
-                    DATASET_SCHEMA.get('resource_fields'),
+                    EcospheresSchemas.dataset.get('resource_fields'),
                     node,
                     dataset_ref
                 )
