@@ -1,7 +1,7 @@
 
 import re, json, requests
 
-from ckanext.ecospheres.scheming import DATASET_SCHEMA
+from ckanext.ecospheres.scheming import EcospheresSchemas
 from ckanext.ecospheres.spatial.base import EcospheresDatasetDict
 
 ISO_NAMESPACES = {
@@ -42,7 +42,7 @@ def build_dataset_dict_from_schema(type='dataset', main_language=None):
         défaut produit par un moissonneur. 
 
     """
-    return EcospheresDatasetDict(DATASET_SCHEMA, main_language=main_language)
+    return EcospheresDatasetDict(EcospheresSchemas.dataset, main_language=main_language)
 
 def bbox_geojson_from_coordinates(west, east, south, north):
     """Serialize bounding box coordinates as a GeoJSON geometry.
