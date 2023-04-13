@@ -69,7 +69,9 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
             'ecospheres_email': v.ecospheres_email,
             'ecospheres_email_output': v.ecospheres_email_output,
             'ecospheres_phone': v.ecospheres_phone,
-            'ecospheres_phone_output': v.ecospheres_phone_output
+            'ecospheres_phone_output': v.ecospheres_phone_output,
+            'ecospheres_iso_date_or_datetime': v.ecospheres_iso_date_or_datetime,
+            'ecospheres_ckan_api_show': v.ecospheres_ckan_api_show
         }
 
     # ------------- IFacets ---------------#
