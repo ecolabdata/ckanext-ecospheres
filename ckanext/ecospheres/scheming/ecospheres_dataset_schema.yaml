@@ -164,7 +164,7 @@ dataset_fields:
       rdf_path:
         - dcat:startDate
         - xsd:date
-      preset: fr_date
+      preset: ecospheres_date_or_datetime
       label: 
         fr: Date de début
         en: Start date
@@ -175,7 +175,7 @@ dataset_fields:
       rdf_path:
         - dcat:endDate
         - xsd:date
-      preset: fr_date
+      preset: ecospheres_date_or_datetime
       label:
         fr: Date de fin
         en: End date
@@ -190,7 +190,7 @@ dataset_fields:
   label: 
     fr: Date de modification
     en: Modification date
-  preset: fr_date
+  preset: ecospheres_date_or_datetime
   help_text: Date de dernière modification du jeu de données.
   value_type: literal
 
@@ -203,7 +203,7 @@ dataset_fields:
   label:
     fr: Date de création
     en: Creation date
-  preset: fr_date
+  preset: ecospheres_date_or_datetime
   help_text: Date de création du jeu de données.
   value_type: literal
   tab: *tab_details
@@ -217,7 +217,7 @@ dataset_fields:
   label: 
     fr: Date de publication
     en: Release date
-  preset: fr_date
+  preset: ecospheres_date_or_datetime
   help_text: Date de publication du jeu de données.
   value_type: literal
   tab: *tab_details
@@ -735,7 +735,7 @@ dataset_fields:
       label:
         fr: Date de modification
         en: Modified date
-      preset: fr_date
+      preset: ecospheres_date_or_datetime
       help_text: Date de dernière modification du document.
       value_type: literal
     # CREATED
@@ -749,7 +749,7 @@ dataset_fields:
       label: 
         fr: Date de création
         en: Creation Date
-      preset: fr_date
+      preset: ecospheres_date_or_datetime
       help_text: Date de création du document.
       value_type: literal
     # ISSUED
@@ -763,7 +763,7 @@ dataset_fields:
       label: 
         fr: Date de publication
         en: Issued date 
-      preset: fr_date
+      preset: ecospheres_date_or_datetime
       help_text: Date de publication du document.
       value_type: literal
     
@@ -1529,6 +1529,7 @@ dataset_fields:
     en: Get metadata through CKAN API
   display_snippet: link.html
   value_type: uri
+  validators: ecospheres_ckan_api_show
   tab: *tab_catalog
 
 # ------------------------------------------------------------------------
@@ -1765,7 +1766,7 @@ resource_fields:
   label:
     fr: Date de publication
     en: Issued Date
-  preset: fr_date
+  preset: ecospheres_date_or_datetime
   help_text: Date de publication de la ressource.
   value_type: literal
 
