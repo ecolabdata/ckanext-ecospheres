@@ -68,3 +68,10 @@ presets:
   values:
     validators: ecospheres_phone
     output_validators: ecospheres_phone_output
+
+- preset_name: ecospheres_date_or_datetime
+  values:
+    display_snippet: dcat_fr_date.html
+    # CKAN's display snippet local_friendly_datetime.html
+    # could be more appropriate
+    validators: ecospheres_iso_date_or_datetime
