@@ -172,188 +172,68 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
     def before_search(self, search_params):
         """
         Cette fonction permet d'intercepter la reqûete avant de faire une
-        recherche pour ajouter/modifier/enrichir des paramètres de recherche,
-        A noter, pour ajouter des paramtres extra à une requetes dans CKAN et
-        les recuperer avec la clé "extras", il faut préfixer le nom du paramtres
-        par "ext_"
+        recherche pour ajouter/modifier/enrichir les paramètres de recherche.
         """
+        fq_in = search_params.get('fq')
+        extras = search_params.get('extras')
+        fq_out = []
 
-        """ Filtre par organistion 
+        if fq_in:
+            # Filtre par organization
+            # - Union (OR) des valeurs.
+            organizations, fq_in = _extract_pattern(r'\+?organization\s*:\s*"([^"]*)"', fq_in)
+            if organizations:
+                fq_out.append(_solr_or('organization', organizations))
 
+            # Filtre par territoires
+            # - Union (OR) des valeurs.
+            # - Les labels sont remplacés par les URI correspondants.
+            # - Ajout des subdivisions si include_subdivision == true.
+            #
+            # TODO: Voir s'il est possible d'utiliser un output validator
+            # pour avoir dès le départ les URI dans l'URL ? [LL-2023.01.16]
+            territories, fq_in = _extract_pattern(r'\+?territory\s*:\s*"([^"]*)"', fq_in)
+            if territories:
+                get_children = extras and extras.get('ext_include_subdivision', False)
+                territories_uris = _map_to_uris(territories, 'ecospheres_territory', get_children)
+                fq_out.append(_solr_or('territory', territories_uris))
 
-        Par défaut, lorsqu'on veut filter les jeux de données par plus d'une
-        organisation, CKAN utilise l'opération AND.
-        Par consequent, comme dans notre cas Ecosphere, un jeu de données
-        n'appartient qu'à une seule organisation, le moteur d'indexation
-        ne remontera aucun résultat
-        Donc pour récuperer les jeux de données appartenant aux organisations
-        présentes dans le reqûete, il faut modifier cette reqûete qui envoyée
-        au moteur Solr pour qu'il applique l'opérateur OR. 
+            # Filtre par thème Ecosphères
+            # - Union (OR) des valeurs.
+            # - Les labels sont remplacés par les URI correspondants.
+            #
+            # TODO: Voir s'il est possible d'utiliser un output validator
+            # pour avoir dès le départ les URI dans l'URL ? [LL-2023.01.16]
+            categories, fq_in = _extract_pattern(r'\+?category\s*:\s*"([^"]*)"', fq_in)
+            if categories:
+                categories_uris = _map_to_uris(categories, 'ecospheres_theme')
+                fq_out.append(_solr_or('category', categories_uris))
 
-        q=organization:"organisation_1"+organization:"organisation_2" 
-        deviendra: q=organization:"organisation_1" OR organization:"organisation_2" 
+        if extras:
+            # Filtre par date de mise à jour
+            # - Date is ISO: 2022-07-20T11:48:38.540Z
+            start_date = extras.get('ext_startdate')
+            end_date = extras.get('ext_enddate')
+            if start_date or end_date:
+                fq_out.append(f'+modified:[{start_date or "*"} TO {end_date or "NOW"}]')
 
-        """
-        fq = search_params.get('fq',None)
-        extras=search_params.get("extras",None)
-        if fq or extras:
+            # Filtre par données à accès resteint
+            restricted_access = extras.get("ext_restricted_access")
+            if restricted_access:
+                fq_out.append(f'extras_restricted_access:{restricted_access}')
 
-            regex_orgs = r"([+]*organization\s*:\s*\"([^\"]*)\")"
-            matches = re.finditer(regex_orgs, fq, re.MULTILINE)
-            list_organizations=[]
-            for _, match in enumerate(matches, start=1):
-                list_organizations.append(match.group(2))
-            if list_organizations:
-                fq = re.sub(regex_orgs, "", fq, 0, re.MULTILINE)
-                query=''
-                op=''
-                for org in list_organizations:
-                    if query:
-                        op='OR'
-                    query=f'{query} {op} organization:"{org}"'
-                if len(fq.strip()) > 0:
-                    query=f'{query} OR'
-                fq=f'{fq.strip()} {query.strip()}'
+        search_params['fq'] = f'{fq_in} {" ".join(fq_out)}'.strip()
 
-            """ Filtre par territoires :
+        # FIXME: Sert à quoi ?
+        #q = search_params.get('q', '')
+        #search_params['q'] = re.sub(":\s", " ", q)
 
-            * Les labels sont remplacés par les URI correspondants.
-            * On veut une union, pas une intersection.
-            * Ajout des subdivisions, si ``include_subdivision`` vaut
-              ``True``.
-
-            TODO: Voir s'il est possible d'utiliser un output validator
-            pour avoir dès le départ les URI dans l'URL ? [LL-2023.01.16]
-
-            /dataset/?q=&ext_include_subdivision=true&territory=Nouvelle-Aquitaine
-
-            """ 
-            territoires = []
-            regex_territory =  r"([+]*territory\s*:\s*\"([^\"]*)\")"
-            matches = re.finditer(regex_territory, fq, re.MULTILINE)
-            for _, match in enumerate(matches, start=1):
-                territoires.append(match.group(2))
-            fq = re.sub(regex_territory, "", fq, 0, re.MULTILINE)
-            
-            territoires_uris = []
-            for territoire in territoires:
-                territoire_label = parse.unquote_plus(territoire)
-                territoire_uri = VocabularyReader.get_uri_from_label(
-                    vocabulary='ecospheres_territory', label=territoire_label
-                )
-                territoires_uris.append(territoire_uri)
-            if extras:=search_params.get('extras'):
-                if extras.get('ext_include_subdivision'):
-                    territoires_uris += VocabularyReader.get_children(
-                        vocabulary='ecospheres_territory', uri=territoires_uris
-                    )
-
-            query = ' OR territory:'.join([
-                '"{0}"'.format(parse.quote(territoire_uri))
-                for territoire_uri in territoires_uris
-            ])
-            if query:
-                fq = f'{fq} +(territory:{query})'
-
-            """ 
-            Filtre par thème Ecosphères :
-
-            * Les labels sont remplacés par les URI correspondants.
-            * On veut une union, pas une intersection.
-
-            TODO: Voir s'il est possible d'utiliser un output validator
-            pour avoir dès le départ les URI dans l'URL ? [LL-2023.01.16]          
-
-            """
-            categories = []
-            regex_category = r"([+]*territory\s*:\s*\"([^\"]*)\")"
-            matches = re.finditer(regex_category, fq, re.MULTILINE)
-            for _, match in enumerate(matches, start=1):
-                categories.append(match.group(2))
-            fq = re.sub(regex_category, "", fq, 0, re.MULTILINE)
-
-            categories_uris = []
-            for category in categories:
-                category_label = parse.unquote_plus(category)
-                category_uri = VocabularyReader.get_uri_from_label(
-                    vocabulary='ecospheres_theme', label=category_label
-                )
-                categories_uris.append(category_uri)
-            query = ' OR category:'.join([
-                '"{0}"'.format(parse.quote(category_uri))
-                for category_uri in categories_uris
-            ])
-            if query:
-                fq = f'{fq} +(category:{query})'
-
-            if extras:
-                """
-                Le schèma de search_params est :
-                    {
-                        'extras': {}, 
-                        'facet.field': ['organization', 'category', 'territory', 'res_format'],
-                        'fq': '', 
-                        'q': '', 
-                        'rows': 20,
-                        'start': 0,
-                        'include_private': True, 
-                        'df': 'text'
-                    }
-
-                Pour récuperer des paramètres supplémentaires, il faut utiliser le champ "extras". 
-                pour récuperer un paramètre dans 'extras', il faut préfixer le nom du paramètre par 'ext_': 
-                    exemple:   reqûete http: dataset/q=&ext_param=param_value
-                            before_search: ext_param = search_params["extras"][ext_param"]
-                
-                """
-            
-                restricted_access=extras.get("ext_restricted_access",None)
-                start_date=extras.get("ext_startdate",None)
-                end_date=extras.get("ext_enddate",None)
-
-
-
-                """ filter par dates de mise à jour 
-                
-                /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z&ext_enddate=2023-07-20T11:48:38.540Z
-                /dataset/?q=&ext_startdate=2022-07-20T11:48:38.540Z
-                /dataset/?q=&ext_enddate=2022-07-20T11:48:38.540Z
-
-                """
-
-                if start_date or end_date:
-                    
-                    if not start_date :
-                        start_date="*"
-                    
-                    if not end_date:
-                        end_date="NOW"
-                        
-                    fq = '{fq} +modified:[{start_date} TO {end_date}]'.format(
-                                            fq=fq, start_date=start_date, end_date=end_date)
-                
-                """ filtrer par données à accès resteint
-                
-                /?q=&ext_restricted_access=true
-                /?q=&ext_restricted_access=false
-
-                """
-                if restricted_access is not None:
-                    fq = '{fq} extras_restricted_access:{restricted_access} '.format(
-                                            fq=fq, restricted_access=restricted_access)
-                q = search_params.get('q', '')
-                search_params['q'] = re.sub(":\s", " ", q)
-
-
-
-            search_params['fq'] = fq
         return search_params
     
     def after_search(self,search_results, search_params):
         '''
         Cette fonction est appellé après qu'un resultat soit renvoyé de l'indexateur Solr.
         On peut ajouter/modifier/supprimer des données avant qu'elles ne soient transmises vers le front
-        
         '''
         search_dicts = search_results.get('results', [])
         territories = []
@@ -480,3 +360,28 @@ class DcatFrenchPlugin(plugins.SingletonPlugin):
             
                         }
         return blueprint
+
+def _extract_pattern(pattern, string):
+    # TODO: single pass?
+    matches = re.findall(pattern, string)
+    out = re.sub(pattern, '', string).strip() if matches else string
+    return matches, out
+
+def _map_to_uris(values, vocab, get_children=False):
+    uris = []
+    for val in values:
+        label = parse.unquote_plus(val)
+        uri = VocabularyReader.get_uri_from_label(vocabulary=vocab, label=label)
+        if uri:
+            uris.append(uri)
+    if get_children:
+        uris += VocabularyReader.get_children(vocabulary=vocab, uri=uris)
+    return uris
+
+def _solr_or(field, values):
+    quoted = [f'"{v}"' for v in values]
+    val = ' OR '.join(quoted)
+    if len(quoted) > 1:
+        val = f'({val})'
+    query = f'+{field}:{val}'
+    return query
