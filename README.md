@@ -135,7 +135,7 @@ To install ckanext-ecospheres:
 
 5. Enable the dcatfrench profile adding the following configuration property in the production.ini file,  (more details [here](https://github.com/ckan/ckanext-dcat#profiles)):
 
-        ckanext.dcat.rdf.profiles = euro_dcat_ap fr_dcat_ap
+        ckanext.dcat.rdf.profiles = ecospheres_dcat_ap
 
 
 <br>
